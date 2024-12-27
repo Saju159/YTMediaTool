@@ -1,20 +1,20 @@
-from tkinter import *
+import tkinter as tk
 from tkinter import filedialog
 import subprocess
 import os
 
 modenum = 1
 
-window = Tk()
+window = tk.Tk()
 window.title("YTMediaTool")
-lbl = Label(window, text="YTMediaTool")
+lbl = tk.Label(window, text="YTMediaTool")
 window.geometry('600x400')
 window.configure(bg='gray')
 
 currentdirectory = os.path.expanduser("~/Downloads")
 
 
-lm = Label(window, text = "Toimintatila:")
+lm = tk.Label(window, text = "Toimintatila:")
 lm.config(font =("Courier", 14))
 lm.place(x=5, y=5)
 
@@ -24,7 +24,7 @@ lm.place(x=5, y=5)
 
 
 def show():
-    label.config( text = mode.get() )
+    tk.Label.config( text = mode.get() )
 
 
 modes = [
@@ -35,7 +35,7 @@ modes = [
 
 
 
-mode = StringVar()
+mode = tk.StringVar()
 
 
 
@@ -45,15 +45,15 @@ def selection():
     modenum = modes.index(mode.get())
     global l1, l2, download, seldirb, input1
 
-    input1 = Text(window, height = 1, width = 50)
+    input1 = tk.Text(window, height = 1, width = 50)
     input1.place(x=110, y=60)
 
 
-    download=Button(window, text="Lataa",bg="yellow", command=download)
+    download=tk.Button(window, text="Lataa",bg="yellow", command=download)
     download.place(x=5, y=90)
 
 
-    seldirb=Button(window, text="Valitse kohdekansio",bg="yellow", command=seldir)
+    seldirb=tk.Button(window, text="Valitse kohdekansio",bg="yellow", command=seldir)
     seldirb.place(x=80, y=90)
 
 
@@ -66,7 +66,7 @@ def selection():
     if modenum == 0:
 
 
-        l1 = Label(window, text = "URL:")
+        l1 = tk.Label(window, text = "URL:")
         l1.config(font =("Courier", 14))
         l1.place(x=5, y=60)
 
@@ -74,14 +74,14 @@ def selection():
 
     if modenum == 1:
 
-        l2 = Label(window, text = "Hakusana:")
+        l2 = tk.Label(window, text = "Hakusana:")
         l2.config(font =("Courier", 14))
         l2.place(x=5, y=60)
 
         #l1.destroy()
 
 
-drop = OptionMenu( window , mode , *modes, command=lambda _: selection())
+drop = tk.OptionMenu( window , mode , *modes, command=lambda _: selection())
 drop.pack()
 
 
@@ -119,12 +119,12 @@ def download():
 
 def seldir():
     global currentdirectory
-    windowp = Tk()
+    windowp = tk.Tk()
     windowp.withdraw()
     currentdirectory = filedialog.askdirectory()
 
 
-    lm = Label(window, text = "Nykyinen kohdekansio: " + currentdirectory)
+    lm = tk.Label(window, text = "Nykyinen kohdekansio: " + currentdirectory)
     lm.config(font =("Courier", 14))
     lm.place(x=5, y=130)
 
@@ -132,7 +132,7 @@ def seldir():
 
 
 
-exit=Button(window, text="Poistu",bg="yellow", command=exit)
+exit=tk.Button(window, text="Poistu",bg="yellow", command=exit)
 exit.place(x=5, y=180)
 
 def exit():
