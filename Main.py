@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import filedialog
 import subprocess
 import os
+from sys import platform
 
 modenum = 1
 
@@ -11,8 +12,18 @@ lbl = tk.Label(window, text="YTMediaTool")
 window.geometry('600x400')
 window.configure(bg='gray')
 
-currentdirectory = os.path.expanduser("~/Downloads")
+def getUserDownloadDir():
+    if platform.startswith == "linux":
+        c = subprocess.run(["which", "xdg-user-dir"])
+        if c.returncode == 0:
+            c = subprocess.run(["xdg-user-dir", "DOWNLOAD"])
+            if c.returncode == 0 and c.stdout:
+                return c.stdout
 
+    # fallback to a 'Downloads' directory in the user's home
+    return os.path.expanduser("~/Downloads")
+
+currentdirectory = getUserDownloadDir()
 
 
 lm = tk.Label(window, text = "Toimintatila:")
@@ -103,9 +114,12 @@ def download():
 
 def seldir():
     global currentdirectory
+    global windowp
     windowp = tk.Toplevel(window)
     windowp.withdraw()
-    currentdirectory = filedialog.askdirectory()
+    picked_dir = filedialog.askdirectory()
+    if isinstance(picked_dir, str):
+        currentdirectory = picked_dir
 
     lm = tk.Label(window, text = "Nykyinen kohdekansio: " + currentdirectory)
     lm.config(font =("Courier", 14))
@@ -118,7 +132,7 @@ exit.place(x=5, y=180)
 
 def quit():
     window.destroy
-    # windowp.destroy
+    if windowp: windowp.destroy
 
 window.mainloop()
 quit()
