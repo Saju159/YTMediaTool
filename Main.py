@@ -119,7 +119,7 @@ def download():
 
 def seldir():
     global currentdirectory
-    windowp = tk.Tk()
+    windowp = tk.Toplevel(window)
     windowp.withdraw()
     currentdirectory = filedialog.askdirectory()
 
@@ -128,23 +128,20 @@ def seldir():
     lm.config(font =("Courier", 14))
     lm.place(x=5, y=130)
 
-    windowp.mainloop()
+
 
 
 
 exit=tk.Button(window, text="Poistu",bg="yellow", command=exit)
 exit.place(x=5, y=180)
 
-def exit():
-    window.destroy
-    windowp.destroy
-
 def quit():
     window.destroy
-    windowp.destroy
+    # windowp.destroy
 
 
 
 
 
 window.mainloop()
+quit()
