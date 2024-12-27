@@ -6,40 +6,39 @@ from sys import platform
 
 def getUserDownloadDir():
 	if platform == "linux":
-		c = subprocess.run(["which", "xdg-user-dir"])
+		c = subprocess.run(["which", "xdg-user-dir"], stdout=subprocess.PIPE)
 		if c.returncode == 0:
-			c = subprocess.run(["xdg-user-dir", "DOWNLOAD"])
-			if c.returncode == 0 and c.stdout:
-				return c.stdout
+			c = subprocess.run(["xdg-user-dir", "DOWNLOAD"], capture_output=True)
+			if c.returncode == 0:
+				pathStr = str(c.stdout)
+				pathStr = pathStr[:len(pathStr)-3][2:]
+				return pathStr
 
 	# fallback to a 'Downloads' directory in the user's home
 	return os.path.expanduser("~/Downloads")
 
-currentdirectory = getUserDownloadDir()
+def download(mode, input2, currentdirectory):
+	print(f"Downloading '{input2}' to '{currentdirectory}'...")
 
-def download(modenum, input2):
-	print("Downloading...")
-
-	print(input2)
-
-	if modenum == 0:
-		filename = subprocess.getoutput(f'yt-dlp {input2} --print filename {input2}')
+	if mode == "url":
 		ytcomman = [
 			"yt-dlp",
 			"-f", "ba[ext=m4a]",
-			"-o", f"{currentdirectory}/{filename}.m4a",
+			"-o", f"{currentdirectory}/%(title)s [%(id)s].%(ext)s",
 			input2,
 			"--max-downloads", "1"
 		]
-	elif modenum == 1:
-		filename = subprocess.getoutput(f'yt-dlp "ytsearch:{input2}", --print filename {input2}')
+	elif mode == "ytsearch":
 		ytcomman = [
 			"yt-dlp",
 			"-f", "ba[ext=m4a]",
-			"-o", f"{currentdirectory}/{filename}.m4a",
+			"-o", f"{currentdirectory}/%(title)s [%(id)s].%(ext)s",
 			f"ytsearch:{input2}",
 			"--max-downloads", "1"
 		]
+	else:
+		print("Invalid mode")
+		return
 
 	if ytcomman:
 		c = subprocess.run(ytcomman)
@@ -50,16 +49,29 @@ def download(modenum, input2):
 def createFrame(window):
 	global frame
 	frame = tk.Frame(window, width=600, height=380)
+	frame.columnconfigure(2, weight=1)
 
 	global showPage, hidePage
 	def hidePage():
 		frame.place_forget()
 	def showPage():
-		frame.place(y=34)
+		frame.place(y=34, h=-34, relwidth=1.0, relheight=1.0)
 
-	lm = tk.Label(frame, text = "Toimintatila:")
-	lm.config(font =("Courier", 14))
-	lm.place(x=5, y=5)
+
+
+	urlLabel = tk.Label(frame, text="URL: ")
+	urlLabel.grid(row=2, column=1, sticky="E")
+
+	urlInputBox = tk.Entry(frame)
+	urlInputBox.grid(row=2, column=2, columnspan=2, sticky="WE")
+
+	tk.Label(frame, text="Destination directory: ").grid(row=5, column=1, sticky="E")
+
+	dirSV = tk.StringVar()
+	dirSV.set(getUserDownloadDir())
+
+	dirInputBox = tk.Entry(frame, textvariable=dirSV)
+	dirInputBox.grid(row=5, column=2, sticky="WE")
 
 	def seldir():
 		global currentdirectory
@@ -68,62 +80,45 @@ def createFrame(window):
 		windowp.withdraw()
 		picked_dir = filedialog.askdirectory()
 		if isinstance(picked_dir, str):
-			currentdirectory = picked_dir
+			dirSV.set(picked_dir)
 
-		lm = tk.Label(frame, text = "Nykyinen kohdekansio: " + currentdirectory)
-		lm.config(font =("Courier", 14))
-		lm.place(x=5, y=130)
+	selectDirButton = tk.Button(frame, text="Pick...", command=seldir)
+	selectDirButton.grid(row=5, column=3)
 
-	global l1, l2, seldirb, input1
-	l1, l2, seldirb, input1 = None, None, None, None
-
-	input1 = tk.Text(frame, height = 1, width = 50)
-	input1.place(x=110, y=  60)
-
+	global modenum
+	modenum = 0
 	def downloadf():
-		input2 = input1.get("1.0", "end").strip()
-		download(modenum, input2)
+		input2 = urlInputBox.get().strip()
+		if modenum == 0:
+			download("url", input2, dirSV.get())
+		elif modenum == 1:
+			download("ytsearch", input2, dirSV.get())
 
-	downloadb=tk.Button(frame, text="Lataa",bg="yellow", command=downloadf)
-	downloadb.place(x=5, y= 90)
+	downloadButton = tk.Button(frame, text="Download", bg="yellow", command=downloadf)
+	downloadButton.grid(row=20, column=1, columnspan=3, sticky="E")
 
-	seldirb=tk.Button(frame, text="Valitse kohdekansio",bg="yellow", command=seldir)
-	seldirb.place(x=80, y= 90)
 
-	def show():
-		tk.Label.config( text = mode.get() )
+
+	modeLabel = tk.Label(frame, text="Mode: ")
+	modeLabel.grid(row=1,column=1,sticky="E")
 
 	modes = [
-		"URL lataus",
-		"Lataus Hakusanalla",
+		"Download from URL",
+		"Search & Download from YouTube",
 	]
 
 	mode = tk.StringVar(value=modes[0])
 
+	urlLabel
 	def selection():
 		global modenum
 		modenum = modes.index(mode.get())
-		global l1, l2, download, seldirb, input1
-
-		if l1: l1.destroy()
-		if l2: l2.destroy()
-
 		if modenum == 0:
-			l1 = tk.Label(frame, text = "URL:")
-			l1.config(font =("Courier", 14))
-			l1.place(x=5, y=60)
-
-			#l2.destroy()
-
-		if modenum == 1:
-			l2 = tk.Label(frame, text = "Hakusana:")
-			l2.config(font =("Courier", 14))
-			l2.place(x=5, y=60)
-
-			#l1.destroy()
-
+			urlLabel.config(text="URL: ")
+		elif modenum == 1:
+			urlLabel.config(text="Search term: ")
 	selection()
 
-	drop = tk.OptionMenu( frame , mode , *modes, command=lambda _: selection())
-	drop.place(x=155, y=0 )
+	modeDropdown = tk.OptionMenu(frame, mode, *modes, command=lambda _: selection())
+	modeDropdown.grid(row=1, column=2, columnspan=2, sticky="W")
 
