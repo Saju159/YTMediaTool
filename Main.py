@@ -11,7 +11,7 @@ lbl = Label(window, text="YTMediaTool")
 window.geometry('600x400')
 window.configure(bg='gray')
 
-currentdirectory = os.path.expanduser("~/Downloads/")
+currentdirectory = os.path.expanduser("~/Downloads")
 
 
 lm = Label(window, text = "Toimintatila:")
@@ -106,7 +106,7 @@ def download():
         ytcomman = [
             "yt-dlp",
             "-f", "ba[ext=m4a]",
-            "-o", f"{currentdirectory}{filename}.m4a",
+            "-o", f"{currentdirectory}/{filename}.m4a",
             f"ytsearch:{input2}",
             "--max-downloads", "1"
         ]
