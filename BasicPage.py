@@ -79,7 +79,7 @@ def createFrame(window):
 		windowp = tk.Toplevel(window)
 		windowp.withdraw()
 		picked_dir = filedialog.askdirectory()
-		if isinstance(picked_dir, str):
+		if isinstance(picked_dir, str) and len(picked_dir) > 0:
 			dirSV.set(picked_dir)
 
 	selectDirButton = tk.Button(frame, text="Pick...", command=seldir)
