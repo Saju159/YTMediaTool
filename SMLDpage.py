@@ -12,8 +12,6 @@ from multiprocessing import Process
 import signal
 
 
-
-
 global download
 global downloaddirectory
 #getprogress = None
@@ -24,10 +22,8 @@ librarydirectory, download = None, None
 downloaddirectory1 = os.path.expanduser("~/YTMediaTool/Downloads/")
 
 
-
 progress = 0
 
-#librarydirectory1 = os.path.expanduser("~/YTMediaTool/Librarylist/Librarylist.txt")
 
 librarydirectory1 = " "
 
@@ -59,13 +55,6 @@ def createFrame(window):
     if not os.path.exists(librarydirectory + "Librarylist/"):
         os.makedirs(librarydirectory + "Librarylist/")
 
-
-   # input1 = tk.Text(frame, height = 1, width = 50)
-    #input1.place(x=110, y=  60)
-
-
-
-
     def sellibdir():
         global librarydirectory
         global windowp
@@ -94,11 +83,6 @@ def createFrame(window):
 
         if not downloaddirectory1:
             downloaddirectory1 = os.path.expanduser("~/YTMediaTool/Downloads/")
-
-       # lm = tk.Label(frame, text = "Nykyinen latauskansio: " + downloaddirectory1)
-        #lm.config(font =("Courier", 14))
-        #lm.place(x=5, y = 5)
-
 
     def sellibrarydirectory():
         global librarydirectory1
@@ -167,11 +151,9 @@ def createFrame(window):
                 f.write(str(librarydirectory1))
                 f.close()
 
-
             with open(os.path.expanduser("~/YTMediaTool/Temp/cancel.txt"), "w") as f:
                 f.write("0")
                 f.close()
-
 
             def loop_a():
                 os.system('python SMLD.py')
@@ -180,18 +162,11 @@ def createFrame(window):
             process1 = Process(target=loop_a)
             process1.start()
 
-
-
-
-
-
         else:
             messagebox.showinfo("File not found", f"File cannot be found or it doesn't exist. Please enter a valid file path.")
 
-
     #runSMLD = subprocess.run(['python', 'SMLD.py', arg1, arg2])
     libraryb=tk.Button(frame, text="Download", command=runSMLD).grid(row=30, column=0, sticky="E")
-
 
     def cancel():
         with open(os.path.expanduser("~/YTMediaTool/Temp/cancel.txt"), "w") as f:
@@ -200,10 +175,7 @@ def createFrame(window):
 
         cancelb.place(x=100, y = 6600)
 
-
     cancelb=tk.Button(frame, text="Cancel", command=cancel)#.grid(row=30, column=0, sticky="E")
-
-
 
     def refresh():
         def loop_b():

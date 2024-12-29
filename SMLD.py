@@ -137,7 +137,6 @@ def suorita_sudo_komennot_tiedostosta(tiedostonimi):
 
                     start = time.process_time()
 
-
                     # Suoritetaan komento
                     prosessi = subprocess.run(
                         sudo_komento, check=True, text=True,
@@ -146,18 +145,14 @@ def suorita_sudo_komennot_tiedostosta(tiedostonimi):
 
                     print(f"Downloading took: {time.process_time() - start}")
 
-
                     # Poistetaan ensimmäinen rivi tiedostosta
                     with open(tiedostonimi, 'w', encoding='utf-8') as tiedosto:
                         tiedosto.writelines(jäljellä_olevat_rivit)
                         continue
 
-
                 except subprocess.CalledProcessError as e:
                     with open(tiedostonimi, 'w', encoding='utf-8') as tiedosto:
                         tiedosto.writelines(jäljellä_olevat_rivit)
-
-                    #print("testing testing")
 
                 #print(downloaddirectory)
                 if os.path.isfile(downloaddirectory + artist +"/" +  albumname + "/" + songname + ".m4a"):
@@ -172,8 +167,6 @@ def suorita_sudo_komennot_tiedostosta(tiedostonimi):
 
 
                 tiedosto = downloaddirectory + artist +"/" +  albumname + "/" + songname + ".m4a"
-
-
             else:
 
                 print ("This file is already in your library.")
@@ -184,16 +177,11 @@ def suorita_sudo_komennot_tiedostosta(tiedostonimi):
 
                 tiedosto = downloaddirectory + artist +"/" +  albumname + "/" + songname + ".m4a"
 
-
-
-
-
             if rate == "2":
                 with open(playlistfile, 'a', encoding='utf-8') as playlist:
                     playlist.write(artist +"/" +  albumname + "/" + songname + ".m4a")
                     playlist.write("\n")
                     playlist.close()
-
     #Metadata:
             try:
                 # Lataa M4A-tiedosto
@@ -214,7 +202,6 @@ def suorita_sudo_komennot_tiedostosta(tiedostonimi):
                     log.write(str(e))
                     log.write("\n")
                     log.close()
-
 
 
     except FileNotFoundError:

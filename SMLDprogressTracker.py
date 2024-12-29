@@ -3,8 +3,6 @@ import time
 import os
 
 
-
-
 with open(os.path.expanduser("~/YTMediaTool/Temp/libraryfiledirectory.txt")) as f:
     libraryfiledirectory = f.read()
     f.close()
