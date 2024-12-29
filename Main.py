@@ -1,8 +1,19 @@
 import tkinter as tk
 
+import os
+
+librarydirectory = os.path.expanduser("~/YTMediaTool/")
+
+if not os.path.exists(librarydirectory + "Temp/"):
+    os.makedirs(librarydirectory + "Temp/")
+
+if not os.path.exists(librarydirectory + "Librarylist/"):
+    os.makedirs(librarydirectory + "Librarylist/")
+
+
 import BasicPage
 import SMLDpage
-import os
+
 
 page1rely = 0
 
