@@ -1,6 +1,8 @@
 import tkinter as tk
 
 import BasicPage
+import SMLDpage
+import os
 
 page1rely = 0
 
@@ -11,17 +13,26 @@ window.geometry('600x400')
 window.configure(bg='gray')
 
 page1frame = BasicPage.createFrame(window)
+page2frame = SMLDpage.createFrame(window)
 
 def page1():
     BasicPage.showPage()
+    SMLDpage.hidePage()
 
 def page2():
     toggle_button("Vaihtoehto 2")
     BasicPage.hidePage()
+    SMLDpage.showPage()
 
 def page3():
     toggle_button("Vaihtoehto 3")
     BasicPage.hidePage()
+    SMLDpage.hidePage()
+
+def page4():
+    toggle_button("Vaihtoehto 4")
+    BasicPage.hidePage()
+    SMLDpage.hidePage()
 
 def toggle_button(selected):
     current_value.set(selected)
@@ -39,7 +50,6 @@ button1 = tk.Radiobutton(
 )
 button1.place(x=5, y=5)
 
-
 button2 = tk.Radiobutton(
     window,
     text="SMLD",
@@ -51,10 +61,9 @@ button2 = tk.Radiobutton(
 )
 button2.place(x=155, y=5)
 
-
 button3 = tk.Radiobutton(
     window,
-    text="About",
+    text="Settings",
     value="Vaihtoehto 3",
     variable=current_value,
     indicatoron=False,
@@ -63,8 +72,23 @@ button3 = tk.Radiobutton(
 )
 button3.place(x=305, y=5)
 
+button4 = tk.Radiobutton(
+    window,
+    text="About",
+    value="Vaihtoehto 4",
+    variable=current_value,
+    indicatoron=False,
+    width=15,
+    command=page4,
+)
+button4.place(x=455, y=5)
+
 def quit():
+    with open(os.path.expanduser("~/YTMediaTool/Temp/cancel.txt"), "w") as f:
+        f.write("1")
+        f.close()
     window.destroy
+
 
 window.mainloop()
 quit()
