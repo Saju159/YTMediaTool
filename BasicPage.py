@@ -17,34 +17,30 @@ def getUserDownloadDir():
 	# fallback to a 'Downloads' directory in the user's home
 	return os.path.expanduser("~/Downloads")
 
-def download(mode, input2, currentdirectory):
+def download(mode: str, input2: str, currentdirectory: str, ext: str):
 	print(f"Downloading '{input2}' to '{currentdirectory}'...")
 
-	if mode == "url":
-		ytcomman = [
-			"yt-dlp",
-			"-f", "ba[ext=m4a]",
-			"-o", f"{currentdirectory}/%(title)s [%(id)s].%(ext)s",
-			input2,
-			"--max-downloads", "1"
-		]
-	elif mode == "ytsearch":
-		ytcomman = [
-			"yt-dlp",
-			"-f", "ba[ext=m4a]",
-			"-o", f"{currentdirectory}/%(title)s [%(id)s].%(ext)s",
-			f"ytsearch:{input2}",
-			"--max-downloads", "1"
-		]
-	else:
-		print("Invalid mode")
-		return
+	if len(mode) <= 0 or len(input2) <= 0 or len(currentdirectory) <= 0 or len(ext) <= 0: print("Invalid args"); return
 
-	if ytcomman:
-		c = subprocess.run(ytcomman)
-		print(c.returncode)
+	ytcomman = [
+		"yt-dlp",
+		"-f", f"b[ext={ext}]/b", # Download chosen format, but fallback to best format if not available
+		"--recode", ext, # Re-encode if not available
+		"-o", f"{currentdirectory}/%(title)s [%(id)s].%(ext)s",
+	]
+
+	if mode == "url":
+		ytcomman.insert(len(ytcomman), input2)
+	elif mode == "ytsearch":
+		ytcomman.insert(len(ytcomman), f"ytsearch:{input2}")
 	else:
-		print("No command")
+		print("Invalid mode"); return
+
+	ytcomman.insert(len(ytcomman), "--max-downloads")
+	ytcomman.insert(len(ytcomman), "1")
+
+	c = subprocess.run(ytcomman)
+	print(c.returncode)
 
 def createFrame(window):
 	global frame
@@ -58,20 +54,36 @@ def createFrame(window):
 		frame.place(y=34, h=-34, relwidth=1.0, relheight=1.0)
 
 
-
+	# URL box
 	urlLabel = tk.Label(frame, text="URL: ")
 	urlLabel.grid(row=2, column=1, sticky="E")
 
 	urlInputBox = tk.Entry(frame)
 	urlInputBox.grid(row=2, column=2, columnspan=2, sticky="WE")
 
-	tk.Label(frame, text="Destination directory: ").grid(row=5, column=1, sticky="E")
+	# File format
+	tk.Label(frame, text="Format: ").grid(row=5, column=1, sticky="E")
+
+	fileformats = [
+		"m4a",
+		"mp4",
+		"mp3",
+		"webm"
+	]
+
+	fileformat = tk.StringVar()
+
+	fileformatDropdown = tk.OptionMenu(frame, fileformat, *fileformats)
+	fileformatDropdown.grid(row=5, column=2, columnspan=2, sticky="W")
+
+	# Destination Directory
+	tk.Label(frame, text="Destination directory: ").grid(row=19, column=1, sticky="E")
 
 	dirSV = tk.StringVar()
 	dirSV.set(getUserDownloadDir())
 
 	dirInputBox = tk.Entry(frame, textvariable=dirSV)
-	dirInputBox.grid(row=5, column=2, sticky="WE")
+	dirInputBox.grid(row=19, column=2, sticky="WE")
 
 	def seldir():
 		global currentdirectory
@@ -83,22 +95,22 @@ def createFrame(window):
 			dirSV.set(picked_dir)
 
 	selectDirButton = tk.Button(frame, text="Pick...", command=seldir)
-	selectDirButton.grid(row=5, column=3)
+	selectDirButton.grid(row=19, column=3)
 
 	global modenum
 	modenum = 0
 	def downloadf():
 		input2 = urlInputBox.get().strip()
 		if modenum == 0:
-			download("url", input2, dirSV.get())
+			download("url", input2, dirSV.get(), fileformat.get())
 		elif modenum == 1:
-			download("ytsearch", input2, dirSV.get())
+			download("ytsearch", input2, dirSV.get(), fileformat.get())
 
 	downloadButton = tk.Button(frame, text="Download", bg="yellow", command=downloadf)
 	downloadButton.grid(row=20, column=1, columnspan=3, sticky="E")
 
 
-
+	# Mode
 	modeLabel = tk.Label(frame, text="Mode: ")
 	modeLabel.grid(row=1,column=1,sticky="E")
 
