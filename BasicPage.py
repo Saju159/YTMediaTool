@@ -3,6 +3,7 @@ from tkinter import filedialog
 import subprocess
 import os
 from sys import platform
+from yt_dlp import YoutubeDL
 
 def getUserDownloadDir():
 	if platform == "linux":
@@ -17,30 +18,36 @@ def getUserDownloadDir():
 	# fallback to a 'Downloads' directory in the user's home
 	return os.path.expanduser("~/Downloads")
 
-def download(mode: str, input2: str, currentdirectory: str, ext: str):
-	print(f"Downloading '{input2}' to '{currentdirectory}'...")
+def download(
+	mode: str,
+	downloadInput: str,
+	directory: str,
+	ext: str,
+):
+	print(f"Downloading '{downloadInput}' to '{directory}'...")
 
-	if len(mode) <= 0 or len(input2) <= 0 or len(currentdirectory) <= 0 or len(ext) <= 0: print("Invalid args"); return
+	if len(mode) <= 0 or len(downloadInput) <= 0 or len(directory) <= 0 or len(ext) <= 0: print("Invalid args"); return
 
-	ytcomman = [
-		"yt-dlp",
-		"-f", f"b[ext={ext}]/b", # Download chosen format, but fallback to best format if not available
-		"--recode", ext, # Re-encode if not available
-		"-o", f"{currentdirectory}/%(title)s [%(id)s].%(ext)s",
-	]
+	opts = {
+		'verbose': False,
+		'outtmpl': {'default': f"{directory}/%(title)s [%(id)s].%(ext)s"},
+		'format': f"b[ext={ext}]/b",
+		'final_ext': ext,
+		'postprocessors': [
+			{'key': 'FFmpegVideoConvertor', 'preferedformat': ext},
+		]
+	}
 
 	if mode == "url":
-		ytcomman.insert(len(ytcomman), input2)
+		url = downloadInput
 	elif mode == "ytsearch":
-		ytcomman.insert(len(ytcomman), f"ytsearch:{input2}")
+		url = f"ytsearch:{url}"
 	else:
 		print("Invalid mode"); return
 
-	ytcomman.insert(len(ytcomman), "--max-downloads")
-	ytcomman.insert(len(ytcomman), "1")
-
-	c = subprocess.run(ytcomman)
-	print(c.returncode)
+	with YoutubeDL(opts) as ydl:
+		c = ydl.download(url)
+		print("Return code: " + c)
 
 def createFrame(window):
 	global frame
