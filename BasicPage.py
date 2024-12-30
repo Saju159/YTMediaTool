@@ -47,7 +47,7 @@ def download(
 
 	with YoutubeDL(opts) as ydl:
 		c = ydl.download(url)
-		print("Return code: " + c)
+		print("return code: " + str(c))
 
 def createFrame(window):
 	global frame
