@@ -50,10 +50,11 @@ def download(
 	downloadInput: str,
 	directory: str,
 	inputff: str,
-	inputvq: str
+	inputvq: str,
+	dlvideo: bool,
+	dlaudio: bool
 ):
 	print(f"Downloading '{downloadInput}' to '{directory}'...")
-
 	if len(mode) <= 0 or len(downloadInput) <= 0 or len(directory) <= 0 or len(inputff) <= 0: print("Invalid args"); return
 
 	ff = fileformats[inputff]
@@ -64,13 +65,21 @@ def download(
 		'outtmpl': {'default': f"{directory}/%(title)s [%(id)s].%(ext)s"},
 	}
 
+	if dlvideo and dlaudio:
+		opts["format"] = "bv*+ba/b"
+	elif dlvideo and not dlaudio:
+		opts["format"] = "bv"
+	elif not dlvideo and dlaudio:
+		opts["format"] = "ba"
+	else:
+		print("No video or audio selected")
+		return
+
+
 	if "ext" in ff:
 		ext = ff["ext"]
-		opts['format'] = "bv*+ba/b"
 		opts['final_ext'] = ext,
 		opts['postprocessors'] = [{'key': 'FFmpegVideoConvertor', 'preferedformat': ext}]
-	else:
-		opts["format"] = "bv*+ba/b"
 
 	if "res" in vq:
 		print(inputvq)
@@ -94,11 +103,20 @@ def createFrame(window):
 	frame = tk.Frame(window, width=600, height=380)
 	frame.columnconfigure(2, weight=1)
 
+	global pageOpenedOnce
+	pageOpenedOnce = False
+	def showPageFirstTime():
+		dlvideoCheckbox.select() # set checkbuttons to selected here because it wouldn't work if the page wasn't visible
+		dlaudioCheckbox.select()
+		global pageOpenedOnce
+		pageOpenedOnce = True
+
 	global showPage, hidePage
 	def hidePage():
 		frame.place_forget()
 	def showPage():
 		frame.place(y=34, h=-34, relwidth=1.0, relheight=1.0)
+		if not pageOpenedOnce: showPageFirstTime()
 
 
 	# URL box
@@ -110,9 +128,34 @@ def createFrame(window):
 
 	# File format
 	tk.Label(frame, text="Format: ").grid(row=5, column=1, sticky="E")
+	ffFrame = tk.Frame(frame)
+	ffFrame.grid(row=5, column=2, columnspan=2, sticky="W")
+
+	dlvideo = tk.BooleanVar()
+	dlaudio = tk.BooleanVar()
 	fileformat = tk.StringVar(value=next(iter(fileformats)))
-	fileformatDropdown = tk.OptionMenu(frame, fileformat, *fileformats)
-	fileformatDropdown.grid(row=5, column=2, columnspan=2, sticky="W")
+
+	def dlvideoselection():
+		if dlvideo.get() == True: vqDropdown.grid(row=6, column=2, columnspan=2, sticky="W"); vqLabel.grid(row=6, column=1, sticky="E")
+		else: vqDropdown.grid_forget(); vqLabel.grid_forget()
+
+	dlvideoCheckbox = tk.Checkbutton(ffFrame, text="Video", variable=dlvideo, onvalue=True, offvalue=False, command=dlvideoselection)
+	dlvideoCheckbox.grid(row=1, column=2, sticky="W")
+
+	dlaudioCheckbox = tk.Checkbutton(ffFrame, text="Audio", variable=dlaudio, onvalue=True, offvalue=False)
+	dlaudioCheckbox.grid(row=1, column=3, sticky="W")
+
+	def ffselection():
+		ff = fileformats[fileformat.get()]
+		if "video" in ff and ff["video"] == True:
+			dlvideoCheckbox.config(state="normal")
+			if dlvideo.get() == True: vqDropdown.grid(row=6, column=2, columnspan=2, sticky="W"); vqLabel.grid(row=6, column=1, sticky="E")
+		else:
+			dlvideoCheckbox.config(state="disabled")
+			vqDropdown.grid_forget(); vqLabel.grid_forget()
+
+	fileformatDropdown = tk.OptionMenu(ffFrame, fileformat, *fileformats, command=lambda _: ffselection())
+	fileformatDropdown.grid(row=1, column=1, sticky="W")
 
 	# Video quality
 	vqLabel = tk.Label(frame, text="Video quality: ")
@@ -151,7 +194,9 @@ def createFrame(window):
 			downloadInput = input2,
 			directory = dirSV.get(),
 			inputff = fileformat.get(),
-			inputvq = vq.get()
+			inputvq = vq.get(),
+			dlvideo = dlvideo.get(),
+			dlaudio = dlaudio.get()
 		)
 
 	downloadButton = tk.Button(frame, text="Download", bg="yellow", command=downloadf)
