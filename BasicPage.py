@@ -1,6 +1,7 @@
+import os
 import tkinter as tk
 from yt_dlp import YoutubeDL
-from Common import getUserDownloadDir, openFilePicker
+from Common import getUserDownloadDir, openDirInFileBrowser, openFilePicker
 
 fileformats = {
 	'Best':	{'video': True, 'audio': True},
@@ -39,15 +40,22 @@ def download(
 	dlaudio: bool
 ):
 	print(f"Downloading '{downloadInput}' to '{directory}'...")
-	if len(mode) <= 0 or len(downloadInput) <= 0 or len(directory) <= 0 or len(inputff) <= 0: print("Invalid args"); return
+	if len(downloadInput) <= 0: print("Invalid download input"); return "invalidDownloadInput", None
+	if len(directory) <= 0 and os.path.exists(directory): print("Invalid directory"); return "invalidDirectory", None
+	if not os.path.isdir(directory): print("Path does not point to a directory!"); return "pathIsNotDir", None
+	if not inputff in fileformats: print("Invalid fileformat"); return "invalidff", None
+	if not inputvq in videoqualities: print("Invalid video quality"); return "invalidvq", None
 
 	ff = fileformats[inputff]
 	vq = videoqualities[inputvq]
 
 	opts = {
-		'verbose': False,
+		'verbose': True,
 		'outtmpl': {'default': f"{directory}/%(title)s [%(id)s].%(ext)s"},
 	}
+
+	if ff["video"] == False: dlvideo = False
+	if ff["audio"] == False: dlaudio = False
 
 	if dlvideo and dlaudio:
 		opts["format"] = "bv*+ba/b"
@@ -57,8 +65,7 @@ def download(
 		opts["format"] = "ba"
 	else:
 		print("No video or audio selected")
-		return
-
+		return "noVideoOrAudio", None
 
 	if "ext" in ff:
 		ext = ff["ext"]
@@ -74,13 +81,18 @@ def download(
 	if mode == "url":
 		url = downloadInput
 	elif mode == "ytsearch":
-		url = f"ytsearch:{url}"
+		url = f"ytsearch:{downloadInput}"
 	else:
-		print("Invalid mode"); return
+		print("Invalid mode"); return "invalidMode", None
 
 	with YoutubeDL(opts) as ydl:
-		c = ydl.download(url)
-		print("return code: " + str(c))
+		try:
+			c = ydl.download(url)
+			print("return code: " + str(c))
+			return "success", None
+		except Exception as err:
+			print("--- Exception in ydl.download() ---")
+			return "unknownException", err
 
 def createFrame(window):
 	global frame
@@ -169,7 +181,7 @@ def createFrame(window):
 	modenum = 0
 	def downloadf():
 		input2 = urlInputBox.get().strip()
-		download(
+		returnStr, r2 = download(
 			mode = (modenum == 1 and "ytsearch" or "url"),
 			downloadInput = input2,
 			directory = dirSV.get(),
@@ -179,9 +191,29 @@ def createFrame(window):
 			dlaudio = dlaudio.get()
 		)
 
+		dText, success = None, False
+		if returnStr == "invalidDownloadInput": dText = mode.get() == 1 and "Invalid search term!" or "Invalid URL!"
+		elif returnStr == "invalidDirectory": dText = "Invalid destination directory!\nMake sure the path is entered correctly."
+		elif returnStr == "pathIsNotDir": dText = "Destination directory must be a directory!"
+		elif returnStr == "noVideoOrAudio": dText = "Neither video nor audio is selected."
+		elif returnStr == "success": success = True
+		elif returnStr == "unknownException":
+			if "Sign in to confirm your age." in str(r2): # FIXME: there's probable a way better method for checking if age-restricted
+				dText = "Failed to download:\nVideo is age-restricted."
+			else:
+				dText = "Unknown exception caught while downloading video.\n"+str(r2)
+
+		if dText:
+			window.update()
+			tk.messagebox.showerror("Download error", dText)
+		elif success:
+			window.update()
+			answer = tk.messagebox.askyesno("Download finished", "Download finished.\nOpen destination directory?")
+			if answer == True:
+				openDirInFileBrowser(dirSV.get())
+
 	downloadButton = tk.Button(frame, text="Download", bg="yellow", command=downloadf)
 	downloadButton.grid(row=20, column=1, columnspan=3, sticky="E")
-
 
 	# Mode
 	modeLabel = tk.Label(frame, text="Mode: ")
