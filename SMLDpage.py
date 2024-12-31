@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import filedialog
+from Common import openFilePicker
 from tkinter import messagebox
 import subprocess
 import os
@@ -7,7 +7,6 @@ from sys import platform
 from mutagen.mp4 import MP4
 import os.path
 import time
-from tkinter import filedialog as fd
 from multiprocessing import Process
 import signal
 
@@ -57,11 +56,8 @@ def createFrame(window):
 
     def sellibdir():
         global librarydirectory
-        global windowp
-        windowp = tk.Toplevel(window)
-        windowp.withdraw()
-        picked_dir = filedialog.askdirectory()
-        if isinstance(picked_dir, str):
+        picked_dir = openFilePicker(window, "openDir")
+        if picked_dir:
             librarydirectory = picked_dir
 
         if not librarydirectory:
@@ -74,11 +70,8 @@ def createFrame(window):
 
     def seldownloaddir1():
         global downloaddirectory
-        global windowp
-        windowp = tk.Toplevel(window)
-        windowp.withdraw()
-        picked_dir = filedialog.askdirectory()
-        if isinstance(picked_dir, str):
+        picked_dir = openFilePicker(window, "openDir")
+        if picked_dir:
             downloaddirectory1 = picked_dir
 
         if not downloaddirectory1:
@@ -87,9 +80,10 @@ def createFrame(window):
     def sellibrarydirectory():
         global librarydirectory1
         #librarydirectory = filedialog.askdirectory(mustexist=True)
-        librarydirectory1 = fd.askopenfilename()
-        print(librarydirectory1)
-        librarydirectory.set(librarydirectory1)
+        librarydirectory1 = openFilePicker(window, "openFile")
+        if librarydirectory1:
+            print(librarydirectory1)
+            librarydirectory.set(librarydirectory1)
 
         # Destination Directory
     tk.Label(frame, text="Destination directory: ").grid(row=2, column=1, sticky="W")
@@ -101,13 +95,9 @@ def createFrame(window):
     dirInputBox.grid(row=2, column=2, sticky="WE")
 
     def seldir():
-        global currentdirectory
-        global windowp
-        windowp = tk.Toplevel(window)
-        windowp.withdraw()
-        picked_dir = filedialog.askdirectory()
-        if isinstance(picked_dir1, str) and len(picked_dir1) > 0:
-            downloaddirectory2.set(picked_dir1)
+        picked_dir = openFilePicker(window, "openDir")
+        if picked_dir:
+            downloaddirectory2.set(picked_dir)
 
     selectDirButton = tk.Button(frame, text="Pick...", command=seldir)
     selectDirButton.grid(row=2, column=3)
@@ -120,15 +110,6 @@ def createFrame(window):
 
     dirInputBox = tk.Entry(frame, textvariable=librarydirectory)
     dirInputBox.grid(row=20, column=2, sticky="WE")
-
-    def seldir():
-        global currentdirectory
-        global windowp
-        windowp = tk.Toplevel(window)
-        windowp.withdraw()
-        picked_dir = librarydirectory1
-        if isinstance(picked_dir2, str) and len(picked_dir2) > 0:
-            librarydirectory.set(picked_dir2)
 
     selectDirButton = tk.Button(frame, text="Pick...", command=sellibrarydirectory)
     selectDirButton.grid(row=20, column=3)

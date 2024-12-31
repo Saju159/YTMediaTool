@@ -1,9 +1,6 @@
 import tkinter as tk
-from tkinter import filedialog
-import subprocess
-import os
-from sys import platform
 from yt_dlp import YoutubeDL
+from Common import getUserDownloadDir, openFilePicker
 
 fileformats = {
 	'Best':	{'video': True, 'audio': True},
@@ -31,19 +28,6 @@ videoqualities = {
 	'144p': {'res': 144},
 	'72p': {'res': 72}
 }
-
-def getUserDownloadDir():
-	if platform == "linux":
-		c = subprocess.run(["which", "xdg-user-dir"], stdout=subprocess.PIPE)
-		if c.returncode == 0:
-			c = subprocess.run(["xdg-user-dir", "DOWNLOAD"], capture_output=True)
-			if c.returncode == 0:
-				pathStr = str(c.stdout)
-				pathStr = pathStr[:len(pathStr)-3][2:]
-				return pathStr
-
-	# fallback to a 'Downloads' directory in the user's home
-	return os.path.expanduser("~/Downloads")
 
 def download(
 	mode: str,
@@ -174,12 +158,8 @@ def createFrame(window):
 	dirInputBox.grid(row=19, column=2, sticky="WE")
 
 	def seldir():
-		global currentdirectory
-		global windowp
-		windowp = tk.Toplevel(window)
-		windowp.withdraw()
-		picked_dir = filedialog.askdirectory()
-		if isinstance(picked_dir, str) and len(picked_dir) > 0:
+		picked_dir = openFilePicker(window, "openDir", title="Select directory to save downloaded files to...")
+		if picked_dir:
 			dirSV.set(picked_dir)
 
 	selectDirButton = tk.Button(frame, text="Pick...", command=seldir)
