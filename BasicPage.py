@@ -18,6 +18,20 @@ fileformats = {
 	'mov':	{'video': True, 'audio': True, 'ext': "mov"}
 }
 
+videoqualities = {
+	'Source': {},
+	'2160p (4K)': {'res': 2160},
+	'1440p': {'res': 1440},
+	'1080p (FHD)': {'res': 1080},
+	'720p': {'res': 720},
+	'480p': {'res': 480},
+	'360p': {'res': 360},
+	'288p': {'res': 288},
+	'240p': {'res': 240},
+	'144p': {'res': 144},
+	'72p': {'res': 72}
+}
+
 def getUserDownloadDir():
 	if platform == "linux":
 		c = subprocess.run(["which", "xdg-user-dir"], stdout=subprocess.PIPE)
@@ -36,12 +50,14 @@ def download(
 	downloadInput: str,
 	directory: str,
 	inputff: str,
+	inputvq: str
 ):
 	print(f"Downloading '{downloadInput}' to '{directory}'...")
 
 	if len(mode) <= 0 or len(downloadInput) <= 0 or len(directory) <= 0 or len(inputff) <= 0: print("Invalid args"); return
 
 	ff = fileformats[inputff]
+	vq = videoqualities[inputvq]
 
 	opts = {
 		'verbose': False,
@@ -50,11 +66,17 @@ def download(
 
 	if "ext" in ff:
 		ext = ff["ext"]
-		opts['format'] = f"b[ext={ext}]"
+		opts['format'] = "bv*+ba/b"
 		opts['final_ext'] = ext,
 		opts['postprocessors'] = [{'key': 'FFmpegVideoConvertor', 'preferedformat': ext}]
 	else:
-		opts["format"] = "b"
+		opts["format"] = "bv*+ba/b"
+
+	if "res" in vq:
+		print(inputvq)
+		print("test test")
+		print(f'res:{vq["res"]}')
+		opts['format_sort'] = [f'res:{vq["res"]}']
 
 	if mode == "url":
 		url = downloadInput
@@ -88,11 +110,16 @@ def createFrame(window):
 
 	# File format
 	tk.Label(frame, text="Format: ").grid(row=5, column=1, sticky="E")
-
 	fileformat = tk.StringVar(value=next(iter(fileformats)))
-
 	fileformatDropdown = tk.OptionMenu(frame, fileformat, *fileformats)
 	fileformatDropdown.grid(row=5, column=2, columnspan=2, sticky="W")
+
+	# Video quality
+	vqLabel = tk.Label(frame, text="Video quality: ")
+	vqLabel.grid(row=6, column=1, sticky="E")
+	vq = tk.StringVar(value=next(iter(videoqualities)))
+	vqDropdown = tk.OptionMenu(frame, vq, *videoqualities)
+	vqDropdown.grid(row=6, column=2, columnspan=2, sticky="W")
 
 	# Destination Directory
 	tk.Label(frame, text="Destination directory: ").grid(row=19, column=1, sticky="E")
@@ -119,10 +146,13 @@ def createFrame(window):
 	modenum = 0
 	def downloadf():
 		input2 = urlInputBox.get().strip()
-		if modenum == 0:
-			download("url", input2, dirSV.get(), fileformat.get())
-		elif modenum == 1:
-			download("ytsearch", input2, dirSV.get(), fileformat.get())
+		download(
+			mode = (modenum == 1 and "ytsearch" or "url"),
+			downloadInput = input2,
+			directory = dirSV.get(),
+			inputff = fileformat.get(),
+			inputvq = vq.get()
+		)
 
 	downloadButton = tk.Button(frame, text="Download", bg="yellow", command=downloadf)
 	downloadButton.grid(row=20, column=1, columnspan=3, sticky="E")
