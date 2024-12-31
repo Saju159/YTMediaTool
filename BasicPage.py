@@ -1,4 +1,4 @@
-import os
+import os, math
 import tkinter as tk
 from yt_dlp import YoutubeDL
 from Common import getUserDownloadDir, openDirInFileBrowser, openFilePicker
@@ -37,7 +37,8 @@ def download(
 	inputff: str,
 	inputvq: str,
 	dlvideo: bool,
-	dlaudio: bool
+	dlaudio: bool,
+	progress_hook: callable,
 ):
 	print(f"Downloading '{downloadInput}' to '{directory}'...")
 	if len(downloadInput) <= 0: print("Invalid download input"); return "invalidDownloadInput", None
@@ -49,9 +50,11 @@ def download(
 	ff = fileformats[inputff]
 	vq = videoqualities[inputvq]
 
+	print(progress_hook)
 	opts = {
-		'verbose': True,
+		'verbose': False,
 		'outtmpl': {'default': f"{directory}/%(title)s [%(id)s].%(ext)s"},
+		'progress_hooks': [progress_hook]
 	}
 
 	if ff["video"] == False: dlvideo = False
@@ -181,36 +184,76 @@ def createFrame(window):
 	modenum = 0
 	def downloadf():
 		input2 = urlInputBox.get().strip()
-		returnStr, r2 = download(
-			mode = (modenum == 1 and "ytsearch" or "url"),
-			downloadInput = input2,
-			directory = dirSV.get(),
-			inputff = fileformat.get(),
-			inputvq = vq.get(),
-			dlvideo = dlvideo.get(),
-			dlaudio = dlaudio.get()
-		)
 
-		dText, success = None, False
-		if returnStr == "invalidDownloadInput": dText = mode.get() == 1 and "Invalid search term!" or "Invalid URL!"
-		elif returnStr == "invalidDirectory": dText = "Invalid destination directory!\nMake sure the path is entered correctly."
-		elif returnStr == "pathIsNotDir": dText = "Destination directory must be a directory!"
-		elif returnStr == "noVideoOrAudio": dText = "Neither video nor audio is selected."
-		elif returnStr == "success": success = True
-		elif returnStr == "unknownException":
-			if "Sign in to confirm your age." in str(r2): # FIXME: there's probable a way better method for checking if age-restricted
-				dText = "Failed to download:\nVideo is age-restricted."
-			else:
-				dText = "Unknown exception caught while downloading video.\n"+str(r2)
+		window.update()
+		progressWindow = tk.Toplevel(window)
+		progressWindow.geometry("360x40")
+		progressWindow.resizable(False,False)
+		progressWindow.minsize(360, 40)
 
-		if dText:
-			window.update()
-			tk.messagebox.showerror("Download error", dText)
-		elif success:
-			window.update()
-			answer = tk.messagebox.askyesno("Download finished", "Download finished.\nOpen destination directory?")
-			if answer == True:
-				openDirInFileBrowser(dirSV.get())
+		progressWindow.rowconfigure(1, weight=1)
+		progressWindow.columnconfigure(2, weight=1)
+
+		pLabel = tk.Label(progressWindow, text="Preparing download...")
+		pLabel.grid(row=1, column=1, columnspan=2)
+
+		pProgressLabel = tk.Label(progressWindow, text="")
+		pProgressLabel.grid(row=2, column=1, sticky="E")
+
+		pProgressAmount = tk.Label(progressWindow, text="")
+		pProgressAmount.grid(row=2, column=2, sticky="W")
+
+		def ignore(): pass
+
+		def progress_hook(d):
+			if d['status'] == "downloading":
+				downloadPercent = d['downloaded_bytes']/(d['total_bytes'] or 1)
+				pLabel.config(text="Downloading...")
+				pProgressLabel.config(text="Progress: ")
+				pProgressAmount.config(text=f"{math.floor(downloadPercent*100)}%")
+				progressWindow.update()
+
+		def downloadFunc():
+			progressWindow.update()
+
+			returnStr, r2 = download(
+				mode = (modenum == 1 and "ytsearch" or "url"),
+				downloadInput = input2,
+				directory = dirSV.get(),
+				inputff = fileformat.get(),
+				inputvq = vq.get(),
+				dlvideo = dlvideo.get(),
+				dlaudio = dlaudio.get(),
+				progress_hook = progress_hook
+			)
+			progressWindow.destroy()
+
+			dText, success = None, False
+			if returnStr == "invalidDownloadInput": dText = mode.get() == 1 and "Invalid search term!" or "Invalid URL!"
+			elif returnStr == "invalidDirectory": dText = "Invalid destination directory!\nMake sure the path is entered correctly."
+			elif returnStr == "pathIsNotDir": dText = "Destination directory must be a directory!"
+			elif returnStr == "noVideoOrAudio": dText = "Neither video nor audio is selected."
+			elif returnStr == "success": success = True
+			elif returnStr == "unknownException":
+				if "Sign in to confirm your age." in str(r2): # FIXME: there's probable a way better method for checking if age-restricted
+					dText = "Failed to download:\nVideo is age-restricted."
+				else:
+					dText = "Unknown exception caught while downloading video.\n"+str(r2)
+
+			if dText:
+				window.update()
+				tk.messagebox.showerror("Download error", dText)
+			elif success:
+				window.update()
+				answer = tk.messagebox.askyesno("Download finished", "Download finished.\nOpen destination directory?")
+				if answer == True:
+					openDirInFileBrowser(dirSV.get())
+
+		progressWindow.grab_set()
+		progressWindow.transient(window)
+		progressWindow.after(100, downloadFunc)
+		progressWindow.protocol("WM_DELETE_WINDOW", ignore)
+		progressWindow.mainloop()
 
 	downloadButton = tk.Button(frame, text="Download", bg="yellow", command=downloadf)
 	downloadButton.grid(row=20, column=1, columnspan=3, sticky="E")
