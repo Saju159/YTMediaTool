@@ -10,6 +10,9 @@ if not os.path.exists(librarydirectory + "Temp/"):
 if not os.path.exists(librarydirectory + "Librarylist/"):
     os.makedirs(librarydirectory + "Librarylist/")
 
+if not os.path.exists(librarydirectory + "Downloads/"):
+    os.makedirs(librarydirectory + "Downloads/")
+
 
 import BasicPage
 import SMLDpage
