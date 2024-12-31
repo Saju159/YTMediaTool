@@ -92,7 +92,7 @@ def createFrame(window):
         librarydirectory.set(librarydirectory1)
 
         # Destination Directory
-    tk.Label(frame, text="Destination directory: ").grid(row=2, column=1, sticky="E")
+    tk.Label(frame, text="Destination directory: ").grid(row=2, column=1, sticky="W")
 
     downloaddirectory2 = tk.StringVar()
     downloaddirectory2.set(os.path.expanduser("~/YTMediaTool/Downloads/"))
@@ -113,7 +113,7 @@ def createFrame(window):
     selectDirButton.grid(row=2, column=3)
 
 
-    tk.Label(frame, text="Library list directory: ").grid(row=20, column=1, sticky="E")
+    tk.Label(frame, text="Library list directory: ").grid(row=20, column=1, sticky="W")
 
     librarydirectory = tk.StringVar()
     librarydirectory.set("Enter library file directory here.")
@@ -142,7 +142,7 @@ def createFrame(window):
     def runSMLD():
         global process1
         if os.path.isfile(librarydirectory1):
-            cancelb.place(x=100, y = 66)
+            cancelb.grid(row=1, column=2, sticky="W")
             with open(os.path.expanduser("~/YTMediaTool/Temp/downloaddirectory.txt"), "w") as f:
                 f.write(downloaddirectory1)
                 f.close()
@@ -166,16 +166,19 @@ def createFrame(window):
             messagebox.showinfo("File not found", f"File cannot be found or it doesn't exist. Please enter a valid file path.")
 
     #runSMLD = subprocess.run(['python', 'SMLD.py', arg1, arg2])
-    libraryb=tk.Button(frame, text="Download", command=runSMLD).grid(row=30, column=0, sticky="E")
+    frame1 = tk.Frame(frame)
+    frame1.grid(row=30, column=1, sticky="WE", columnspan=4)    #sticky="W" = tasaus west (ilmansuunnat)  columnspan=2 = monta saraketta grid vie
+    frame1.columnconfigure(2, weight=1)  #venyttää ensin saraketta 2
+    libraryb=tk.Button(frame1, text="Download", command=runSMLD).grid(row=1, column=1, sticky="W")
 
     def cancel():
         with open(os.path.expanduser("~/YTMediaTool/Temp/cancel.txt"), "w") as f:
             f.write("1")
             f.close()
 
-        cancelb.place(x=100, y = 6600)
+        cancelb.grid_forget()
 
-    cancelb=tk.Button(frame, text="Cancel", command=cancel)#.grid(row=30, column=0, sticky="E")
+    cancelb=tk.Button(frame1, text="Cancel", command=cancel)#.grid(row=30, column=0, sticky="E")
 
     def refresh():
         def loop_b():
@@ -194,8 +197,8 @@ def createFrame(window):
             #print(progress)
             f.close()
 
-    tk.Button(frame, text="Refresh progress", command=refresh).grid(row=30, column=2, sticky="E")
+    tk.Button(frame1, text="Refresh progress", command=refresh).grid(row=1, column=4, sticky="E")
 
-    pg = tk.Label(frame, text="Progress: "+ str(progress) + "%")
-    pg.place(x=200, y = 70)
+    pg = tk.Label(frame1, text="Progress: "+ str(progress) + "%")
+    pg.grid(row=1, column=3)
 
