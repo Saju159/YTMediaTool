@@ -17,6 +17,16 @@ def getUserDownloadDir():
 	# fallback to a 'Downloads' directory in the user's home
 	return os.path.expanduser("~/Downloads")
 
+def openDirInFileBrowser(directory: str):
+	if platform == "linux":
+		c = subprocess.run(["which", "xdg-open"], stdout=subprocess.PIPE)
+		if c.returncode == 0:
+			subprocess.run(["xdg-open", directory], stdout=subprocess.PIPE)
+		else:
+			print("xdg-open not found! Can't open directory in system file browser!")
+	elif platform == "win32":
+		subprocess.run(["start", directory], stdout=subprocess.PIPE)
+
 def openFilePicker(window: tk.Tk, dtype: str, **kwargs):
 	window.update() # Prevent program from freezing if root window is killed while file picker is open
 	title = "title" in kwargs and kwargs["title"] or None
