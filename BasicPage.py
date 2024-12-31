@@ -5,6 +5,19 @@ import os
 from sys import platform
 from yt_dlp import YoutubeDL
 
+fileformats = {
+	'Best':	{'video': True, 'audio': True},
+	'mp4':	{'video': True, 'audio': True, 'ext': "mp4"},
+	'm4a':	{'video': False, 'audio': True, 'ext': "m4a"},
+	'webm':	{'video': True, 'audio': True, 'ext': "webm"},
+	'mp3':	{'video': False, 'audio': True, 'ext': "mp3"},
+	'ogg':	{'video': False, 'audio': True, 'ext': "ogg"},
+	'flac':	{'video': False, 'audio': True, 'ext': "flac"},
+	'ogv':	{'video': True, 'audio': True, 'ext': "ogv"},
+	'mkv':	{'video': True, 'audio': True, 'ext': "mkv"},
+	'mov':	{'video': True, 'audio': True, 'ext': "mov"}
+}
+
 def getUserDownloadDir():
 	if platform == "linux":
 		c = subprocess.run(["which", "xdg-user-dir"], stdout=subprocess.PIPE)
@@ -22,21 +35,26 @@ def download(
 	mode: str,
 	downloadInput: str,
 	directory: str,
-	ext: str,
+	inputff: str,
 ):
 	print(f"Downloading '{downloadInput}' to '{directory}'...")
 
-	if len(mode) <= 0 or len(downloadInput) <= 0 or len(directory) <= 0 or len(ext) <= 0: print("Invalid args"); return
+	if len(mode) <= 0 or len(downloadInput) <= 0 or len(directory) <= 0 or len(inputff) <= 0: print("Invalid args"); return
+
+	ff = fileformats[inputff]
 
 	opts = {
 		'verbose': False,
 		'outtmpl': {'default': f"{directory}/%(title)s [%(id)s].%(ext)s"},
-		'format': f"b[ext={ext}]/b",
-		'final_ext': ext,
-		'postprocessors': [
-			{'key': 'FFmpegVideoConvertor', 'preferedformat': ext},
-		]
 	}
+
+	if "ext" in ff:
+		ext = ff["ext"]
+		opts['format'] = f"b[ext={ext}]"
+		opts['final_ext'] = ext,
+		opts['postprocessors'] = [{'key': 'FFmpegVideoConvertor', 'preferedformat': ext}]
+	else:
+		opts["format"] = "b"
 
 	if mode == "url":
 		url = downloadInput
@@ -71,14 +89,7 @@ def createFrame(window):
 	# File format
 	tk.Label(frame, text="Format: ").grid(row=5, column=1, sticky="E")
 
-	fileformats = [
-		"m4a",
-		"mp4",
-		"mp3",
-		"webm"
-	]
-
-	fileformat = tk.StringVar()
+	fileformat = tk.StringVar(value=next(iter(fileformats)))
 
 	fileformatDropdown = tk.OptionMenu(frame, fileformat, *fileformats)
 	fileformatDropdown.grid(row=5, column=2, columnspan=2, sticky="W")
