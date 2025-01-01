@@ -4,7 +4,7 @@ from tkinter import messagebox
 import os
 import os.path
 from multiprocessing import Process
-import time
+
 
 
 global download
@@ -124,13 +124,14 @@ def createFrame(window):
         with open(os.path.expanduser("~/YTMediaTool/Temp/cancel.txt"), "r") as f:
             cancel = f.read()
             if int(cancel) == 0:
-                window.after(5000, refresher)
+                window.after(2000, refresher)
 
             else:
                 print("cancel")
 
             f.close()
 
+        os.system("python SMLDprogressTracker.py")
 
         with open(os.path.expanduser("~/YTMediaTool/Temp/songinfo.txt"), "r") as f:
             filter = "[]'"
@@ -159,7 +160,6 @@ def createFrame(window):
             progress = progress.replace("'", "")
 
             pg.config(text = "Progress: "+ str(progress) + "%")
-            #print(progress)
             f.close()
 
 
@@ -188,7 +188,6 @@ def createFrame(window):
             songinfo1.grid(row=5, column=1, columnspan = 3, sticky="W")
             songinfo3.grid(row=7, column=1, columnspan = 3, sticky="W")
 
-            os.system("python SMLDprogressTracker.py")
 
             def refresher_a():
                 os.system('python SMLD.py')
