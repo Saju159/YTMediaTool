@@ -1,5 +1,6 @@
 import tkinter as tk
 
+
 import os
 
 librarydirectory = os.path.expanduser("~/YTMediaTool/")
@@ -12,6 +13,9 @@ if not os.path.exists(librarydirectory + "Librarylist/"):
 
 if not os.path.exists(librarydirectory + "Downloads/"):
     os.makedirs(librarydirectory + "Downloads/")
+
+with open(os.path.expanduser("~/YTMediaTool/Temp/progress.txt"), "w") as f:
+    f.close()
 
 
 import BasicPage
@@ -51,7 +55,7 @@ def page4():
 def toggle_button(selected):
     current_value.set(selected)
 
-current_value = tk.StringVar(value="None")
+current_value = tk.StringVar(value="Vaihtoehto 1")
 
 button1 = tk.Radiobutton(
     window,
@@ -103,6 +107,7 @@ def quit():
         f.close()
     window.destroy
 
+window.after(1,page1)
 
 window.mainloop()
 quit()

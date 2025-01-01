@@ -255,7 +255,7 @@ def createFrame(window):
 		progressWindow.protocol("WM_DELETE_WINDOW", ignore)
 		progressWindow.mainloop()
 
-	downloadButton = tk.Button(frame, text="Download", bg="yellow", command=downloadf)
+	downloadButton = tk.Button(frame, text="Download", command=downloadf)
 	downloadButton.grid(row=20, column=1, columnspan=3, sticky="E")
 
 	# Mode

@@ -1,19 +1,12 @@
-import tkinter as tk
-from tkinter import filedialog
 from tkinter import messagebox
 import subprocess
 import os
-from sys import platform
 from mutagen.mp4 import MP4
 import os.path
 import time
-from tkinter import filedialog as fd
-import sys
-
-
+from yt_dlp import YoutubeDL
 
 polku3 = (os.getcwd())
-
 
 
 with open(os.path.expanduser("~/YTMediaTool/Temp/downloaddirectory.txt")) as f:
@@ -22,6 +15,10 @@ with open(os.path.expanduser("~/YTMediaTool/Temp/downloaddirectory.txt")) as f:
 
 with open(os.path.expanduser("~/YTMediaTool/Temp/libraryfiledirectory.txt")) as f:
     libraryfiledirectory = f.read()
+    f.close()
+
+with open(os.path.expanduser("~/YTMediaTool/Temp/fileformat.txt")) as f:
+    fileformat= f.read()
     f.close()
 
 
@@ -69,7 +66,6 @@ def suorita_sudo_komennot_tiedostosta(tiedostonimi):
 
             with open(os.path.expanduser("~/YTMediaTool/Temp/cancel.txt"), "r") as f:
                 cancel = f.read()
-                #print(cancel)
                 if int(cancel) == 1:
                     print("cancel")
                     break
@@ -105,6 +101,9 @@ def suorita_sudo_komennot_tiedostosta(tiedostonimi):
                 genre = f"{osat[3]}"
                 rate = f"{osat[4]}"
 
+                with open(os.path.expanduser("~/YTMediaTool/Temp/songinfo.txt"), "w") as f:
+                    f.write(artist + "\n "+ songname + "\n" + albumname)
+                    f.close()
 
                 print("----------------------------------------")
                 print("Downloading:")
@@ -112,8 +111,7 @@ def suorita_sudo_komennot_tiedostosta(tiedostonimi):
                 print("Artist: " + str(artist))
                 print("Song: " + str(songname))
                 print("Albumname: " + str(albumname))
-                #if favorited == "2":
-                # print("This song is in your favorites.")
+
 
             if not komento:  # Ohitetaan tyhjät rivit
                 # Päivitetään tiedosto ilman ensimmäistä riviä
@@ -123,27 +121,25 @@ def suorita_sudo_komennot_tiedostosta(tiedostonimi):
 
 
             if not os.path.isfile(downloaddirectory + artist +"/" +  albumname + "/" + songname + ".m4a"):
-                # Muodostetaan yt-dlp-komento
-                sudo_komento = [
-                    "yt-dlp",
-                    "-f", "ba[ext=m4a]",
-                    "-o", f"{downloaddirectory}{artist}/{albumname}/{songname}.m4a",
-                    f"ytsearch:{komento}",
-                    "--max-downloads", "1"
-                ]
 
-                #print (sudo_komento)
+                vaihtoehdot = {
+                'format': "ba",
+                'max_downloads': 1,
+                'outtmpl': {'default': f"{downloaddirectory}{artist}/{albumname}/{songname}.%(ext)s"},
+                'final_ext' : fileformat,
+                'postprocessors' : [{'key': 'FFmpegVideoConvertor', 'preferedformat': fileformat}]
+                }
+
+                start = time.process_time()
                 try:
 
-                    start = time.process_time()
+                    with YoutubeDL(vaihtoehdot) as ydl:
+                        try:
+                            c = ydl.download(f"ytsearch:{komento}")
+                            print("return code: " + str(c))
 
-                    # Suoritetaan komento
-                    prosessi = subprocess.run(
-                        sudo_komento, check=True, text=True,
-                        stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=os.environ
-                    )
-
-                    print(f"Downloading took: {time.process_time() - start}")
+                        except Exception as e:
+                            print(f"An unexpected error occured e3: {e}")
 
                     # Poistetaan ensimmäinen rivi tiedostosta
                     with open(tiedostonimi, 'w', encoding='utf-8') as tiedosto:
@@ -151,10 +147,12 @@ def suorita_sudo_komennot_tiedostosta(tiedostonimi):
                         continue
 
                 except subprocess.CalledProcessError as e:
+                    print("Virhe: " + str(e))
                     with open(tiedostonimi, 'w', encoding='utf-8') as tiedosto:
                         tiedosto.writelines(jäljellä_olevat_rivit)
 
-                #print(downloaddirectory)
+                print(f"Downloading took: {time.process_time() - start}")
+
                 if os.path.isfile(downloaddirectory + artist +"/" +  albumname + "/" + songname + ".m4a"):
                     print("Files saved")
                 else:
@@ -164,7 +162,6 @@ def suorita_sudo_komennot_tiedostosta(tiedostonimi):
                         log.write(downloaddirectory + artist +"/" +  albumname + "/" + songname + ".m4a  " + "Was not saved as it should have been. The video might be age restricted.")
                         log.write("\n")
                         log.close()
-
 
                 tiedosto = downloaddirectory + artist +"/" +  albumname + "/" + songname + ".m4a"
             else:
@@ -195,7 +192,7 @@ def suorita_sudo_komennot_tiedostosta(tiedostonimi):
                 # Tallenna muutokset
                 audio.save()
 
-                print(f"Metadata added to file: " + downloaddirectory  + artist +"/" +  albumname + "/" + songname + ".m4a")
+                print("Metadata added to file: " + downloaddirectory  + artist +"/" +  albumname + "/" + songname + ".m4a")
             except Exception as e:
                 print(f"Error in updating metadata e2: {e}")
                 with open(os.path.expanduser("~/YTMediaTool/SMLDLog.txt"), 'a', encoding='utf-8') as log:
@@ -215,7 +212,8 @@ def suorita_sudo_komennot_tiedostosta(tiedostonimi):
             log.write("While trying to run command: {sudo_komento}")
             log.close()
 
-        print(sudo_komento)
+        #print(sudo_komento)
+        print(vaihtoehdot)
 
 # Käyttö
 tiedostonimi = os.path.expanduser("~/YTMediaTool/Temp/Songlist.txt")  # Tekstitiedosto, joka sisältää hakusanat
