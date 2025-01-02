@@ -1,4 +1,5 @@
 import tkinter as tk
+import Settings
 
 
 import os
@@ -17,6 +18,7 @@ if not os.path.exists(librarydirectory + "Downloads/"):
 with open(os.path.expanduser("~/YTMediaTool/Temp/progress.txt"), "w") as f:
     f.close()
 
+import SettingsPage # Import settings page before anything else
 
 import BasicPage
 import SMLDpage
@@ -32,25 +34,30 @@ window.configure(bg='gray')
 
 page1frame = BasicPage.createFrame(window)
 page2frame = SMLDpage.createFrame(window)
+page3frame = SettingsPage.createFrame(window)
 
 def page1():
     BasicPage.showPage()
     SMLDpage.hidePage()
+    SettingsPage.hidePage()
 
 def page2():
     toggle_button("Vaihtoehto 2")
     BasicPage.hidePage()
     SMLDpage.showPage()
+    SettingsPage.hidePage()
 
 def page3():
     toggle_button("Vaihtoehto 3")
     BasicPage.hidePage()
     SMLDpage.hidePage()
+    SettingsPage.showPage()
 
 def page4():
     toggle_button("Vaihtoehto 4")
     BasicPage.hidePage()
     SMLDpage.hidePage()
+    SettingsPage.hidePage()
 
 def toggle_button(selected):
     current_value.set(selected)
@@ -106,6 +113,7 @@ def quit():
         f.write("1")
         f.close()
     window.destroy
+    Settings.saveSettingsToFile()
 
 window.after(1,page1)
 
