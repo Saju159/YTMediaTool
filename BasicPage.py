@@ -4,16 +4,17 @@ from yt_dlp import YoutubeDL
 from Common import getUserDownloadDir, openDirInFileBrowser, openFilePicker
 
 fileformats = {
-	'Best':	{'video': True, 'audio': True},
-	'mp4':	{'video': True, 'audio': True, 'ext': "mp4"},
-	'm4a':	{'video': False, 'audio': True, 'ext': "m4a"},
-	'webm':	{'video': True, 'audio': True, 'ext': "webm"},
-	'mp3':	{'video': False, 'audio': True, 'ext': "mp3"},
-	'ogg':	{'video': False, 'audio': True, 'ext': "ogg"},
-	'flac':	{'video': False, 'audio': True, 'ext': "flac"},
-	'ogv':	{'video': True, 'audio': True, 'ext': "ogv"},
-	'mkv':	{'video': True, 'audio': True, 'ext': "mkv"},
-	'mov':	{'video': True, 'audio': True, 'ext': "mov"}
+	'Original':	{'video': True, 'audio': True},
+	'MP4':	{'video': True, 'audio': True, 'ext': "mp4"},
+	'M4A':	{'video': False, 'audio': True, 'ext': "m4a"},
+	'WebM':	{'video': True, 'audio': True, 'ext': "webm"},
+	'MP3':	{'video': False, 'audio': True, 'ext': "mp3"},
+	'Ogg':	{'video': False, 'audio': True, 'ext': "ogg"},
+	'FLAC':	{'video': False, 'audio': True, 'ext': "flac", 'warn': "FLAC does not magically make your audio high-quality, audio is almost always converted from a lossy format to this!"},
+	'WAV':	{'video': False, 'audio': True, 'ext': "wav", 'warn': "WAV files are uncompressed and will result in very large files! Use with caution."},
+	'Theora (ogv)':	{'video': True, 'audio': True, 'ext': "ogv"},
+	'Matroska (mkv)':	{'video': True, 'audio': True, 'ext': "mkv"},
+	'QuickTime Movie (mov)':	{'video': True, 'audio': True, 'ext': "mov"}
 }
 
 videoqualities = {
@@ -152,6 +153,8 @@ def createFrame(window):
 		else:
 			dlvideoCheckbox.config(state="disabled")
 			vqDropdown.grid_forget(); vqLabel.grid_forget()
+		if "warn" in ff:
+			tk.messagebox.showwarning("Warning", ff["warn"]) # FIXME make this into a button next to the format dropdown instead of a popup
 
 	fileformatDropdown = tk.OptionMenu(ffFrame, fileformat, *fileformats, command=lambda _: ffselection())
 	fileformatDropdown.grid(row=1, column=1, sticky="W")
