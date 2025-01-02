@@ -77,12 +77,11 @@ def download(
 
 	if "ext" in ff:
 		ext = ff["ext"]
-		opts['final_ext'] = ext,
-		opts['postprocessors'] = [{'key': 'FFmpegVideoConvertor', 'preferedformat': ext}]
+		opts['final_ext'] = ext
+		if dlvideo:
+			opts['postprocessors'] = [{'key': 'FFmpegVideoRemuxer', 'preferedformat': ext}]
 
-	if "res" in vq:
-		print(inputvq)
-		print("test test")
+	if dlvideo and "res" in vq:
 		print(f'res:{vq["res"]}')
 		opts['format_sort'] = [f'res:{vq["res"]}']
 
@@ -99,7 +98,7 @@ def download(
 			print("return code: " + str(c))
 			return "success", None
 		except Exception as err:
-			print("--- Exception in ydl.download() ---")
+			print("--- Exception in ydl.download() ---\n"+str(err))
 			return "unknownException", err
 
 def createFrame(window):
@@ -213,12 +212,15 @@ def createFrame(window):
 		def ignore(): pass
 
 		def progress_hook(d):
-			if d['status'] == "downloading":
-				downloadPercent = d['downloaded_bytes']/(d['total_bytes'] or 1)
-				pLabel.config(text="Downloading...")
-				pProgressLabel.config(text="Progress: ")
-				pProgressAmount.config(text=f"{math.floor(downloadPercent*100)}%")
-				progressWindow.update()
+			try:
+				if d['status'] == "downloading":
+					downloadPercent = d['downloaded_bytes']/(d['total_bytes'] or 1)
+					pLabel.config(text="Downloading...")
+					pProgressLabel.config(text="Progress: ")
+					pProgressAmount.config(text=f"{math.floor(downloadPercent*100)}%")
+					progressWindow.update()
+			except Exception as err:
+				print("Error in progress hook:\n"+str(err))
 
 		def downloadFunc():
 			progressWindow.update()
