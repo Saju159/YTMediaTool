@@ -99,7 +99,6 @@ def createFrame(window):
 		tk.Label(frame, text="\n ").grid(row=nextRow)
 		nextRow += 1
 
-	addLabel("Global settings:")
 	addFilePathOption("FFmpeg_path", "Path to FFmpeg executable")
 	addLabel("FFmpeg is required to convert downloaded media from it's source format to the selected one.")
 	addHyperlink("Get binaries from https://www.ffmpeg.org/download.html", "https://www.ffmpeg.org/download.html")
