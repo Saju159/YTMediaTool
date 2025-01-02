@@ -78,8 +78,7 @@ def download(
 	if "ext" in ff:
 		ext = ff["ext"]
 		opts['final_ext'] = ext
-		if dlvideo:
-			opts['postprocessors'] = [{'key': 'FFmpegVideoRemuxer', 'preferedformat': ext}]
+		opts['postprocessors'] = [{'key': 'FFmpegVideoConvertor', 'preferedformat': ext}]
 
 	if dlvideo and "res" in vq:
 		print(f'res:{vq["res"]}')
