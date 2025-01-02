@@ -3,9 +3,9 @@ from Common import openFilePicker
 from tkinter import messagebox
 import os
 import os.path
-from multiprocessing import Process
 import SMLDprogressTracker
 import SMLD
+import threading
 
 
 
@@ -176,10 +176,10 @@ def createFrame(window):
         else:
             print("Päällä")
             def smld_a():
-                SMLD.runsmld()()
+                SMLD.runsmld()
 
-            process1 = Process(target=smld_a)
-            process1.start()
+            smld_b = threading.Thread(target=smld_a)
+            smld_b.start()
 
 
     def setupSMLD():
