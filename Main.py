@@ -23,19 +23,7 @@ with open(os.path.expanduser("~/YTMediaTool/Temp/cancel.txt"), "w") as f:
     f.write("0")
     f.close()
 
-#luo uudet tiedostot jos niitä ei ole:
 
-if not os.path.isfile(os.path.expanduser("~/YTMediaTool/Temp/downloaddirectory.txt")):
-    with open(os.path.expanduser("~/YTMediaTool/Temp/downloaddirectory.txt"), "w") as f:
-        f.close()
-
-if not os.path.isfile(os.path.expanduser("~/YTMediaTool/Temp/libraryfiledirectory.txt")):
-    with open(os.path.expanduser("~/YTMediaTool/Temp/libraryfiledirectory.txt"), "w") as f:
-        f.close()
-
-if not os.path.isfile(os.path.expanduser("~/YTMediaTool/Temp/fileformat.txt")):
-    with open(os.path.expanduser("~/YTMediaTool/Temp/fileformat.txt"), "w") as f:
-        f.close()
 
 import BasicPage
 import SMLDpage
