@@ -17,6 +17,20 @@ def getUserDownloadDir():
 	# fallback to a 'Downloads' directory in the user's home
 	return os.path.expanduser("~/Downloads")
 
+def getBaseConfigDir():
+	configPath = "~/.YTMediaTool/" # Fallback if not linux or windows
+	if platform == "linux":
+		configPath = os.environ.get('XDG_CONFIG_HOME') and os.path.join(os.environ.get('XDG_CONFIG_HOME'), "YTMediaTool/") or "~/.config/YTMediaTool/"
+	elif platform == "win32":
+		configPath = "~\\AppData\\Local\\Roaming\\YTMediaTool"
+
+	configPath = os.path.expanduser(configPath)
+	print("Config path: "+configPath)
+	if not os.path.exists(configPath):
+		print("Config dir doesn't exist! Creating...")
+		os.makedirs(configPath)
+	return configPath
+
 def openDirInFileBrowser(directory: str):
 	if platform == "linux":
 		c = subprocess.run(["which", "xdg-open"], stdout=subprocess.PIPE)
