@@ -5,6 +5,7 @@ from mutagen.mp4 import MP4
 import os.path
 import time
 from yt_dlp import YoutubeDL
+from Settings import Settings
 
 polku3 = (os.getcwd())
 
@@ -129,6 +130,9 @@ def suorita_sudo_komennot_tiedostosta(tiedostonimi):
                 'final_ext' : fileformat,
                 'postprocessors' : [{'key': 'FFmpegVideoConvertor', 'preferedformat': fileformat}]
                 }
+
+                if "FFmpeg_path" in Settings:
+                    vaihtoehdot["ffmpeg_location"] = Settings["FFmpeg_path"]
 
                 start = time.process_time()
                 try:

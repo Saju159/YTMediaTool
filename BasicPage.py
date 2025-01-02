@@ -2,6 +2,7 @@ import os, math
 import tkinter as tk
 from yt_dlp import YoutubeDL
 from Common import getUserDownloadDir, openDirInFileBrowser, openFilePicker
+from Settings import Settings
 
 fileformats = {
 	'Original':	{'video': True, 'audio': True},
@@ -10,7 +11,7 @@ fileformats = {
 	'WebM':	{'video': True, 'audio': True, 'ext': "webm"},
 	'MP3':	{'video': False, 'audio': True, 'ext': "mp3"},
 	'Ogg':	{'video': False, 'audio': True, 'ext': "ogg"},
-	'FLAC':	{'video': False, 'audio': True, 'ext': "flac", 'warn': "FLAC does not magically make your audio high-quality, audio is almost always converted from a lossy format to this!"},
+	'FLAC':	{'video': False, 'audio': True, 'ext': "flac", 'warn': "Downloading to FLAC does not magically make your audio high-quality, as audio is almost always converted from a lossy format to this!"},
 	'WAV':	{'video': False, 'audio': True, 'ext': "wav", 'warn': "WAV files are uncompressed and will result in very large files! Use with caution."},
 	'Theora (ogv)':	{'video': True, 'audio': True, 'ext': "ogv"},
 	'Matroska (mkv)':	{'video': True, 'audio': True, 'ext': "mkv"},
@@ -60,6 +61,9 @@ def download(
 
 	if ff["video"] == False: dlvideo = False
 	if ff["audio"] == False: dlaudio = False
+
+	if "FFmpeg_path" in Settings:
+		opts["ffmpeg_location"] = Settings["FFmpeg_path"]
 
 	if dlvideo and dlaudio:
 		opts["format"] = "bv*+ba/b"
@@ -248,9 +252,11 @@ def createFrame(window):
 				tk.messagebox.showerror("Download error", dText)
 			elif success:
 				window.update()
-				answer = tk.messagebox.askyesno("Download finished", "Download finished.\nOpen destination directory?")
-				if answer == True:
-					openDirInFileBrowser(dirSV.get())
+				print("Download success!")
+				if Settings["BasicPage-ShowDialogAfterDLSuccess"] == True:
+					answer = tk.messagebox.askyesno("Download finished", "Download finished.\nOpen destination directory?")
+					if answer == True:
+						openDirInFileBrowser(dirSV.get())
 
 		progressWindow.grab_set()
 		progressWindow.transient(window)
