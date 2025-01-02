@@ -46,11 +46,6 @@ def createFrame(window):
 		nextRow += 1
 		return label
 
-	def addHyperlink(text, url):
-		label = addLabel(text)
-		label.config(text=text, fg="blue", cursor="hand2")
-		label.bind("<Button-1>", lambda e: openInBrowser(url))
-
 	def addFilePathOption(optId, text):
 		nonlocal nextRow
 		tk.Label(frame, text=f"{text}: ").grid(row=nextRow, column=1, sticky="E")
@@ -100,8 +95,7 @@ def createFrame(window):
 		nextRow += 1
 
 	addFilePathOption("FFmpeg_path", "Path to FFmpeg executable")
-	addLabel("FFmpeg is required to convert downloaded media from it's source format to the selected one.")
-	addHyperlink("Get binaries from https://www.ffmpeg.org/download.html", "https://www.ffmpeg.org/download.html")
+	addLabel("FFmpeg is required for merging the downloaded video + audio and for converting formats.\nGet binaries from https://www.ffmpeg.org/download.html")
 
 	addSpacer()
 	addLabel("Settings for 'Basic' tab:")
