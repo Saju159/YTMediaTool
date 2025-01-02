@@ -7,70 +7,79 @@ import time
 from yt_dlp import YoutubeDL
 from Settings import Settings
 
-polku3 = (os.getcwd())
 
 
-with open(os.path.expanduser("~/YTMediaTool/Temp/downloaddirectory.txt")) as f:
-    downloaddirectory = f.read()
-    f.close()
-
-with open(os.path.expanduser("~/YTMediaTool/Temp/libraryfiledirectory.txt")) as f:
-    libraryfiledirectory = f.read()
-    f.close()
-
-with open(os.path.expanduser("~/YTMediaTool/Temp/fileformat.txt")) as f:
-    fileformat= f.read()
-    f.close()
+def setupSMLD():
+    global polku3
+    polku3 = (os.getcwd())
 
 
-print(f"Download Directory: {downloaddirectory}")
-print(f"Library Directory: {libraryfiledirectory}")
+    with open(os.path.expanduser("~/YTMediaTool/Temp/downloaddirectory.txt")) as f:
+        global downloaddirectory
+        downloaddirectory = f.read()
+        f.close()
+
+    with open(os.path.expanduser("~/YTMediaTool/Temp/libraryfiledirectory.txt")) as f:
+        libraryfiledirectory = f.read()
+        f.close()
+
+    with open(os.path.expanduser("~/YTMediaTool/Temp/fileformat.txt")) as f:
+        global fileformat
+        fileformat= f.read()
+        f.close()
 
 
-playlistfile = (downloaddirectory + "Favorites.m3u")
+    print(f"Download Directory: {downloaddirectory}")
+    print(f"Library Directory: {libraryfiledirectory}")
 
-with open(playlistfile, 'w', encoding='utf-8') as f2:
-    f2.write("#EXTM3U")
-    f2.write("\n")
-    f2.close()
+    global playlistfile
+    playlistfile = (downloaddirectory + "Favorites.m3u")
 
-try:
-    with open(libraryfiledirectory, 'r', encoding='utf-8') as tiedosto:
-        rivit = tiedosto.readlines()
+    with open(playlistfile, 'w', encoding='utf-8') as f2:
+        f2.write("#EXTM3U")
+        f2.write("\n")
+        f2.close()
 
-    with open((os.path.expanduser("~/YTMediaTool/Temp/Songlist.txt")), 'w', encoding='utf-8') as tiedosto:
-        for rivi in rivit:
-            osat = rivi.split('\t')  # Käytetään kahta tabulaattoria erottimena
-            if len(osat) > 4:  # Tarkistetaan, että riittävästi osia löytyy
-                uusi_rivi = f"{osat[0]}\t{osat[3]}\t{osat[4]}\t{osat[5]}\t{osat[6]}\n"  # Ensimmäinen ja kolmas osa
-                tiedosto.write(uusi_rivi)
-
-    print("File saved successfully.")
-except Exception as e:
-    print(f"An error occured: {e}")
-    messagebox.showinfo("An error occured", e)
-
-
-#Poistetaan tyhjät rivit:
-
-with open(os.path.expanduser("~/YTMediaTool/Temp/Songlist.txt"), 'r', encoding='utf-8') as file:
-    lines = file.readlines()
-non_empty_lines = [line for line in lines if line.strip()]
-with open(os.path.expanduser("~/YTMediaTool/Temp/Songlist.txt"), 'w', encoding='utf-8') as file:
-    file.writelines(non_empty_lines)
-    file.close()
-
-
-def suorita_sudo_komennot_tiedostosta(tiedostonimi):
     try:
-        while True:
+        with open(libraryfiledirectory, 'r', encoding='utf-8') as tiedosto:
+            rivit = tiedosto.readlines()
 
-            with open(os.path.expanduser("~/YTMediaTool/Temp/cancel.txt"), "r") as f:
-                cancel = f.read()
-                if int(cancel) == 1:
-                    print("cancel")
-                    break
-                f.close()
+        with open((os.path.expanduser("~/YTMediaTool/Temp/Songlist.txt")), 'w', encoding='utf-8') as tiedosto:
+            for rivi in rivit:
+                osat = rivi.split('\t')  # Käytetään kahta tabulaattoria erottimena
+                if len(osat) > 4:  # Tarkistetaan, että riittävästi osia löytyy
+                    uusi_rivi = f"{osat[0]}\t{osat[3]}\t{osat[4]}\t{osat[5]}\t{osat[6]}\n"  # Ensimmäinen ja kolmas osa
+                    tiedosto.write(uusi_rivi)
+
+        print("File saved successfully.")
+    except Exception as e:
+        print(f"An error occured: {e}")
+        messagebox.showinfo("An error occured", e)
+
+    #Poistetaan tyhjät rivit:
+
+    with open(os.path.expanduser("~/YTMediaTool/Temp/Songlist.txt"), 'r', encoding='utf-8') as file:
+        lines = file.readlines()
+    non_empty_lines = [line for line in lines if line.strip()]
+    with open(os.path.expanduser("~/YTMediaTool/Temp/Songlist.txt"), 'w', encoding='utf-8') as file:
+        file.writelines(non_empty_lines)
+        file.close()
+
+
+def runsmld():
+    global downloaddirectory, vaihtoehdot, fileformat, polku3
+    while True:
+        time.sleep(0.05)
+        with open(os.path.expanduser("~/YTMediaTool/Temp/cancel.txt"), "r") as f:
+            cancel = f.read()
+            f.close()
+        if int(cancel) == 1:
+            print("cancel")
+            break
+
+        f.close()
+        tiedostonimi = os.path.expanduser("~/YTMediaTool/Temp/Songlist.txt")
+        try:
 
             # Luetaan tiedoston ensimmäinen rivi
             with open(tiedostonimi, 'r', encoding='utf-8') as tiedosto:
@@ -94,6 +103,9 @@ def suorita_sudo_komennot_tiedostosta(tiedostonimi):
 
             osat = komento2.split('\t')
             if len(osat) > 2:
+                global albumname
+                global songname
+                global artist
                 songname = f"{osat[0]}"
                 artist = f"{osat[1]}"
                 albumname2 = f"{osat[2]}"
@@ -122,7 +134,7 @@ def suorita_sudo_komennot_tiedostosta(tiedostonimi):
 
 
             if not os.path.isfile(downloaddirectory + artist +"/" +  albumname + "/" + songname + ".m4a"):
-
+                global vaihtoehdot
                 vaihtoehdot = {
                 'format': "ba",
                 'max_downloads': 1,
@@ -148,7 +160,6 @@ def suorita_sudo_komennot_tiedostosta(tiedostonimi):
                     # Poistetaan ensimmäinen rivi tiedostosta
                     with open(tiedostonimi, 'w', encoding='utf-8') as tiedosto:
                         tiedosto.writelines(jäljellä_olevat_rivit)
-                        continue
 
                 except subprocess.CalledProcessError as e:
                     print("Virhe: " + str(e))
@@ -175,6 +186,7 @@ def suorita_sudo_komennot_tiedostosta(tiedostonimi):
                 # Poistetaan ensimmäinen rivi tiedostosta
                 with open(tiedostonimi, 'w', encoding='utf-8') as tiedosto:
                     tiedosto.writelines(jäljellä_olevat_rivit)
+                continue
 
                 tiedosto = downloaddirectory + artist +"/" +  albumname + "/" + songname + ".m4a"
 
@@ -205,20 +217,15 @@ def suorita_sudo_komennot_tiedostosta(tiedostonimi):
                     log.close()
 
 
-    except FileNotFoundError:
-        messagebox.showinfo("File not found", f"File: '{tiedostonimi}' cannot be found.")
-        #print(f"Tiedostoa '{tiedostonimi}' ei löydy.")
-    except Exception as e:
-        print(f"An unexpected error occured e1: {e}")
-        with open(os.path.expanduser("~/YTMediaTool/SMLDLog.txt"), 'a', encoding='utf-8') as log:
-            log.write("Error: " + str(e))
-            log.write("\n")
-            log.write("While trying to run command: {sudo_komento}")
-            log.close()
+        except FileNotFoundError:
+            messagebox.showinfo("File not found", f"File: '{tiedostonimi}' cannot be found.")
+            #print(f"Tiedostoa '{tiedostonimi}' ei löydy.")
+        except Exception as e:
+            print(f"An unexpected error occured e1: {e}")
+            with open(os.path.expanduser("~/YTMediaTool/SMLDLog.txt"), 'a', encoding='utf-8') as log:
+                log.write("Error: " + str(e))
+                log.write("\n")
+                log.write("While trying to run command: {sudo_komento}")
+                log.close()
 
-        #print(sudo_komento)
-        print(vaihtoehdot)
 
-# Käyttö
-tiedostonimi = os.path.expanduser("~/YTMediaTool/Temp/Songlist.txt")  # Tekstitiedosto, joka sisältää hakusanat
-suorita_sudo_komennot_tiedostosta(tiedostonimi)

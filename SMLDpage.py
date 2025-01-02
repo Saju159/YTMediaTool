@@ -4,6 +4,8 @@ from tkinter import messagebox
 import os
 import os.path
 from multiprocessing import Process
+import SMLDprogressTracker
+import SMLD
 
 
 
@@ -123,15 +125,15 @@ def createFrame(window):
     def refresher():
         with open(os.path.expanduser("~/YTMediaTool/Temp/cancel.txt"), "r") as f:
             cancel = f.read()
-            if int(cancel) == 0:
-                window.after(2000, refresher)
+            if int(cancel) == 1:
+                print("cancel")
 
             else:
-                print("cancel")
+                window.after(2000, refresher)
 
             f.close()
 
-        os.system("python SMLDprogressTracker.py")
+        SMLDprogressTracker.trackprogress()
 
         with open(os.path.expanduser("~/YTMediaTool/Temp/songinfo.txt"), "r") as f:
             filter = "[]'"
@@ -159,12 +161,33 @@ def createFrame(window):
             progress = progress.replace("]", "")
             progress = progress.replace("'", "")
 
+            print(progress)
             pg.config(text = "Progress: "+ str(progress) + "%")
             f.close()
 
 
     def runSMLD():
+        print("run")
+        with open(os.path.expanduser("~/YTMediaTool/Temp/cancel.txt"), "r") as f:
+            cancel = f.read()
+            f.close()
+        if int(cancel) == 1:
+            print("cancel")
+        else:
+            print("Päällä")
+            def smld_a():
+                SMLD.runsmld()()
+
+            process1 = Process(target=smld_a)
+            process1.start()
+
+
+    def setupSMLD():
+        SMLD.setupSMLD()
         global process1
+        global smld_a
+        window.after(100, runSMLD)
+
         if os.path.isfile(librarydirectory1):
             cancelb.grid(row=1, column=2, sticky="W")
             pg.grid(row=1, column=3)
@@ -189,23 +212,14 @@ def createFrame(window):
             songinfo3.grid(row=7, column=1, columnspan = 3, sticky="W")
 
 
-            def refresher_a():
-                os.system('python SMLD.py')
-
-
-            process1 = Process(target=refresher_a)
-            process1.start()
-
             window.after(1, refresher)
 
         else:
             messagebox.showinfo("File not found", "File cannot be found or it doesn't exist. Please enter a valid file path.")
 
-    #runSMLD = subprocess.run(['python', 'SMLD.py', arg1, arg2])
     frame1 = tk.Frame(frame)
     frame1.grid(row=4, column=1, sticky="WE", columnspan=4)    #sticky="W" = tasaus west (ilmansuunnat)  columnspan=2 = monta saraketta grid vie
-    #frame1.columnconfigure(2, weight=1)  #venyttää ensin saraketta 2
-    tk.Button(frame1, text="Download", command=runSMLD).grid(row=1, column=1, sticky="W")
+    tk.Button(frame1, text="Download", command=setupSMLD).grid(row=1, column=1, sticky="W")
 
     def cancel():
         with open(os.path.expanduser("~/YTMediaTool/Temp/cancel.txt"), "w") as f:
@@ -220,15 +234,6 @@ def createFrame(window):
 
     cancelb=tk.Button(frame1, text="Cancel", command=cancel)#.grid(row=30, column=0, sticky="E")
 
-   # def refresh():
-    #    def refresher_b():
-     #       os.system("python SMLDprogressTracker.py")
-      #  Process(target=refresher_b).start()
-
-
-
-    #tk.Button(frame1, text="Refresh progress", command=refresh).grid(row=1, column=4, sticky="E")
-
     pg = tk.Label(frame1, text="Progress: "+ str(progress) + "%")
 
 
@@ -238,10 +243,3 @@ def createFrame(window):
     songinfo2 = tk.Label(frame)
 
     songinfo3 = tk.Label(frame)
-
-
-
-
-
-
-

@@ -19,6 +19,9 @@ with open(os.path.expanduser("~/YTMediaTool/Temp/progress.txt"), "w") as f:
     f.close()
 
 import SettingsPage # Import settings page before anything else
+with open(os.path.expanduser("~/YTMediaTool/Temp/cancel.txt"), "w") as f:
+            f.write("0")
+            f.close()
 
 import BasicPage
 import SMLDpage
