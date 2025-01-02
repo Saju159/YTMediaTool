@@ -68,6 +68,17 @@ def setupSMLD():
 
 def runsmld():
     global downloaddirectory, vaihtoehdot, fileformat, polku3
+
+    with open(os.path.expanduser("~/YTMediaTool/Temp/downloaddirectory.txt")) as f:
+        global downloaddirectory
+        downloaddirectory = f.read()
+        f.close()
+
+    with open(os.path.expanduser("~/YTMediaTool/Temp/fileformat.txt")) as f:
+        global fileformat
+        fileformat= f.read()
+        f.close()
+
     while True:
         time.sleep(0.05)
         with open(os.path.expanduser("~/YTMediaTool/Temp/cancel.txt"), "r") as f:

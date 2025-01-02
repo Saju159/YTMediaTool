@@ -183,7 +183,6 @@ def createFrame(window):
 
 
     def setupSMLD():
-        SMLD.setupSMLD()
         global process1
         global smld_a
         window.after(100, runSMLD)
@@ -206,6 +205,8 @@ def createFrame(window):
             with open(os.path.expanduser("~/YTMediaTool/Temp/fileformat.txt"), "w") as f:
                 f.write(fileformat.get())
                 f.close()
+
+            SMLD.setupSMLD()
 
             songinfo2.grid(row=6, column=1, columnspan = 3, sticky="W")
             songinfo1.grid(row=5, column=1, columnspan = 3, sticky="W")
