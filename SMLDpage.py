@@ -47,7 +47,7 @@ def createFrame(window):
     frame = tk.Frame(window, width=600, height=380)
     frame.columnconfigure(2, weight=1)
 
-    global showPage, hidePage
+    global showPage, hidePage, cancel
     def hidePage():
         frame.place_forget()
     def showPage():
@@ -127,12 +127,22 @@ def createFrame(window):
 
 
     def refresher():
+        global cancel
         with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "r") as f:
-            cancel = f.read()
-            if int(cancel) == 1:
+            cancel1 = f.read()
+            if int(cancel1) == 1:
                 print("cancel")
             else:
+                with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Done.txt"), "r") as f:
+                    done = f.read()
+                    f.close()
+                    if done == "1":
+                        cancel()
+                        print("Done")
                 window.after(2000, refresher)
+
+
+
             f.close()
 
         SMLDprogressTracker.trackprogress()
@@ -205,6 +215,9 @@ def createFrame(window):
         global smld_a
         window.after(100, runSMLD)
 
+        with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Done.txt"), 'w') as f:
+            f.write("0")
+            f.close()
 
         if os.path.isfile(librarydirectory1):
             cancelb.grid(row=1, column=3, sticky="W")

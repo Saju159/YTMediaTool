@@ -143,7 +143,10 @@ def runsmld():
 
             if not rivit:  # Lopeta, jos tiedosto on tyhjä
                 print("File is empty. No more files to add.")
+                with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Done.txt"), 'w') as f:
+                    f.write("1")
                 messagebox.showinfo("Done", "Downloading has been completed")
+
                 break
 
             # Ota ensimmäinen rivi ja poista se tiedoston riveistä
