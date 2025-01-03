@@ -57,28 +57,24 @@ def createFrame(window):
 
     print (librarydirectory)
 
-    def sellibdir():
-        global librarydirectory
-        picked_dir = openFilePicker(window, "openDir")
-        if picked_dir:
-            librarydirectory = picked_dir
-
-        if not librarydirectory:
-            librarydirectory = "~/YTMediaTool/Downloads/"
-
-        lm = tk.Label(frame, text = "Nykyinen kirjastokansio: " + librarydirectory)
-        lm.config(font =("Courier", 14))
-        lm.place(x=5, y = 5)
-
+    # def sellibdir():
+    #     global librarydirectory
+    #     picked_dir = openFilePicker(window, "openDir")
+    #     if picked_dir:
+    #         librarydirectory = picked_dir
+    #
+    #     if not librarydirectory:
+    #         librarydirectory = "~/YTMediaTool/Downloads/"
 
     def seldownloaddir1():
-        global downloaddirectory
+        global downloaddirectory1
         picked_dir = openFilePicker(window, "openDir")
+        print(downloaddirectory1)
         if picked_dir:
             downloaddirectory1 = picked_dir
 
-        if not downloaddirectory1:
-            downloaddirectory1 = os.path.expanduser("~/YTMediaTool/Downloads/")
+        # if not downloaddirectory1:
+        #     downloaddirectory1 = os.path.expanduser("~/YTMediaTool/Downloads/")
 
     def sellibrarydirectory():
         global librarydirectory1
@@ -97,12 +93,12 @@ def createFrame(window):
     dirInputBox = tk.Entry(frame, textvariable=downloaddirectory2)
     dirInputBox.grid(row=1, column=2, sticky="WE")
 
-    def seldir():
-        picked_dir = openFilePicker(window, "openDir")
-        if picked_dir:
-            downloaddirectory2.set(picked_dir)
+    # def seldir():
+    #     picked_dir = openFilePicker(window, "openDir")
+    #     if picked_dir:
+    #         downloaddirectory2.set(picked_dir)
 
-    selectDirButton = tk.Button(frame, text="Browse...", command=seldir)
+    selectDirButton = tk.Button(frame, text="Browse...", command=seldownloaddir1)
     selectDirButton.grid(row=1, column=3)
 
 
@@ -117,16 +113,19 @@ def createFrame(window):
     selectDirButton = tk.Button(frame, text="Browse...", command=sellibrarydirectory)
     selectDirButton.grid(row=2, column=3)
 
-    downloaddirectory = downloaddirectory1
-
     openlink = tk.Button(frame, text="Open .csv tool", command=lambda: openInBrowser("https://www.tunemymusic.com/transfer"))
     openlink.grid(row=3, column=2, sticky="W")
 
-    info = tk.Label(frame, text="\n SMLD is a tool designed to download large amounts of audio files from YouTube. Currently it works with iTunes and Spotify playlists. Select .csv files with the library list directory picker and use the .csv tool to make them.", wraplength = 500 )
+    info = tk.Label(frame, text="\n SMLD is a tool designed to download large amounts of audio files from YouTube. Currently it works with iTunes and Spotify playlists. Select .csv files with the library list directory picker and use the .csv tool to make them. Metadata is only added to .m4a files.", wraplength = 500 )
     info.grid(row=8, column=1, columnspan = 3)
 
 
     def refresher():
+        librarydirectory1 = os.path.expanduser("~/YTMediaTool/")
+
+        if not os.path.exists(librarydirectory1 + "Downloads/"):
+            os.makedirs(librarydirectory1 + "Downloads/")
+
         global cancel
         with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "r") as f:
             cancel1 = f.read()
@@ -140,8 +139,6 @@ def createFrame(window):
                         cancel()
                         print("Done")
                 window.after(2000, refresher)
-
-
 
             f.close()
 

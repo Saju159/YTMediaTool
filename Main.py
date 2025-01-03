@@ -5,10 +5,6 @@ from Common import getBaseConfigDir
 
 import os
 
-librarydirectory = os.path.expanduser("~/YTMediaTool/")
-
-if not os.path.exists(librarydirectory + "Downloads/"):
-    os.makedirs(librarydirectory + "Downloads/")
 
 if not os.path.exists(os.path.join(getBaseConfigDir(),"SMLD")):
     os.makedirs(os.path.join(getBaseConfigDir(),"SMLD"))

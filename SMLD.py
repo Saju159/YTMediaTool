@@ -99,7 +99,7 @@ def setupSMLD():
         with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
             log.write("Error: " + str(e))
             log.write("\n")
-            log.write("While trying to download: {downloaddirectory} {artist} {albumname} {songname}")
+            log.write(f"While trying to download: {downloaddirectory} {artist} {albumname} {songname}")
             log.close()
 
     #Poistetaan tyhjät rivit:
@@ -206,12 +206,12 @@ def runsmld():
                 continue
 
 
-            if not os.path.isfile(downloaddirectory + artist +"/" +  albumname + "/" + songname + ".m4a"):
+            if not os.path.isfile(downloaddirectory + artist +"/" +  albumname + "/" + songname + "." + fileformat):
                 global vaihtoehdot
                 vaihtoehdot = {
                 'format': "ba",
                 'max_downloads': 1,
-                'outtmpl': {'default': f"{downloaddirectory}{artist}/{albumname}/{songname}.%(ext)s"},
+                'outtmpl': {'default': os.path.join(getBaseConfigDir(), downloaddirectory, artist,albumname, songname + ".%(ext)s")},
                 'final_ext' : fileformat,
                 'postprocessors' : [{'key': 'FFmpegVideoConvertor', 'preferedformat': fileformat}]
                 }
@@ -234,7 +234,7 @@ def runsmld():
                                 with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
                                     log.write(f"Failed to download: {artist} {albumname} {songname} Video is age-restricted.")
                                     log.write("\n")
-                                    log.write(e)
+                                    #log.write(str(e))
                                     log.write("\n")
                                     log.close()
 
@@ -249,13 +249,13 @@ def runsmld():
 
                 print(f"Downloading took: {time.process_time() - start}")
 
-                if os.path.isfile(downloaddirectory + artist +"/" +  albumname + "/" + songname + ".m4a"):
+                if os.path.isfile(downloaddirectory + artist +"/" +  albumname + "/" + songname + "." + fileformat):
                     print("Files saved")
                 else:
 
                     print("The file was not saved due to an unknown error. The video might be age restricted.")
 
-                tiedosto = downloaddirectory + artist +"/" +  albumname + "/" + songname + ".m4a"
+                tiedosto = os.path.join(getBaseConfigDir(), downloaddirectory, artist,albumname, songname + "." + fileformat)
             else:
 
                 print ("This file is already in your library.")
@@ -265,34 +265,37 @@ def runsmld():
                     tiedosto.writelines(jäljellä_olevat_rivit)
                 continue
 
-                tiedosto = downloaddirectory + artist +"/" +  albumname + "/" + songname + ".m4a"
+                tiedosto = os.path.join(getBaseConfigDir(), downloaddirectory, artist,albumname, songname + "." + fileformat)
 
             if rate == "2":
                 with open(playlistfile, 'a', encoding='utf-8') as playlist:
-                    playlist.write(artist +"/" +  albumname + "/" + songname + ".m4a")
+                    playlist.write(artist +"/" +  albumname + "/" + songname + "." + fileformat)
                     playlist.write("\n")
                     playlist.close()
     #Metadata:
-            try:
-                # Lataa M4A-tiedosto
-                audio = MP4(tiedosto)
+            if fileformat == "m4a":
+                print("m4a detected")
+                try:
+                    # Lataa M4A-tiedosto
+                    audio = MP4(tiedosto)
 
-                # Lisää metatiedot
-                audio["\xa9alb"] = albumname  # Albumin nimi
-                audio["\xa9ART"] = artist  # Artistin nimi
-                audio["\xa9gen"] = genre
+                    # Lisää metatiedot
+                    audio["\xa9alb"] = albumname  # Albumin nimi
+                    audio["\xa9ART"] = artist  # Artistin nimi
+                    audio["\xa9gen"] = genre
 
-                # Tallenna muutokset
-                audio.save()
+                    # Tallenna muutokset
+                    audio.save()
 
-                print("Metadata added to file: " + downloaddirectory  + artist +"/" +  albumname + "/" + songname + ".m4a")
-            except Exception as e:
-                print(f"Error in updating metadata e2: {e}")
-                with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
-                    log.write("Mutagen error: " + str(e))
-                    log.write("\n")
-                    log.close()
-
+                    print("Metadata added to file: " + downloaddirectory  + artist +"/" +  albumname + "/" + songname + "." + fileformat)
+                except Exception as e:
+                    print(f"Error in updating metadata e2: {e}")
+                    with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
+                        log.write("Mutagen error: " + str(e) + artist + albumname + songname + "." + fileformat)
+                        log.write("\n")
+                        log.close()
+            else:
+                print("File is not a m4a. Skipping metadata.")
 
         except FileNotFoundError:
             messagebox.showinfo("File not found", f"File: '{tiedostonimi}' cannot be found.")
@@ -302,7 +305,7 @@ def runsmld():
             with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
                 log.write("Main loop error: " + str(e))
                 log.write("\n")
-                log.write("While trying to download: {downloaddirectory} {artist} {albumname} {songname}")
+                log.write(f"While trying to download: {downloaddirectory} {artist} {albumname} {songname}")
                 log.close()
 
 
