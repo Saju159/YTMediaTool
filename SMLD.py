@@ -104,7 +104,7 @@ def setupSMLD():
 
 
 def runsmld():
-    global downloaddirectory, vaihtoehdot, fileformat, polku3, spotify, albumname, songname, artist
+    global downloaddirectory, vaihtoehdot, fileformat, polku3, filetype, albumname, songname, artist
 
     with open(os.path.expanduser("~/YTMediaTool/Temp/downloaddirectory.txt")) as f:
         global downloaddirectory

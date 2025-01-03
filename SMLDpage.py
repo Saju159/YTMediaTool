@@ -6,6 +6,7 @@ import os.path
 import SMLDprogressTracker
 import SMLD
 import threading
+from webbrowser import open_new_tab as openInBrowser
 
 #Website: https://www.tunemymusic.com/transfer
 
@@ -14,6 +15,7 @@ global downloaddirectory
 #getprogress = None
 global getprogress
 process1 = None
+
 
 librarydirectory, download = None, None
 downloaddirectory1 = os.path.expanduser("~/YTMediaTool/Downloads/")
@@ -97,7 +99,7 @@ def createFrame(window):
         if picked_dir:
             downloaddirectory2.set(picked_dir)
 
-    selectDirButton = tk.Button(frame, text="Pick...", command=seldir)
+    selectDirButton = tk.Button(frame, text="Browse...", command=seldir)
     selectDirButton.grid(row=1, column=3)
 
 
@@ -109,17 +111,16 @@ def createFrame(window):
     dirInputBox = tk.Entry(frame, textvariable=librarydirectory)
     dirInputBox.grid(row=2, column=2, sticky="WE")
 
-    selectDirButton = tk.Button(frame, text="Pick...", command=sellibrarydirectory)
+    selectDirButton = tk.Button(frame, text="Browse...", command=sellibrarydirectory)
     selectDirButton.grid(row=2, column=3)
 
     downloaddirectory = downloaddirectory1
 
-    info = tk.Label(frame, text="\n SMLD is a tool designed to download large amounts of audio files from YouTube. Currently it works straight out of the box with iTunes library lists that you can get by CTRL + A and CTRL + C from the iTunes application. Put that in a text file and select it with the library list selector. Lists for other music services are coming soon " + u"\u2122", wraplength = 500 )
+    openlink = tk.Button(frame, text="Open .csv tool", command=lambda: openInBrowser("https://www.tunemymusic.com/transfer"))
+    openlink.grid(row=3, column=2, sticky="W")
+
+    info = tk.Label(frame, text="\n SMLD is a tool designed to download large amounts of audio files from YouTube. Currently it works with iTunes and Spotify playlists. Select .csv files with the library list directory picker and use the .csv tool to make them.", wraplength = 500 )
     info.grid(row=8, column=1, columnspan = 3)
-
-    fileformatDropdown = tk.OptionMenu(frame, fileformat, *fileformats)
-    fileformatDropdown.grid(row=3, column=1, sticky="W")
-
 
 
     def refresher():
@@ -127,10 +128,8 @@ def createFrame(window):
             cancel = f.read()
             if int(cancel) == 1:
                 print("cancel")
-
             else:
                 window.after(2000, refresher)
-
             f.close()
 
         SMLDprogressTracker.trackprogress()
@@ -181,15 +180,17 @@ def createFrame(window):
             smld_b = threading.Thread(target=smld_a)
             smld_b.start()
 
-
     def setupSMLD():
+        downloadb1.config(state="disabled")
+        fileformatDropdown.config(state="disabled")
         global process1
         global smld_a
         window.after(100, runSMLD)
 
+
         if os.path.isfile(librarydirectory1):
-            cancelb.grid(row=1, column=2, sticky="W")
-            pg.grid(row=1, column=3)
+            cancelb.grid(row=1, column=3, sticky="W")
+            pg.grid(row=1, column=4)
             with open(os.path.expanduser("~/YTMediaTool/Temp/downloaddirectory.txt"), "w") as f:
                 f.write(downloaddirectory1)
                 f.close()
@@ -208,6 +209,7 @@ def createFrame(window):
 
             SMLD.setupSMLD()
 
+
             songinfo2.grid(row=6, column=1, columnspan = 3, sticky="W")
             songinfo1.grid(row=5, column=1, columnspan = 3, sticky="W")
             songinfo3.grid(row=7, column=1, columnspan = 3, sticky="W")
@@ -220,7 +222,11 @@ def createFrame(window):
 
     frame1 = tk.Frame(frame)
     frame1.grid(row=4, column=1, sticky="WE", columnspan=4)    #sticky="W" = tasaus west (ilmansuunnat)  columnspan=2 = monta saraketta grid vie
-    tk.Button(frame1, text="Download", command=setupSMLD).grid(row=1, column=1, sticky="W")
+    #global downloadb1
+
+
+    fileformatDropdown = tk.OptionMenu(frame1, fileformat, *fileformats)
+    fileformatDropdown.grid(row=1, column=2, sticky="W")
 
     def cancel():
         with open(os.path.expanduser("~/YTMediaTool/Temp/cancel.txt"), "w") as f:
@@ -228,12 +234,17 @@ def createFrame(window):
             f.close()
 
         cancelb.grid_forget()
+        downloadb1.config(state="normal")
+        fileformatDropdown.config(state="normal")
         pg.grid_forget()
         songinfo1.grid_forget()
         songinfo2.grid_forget()
         songinfo3.grid_forget()
 
     cancelb=tk.Button(frame1, text="Cancel", command=cancel)#.grid(row=30, column=0, sticky="E")
+
+    downloadb1 = tk.Button(frame1, text="Download", command=setupSMLD)
+    downloadb1.grid(row=1, column=1, sticky="W")
 
     pg = tk.Label(frame1, text="Progress: "+ str(progress) + "%")
 
