@@ -6,8 +6,10 @@ Settings = {
 	"FFmpeg_path": "ffmpeg",
 	"BasicPage-ShowDialogAfterDLSuccess": True,
 	"BasicPage-DownloadDir": getUserDownloadDir(),
+	"BasicPage-DLVideo": True,
+	"BasicPage-DLAudio": True,
 	"BasicPage-Format": "Original",
-	"BasicPage-Quality": "Source"
+	"BasicPage-VideoQuality": "Source"
 }
 SettingsFilePath = os.path.join(getBaseConfigDir(), "settings.json")
 

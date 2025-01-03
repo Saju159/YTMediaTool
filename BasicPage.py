@@ -135,8 +135,12 @@ def createFrame(window):
 	global pageOpenedOnce
 	pageOpenedOnce = False
 	def showPageFirstTime():
-		dlvideoCheckbox.select() # set checkbuttons to selected here because it wouldn't work if the page wasn't visible
-		dlaudioCheckbox.select()
+		if Settings["BasicPage-DLVideo"] == True:
+			dlvideoCheckbox.select()
+		if Settings["BasicPage-DLAudio"] == True:
+			dlaudioCheckbox.select()
+		dlvideoselection()
+		ffselection()
 		global pageOpenedOnce
 		pageOpenedOnce = True
 
@@ -159,9 +163,24 @@ def createFrame(window):
 	ffFrame = tk.Frame(frame)
 	ffFrame.grid(row=5, column=2, columnspan=2, sticky="W")
 
-	dlvideo = tk.BooleanVar()
-	dlaudio = tk.BooleanVar()
-	fileformat = tk.StringVar(value=next(iter(fileformats)))
+	dlvideo = tk.BooleanVar(value=Settings["BasicPage-DLVideo"])
+	dlaudio = tk.BooleanVar(value=Settings["BasicPage-DLAudio"])
+	fileformat = tk.StringVar(value=Settings["BasicPage-Format"])
+	vq = tk.StringVar(value=Settings["BasicPage-VideoQuality"])
+	dirSV = tk.StringVar(value=Settings["BasicPage-DownloadDir"])
+
+	def onSaveableSettingUpdate():
+		Settings["BasicPage-DLVideo"] = bool(dlvideo.get())
+		Settings["BasicPage-DLAudio"] = bool(dlaudio.get())
+		Settings["BasicPage-Format"] = str(fileformat.get())
+		Settings["BasicPage-VideoQuality"] = str(vq.get())
+		Settings["BasicPage-DownloadDir"] = str(dirSV.get())
+
+	dlvideo.trace('w',lambda _, _2, _3: onSaveableSettingUpdate())
+	dlaudio.trace('w',lambda _, _2, _3: onSaveableSettingUpdate())
+	fileformat.trace('w',lambda _, _2, _3: onSaveableSettingUpdate())
+	vq.trace('w',lambda _, _2, _3: onSaveableSettingUpdate())
+	dirSV.trace('w',lambda _, _2, _3: onSaveableSettingUpdate())
 
 	def dlvideoselection():
 		if dlvideo.get() == True: vqDropdown.grid(row=6, column=2, columnspan=2, sticky="W"); vqLabel.grid(row=6, column=1, sticky="E")
@@ -190,15 +209,11 @@ def createFrame(window):
 	# Video quality
 	vqLabel = tk.Label(frame, text="Video quality: ")
 	vqLabel.grid(row=6, column=1, sticky="E")
-	vq = tk.StringVar(value=next(iter(videoqualities)))
 	vqDropdown = tk.OptionMenu(frame, vq, *videoqualities)
 	vqDropdown.grid(row=6, column=2, columnspan=2, sticky="W")
 
 	# Destination Directory
 	tk.Label(frame, text="Destination directory: ").grid(row=19, column=1, sticky="E")
-
-	dirSV = tk.StringVar()
-	dirSV.set(getUserDownloadDir())
 
 	dirInputBox = tk.Entry(frame, textvariable=dirSV)
 	dirInputBox.grid(row=19, column=2, sticky="WE")
