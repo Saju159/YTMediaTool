@@ -38,7 +38,7 @@ def createFrame(window):
 		frame.place(y=34, h=-34, relwidth=1.0, relheight=1.0)
 		loadSettings()
 
-	def addLabel(text):
+	def addLabel(text: str):
 		nonlocal nextRow, labels
 		label = tk.Label(frame, text=text, justify="left")
 		label.grid(row=nextRow, column=1, columnspan=3, sticky="W", ipadx=10)
@@ -46,7 +46,15 @@ def createFrame(window):
 		nextRow += 1
 		return label
 
-	def addFilePathOption(optId, text):
+	def addButton(text: str, func: callable):
+		nonlocal nextRow
+		button = tk.Button(frame, text=text, command=lambda: func())
+		button.grid(row=nextRow, column=1, columnspan=3, sticky="W")
+		labels.append(button)
+		nextRow += 1
+		return button
+
+	def addFilePathOption(optId: str, text: str):
 		nonlocal nextRow
 		tk.Label(frame, text=f"{text}: ").grid(row=nextRow, column=1, sticky="E")
 
@@ -73,7 +81,7 @@ def createFrame(window):
 
 		nextRow += 1
 
-	def addBooleanOption(optId, text):
+	def addBooleanOption(optId: str, text: str):
 		nonlocal nextRow
 		# tk.Label(frame, text=f"{text}: ").grid(row=nextRow, column=1, sticky="E")
 
@@ -95,7 +103,8 @@ def createFrame(window):
 		nextRow += 1
 
 	addFilePathOption("FFmpeg_path", "Path to FFmpeg executable")
-	addLabel("FFmpeg is required for merging the downloaded video + audio and for converting formats.\nGet binaries from https://www.ffmpeg.org/download.html")
+	addLabel("FFmpeg is required for merging the downloaded video + audio and for converting formats.")
+	addButton("Get binaries from https://www.ffmpeg.org/download.html", lambda: openInBrowser("https://www.ffmpeg.org/download.html"))
 
 	addSpacer()
 	addLabel("Settings for 'Basic' tab:")
@@ -111,4 +120,4 @@ def createFrame(window):
 		for label in labels:
 			label.config(wraplength=width)
 
-	window.bind("<Configure>", onResize)
+	frame.bind("<Configure>", onResize)
