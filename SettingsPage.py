@@ -132,9 +132,6 @@ def createFrame(window):
 	addLabel("Settings for 'SMLD' tab:")
 	addButton("Open SMLD logs", lambda: openInBrowser(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt")))
 
-	addSpacer()
-	addButton("DETELE ALL CONFIGURATION FILES", lambda: openInBrowser(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt")))
-
 	buttonsFrame = tk.Frame(frame)
 	tk.Button(buttonsFrame, text="Apply & Save Settings", bg="spring green", command=lambda: applySettings()).grid(row=1, column=1, sticky="E")
 	tk.Button(buttonsFrame, text="Cancel", command=lambda: loadSettings()).grid(row=1, column=2, sticky="E")
