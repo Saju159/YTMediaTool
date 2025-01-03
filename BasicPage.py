@@ -39,6 +39,7 @@ dlStatus = {
 	'progress': 0,
 	'returnStr': None,
 	'errorStr': None,
+	'dlQuality': None,
 	'final_file_path': None
 }
 
@@ -56,6 +57,7 @@ def download(
 	dlStatus["errorStr"] = None
 	dlStatus["progressWindowLabel"] = "Preparing download..."
 	dlStatus["progress"] = 0
+	dlStatus["dlQuality"] = None
 	dlStatus["final_file_path"] = None
 
 	print(f"Downloading '{downloadInput}' to '{directory}'...")
@@ -76,12 +78,16 @@ def download(
 				dlStatus["progress"] = math.floor(downloadPercent*100)/100
 			elif d['status'] == "finished":
 				dlStatus["final_file_path"] = d.get("info_dict").get("_filename")
+			if d.get("info_dict").get("height"):
+				dlStatus["dlQuality"] = str(d.get("info_dict").get("height"))
 		except Exception as err:
 			print("Error in progress hook:\n"+str(err))
 
 	opts = {
 		'verbose': False,
 		'outtmpl': {'default': f"{directory}/%(title)s [%(id)s].%(ext)s"},
+		'overwrites': True, # FIXME: workaround for ffmpeg failure if already downloaded
+		'continuedl': False,
 		'progress_hooks': [progress_hook]
 	}
 
@@ -124,7 +130,7 @@ def download(
 			c = ydl.download(url)
 			print("return code: " + str(c))
 			if dlvideo and "res" in vq and Settings["BasicPage-ForceQuality"] == "Resize to selected quality" and "ffmpeg_location" in opts:
-				if os.path.isfile(opts["ffmpeg_location"]):
+				if os.path.isfile(opts["ffmpeg_location"]) and str(dlStatus["dlQuality"]) != str(vq["res"]):
 					dlStatus["progressWindowLabel"] = "Resizing..."
 
 					ffmpeg_path = opts["ffmpeg_location"]
@@ -341,6 +347,9 @@ def createFrame(window):
 		dlThread.start()
 
 		frame.after(100, checkStatus)
+
+		def skip(): pass
+		progressWindow.protocol("WM_DELETE_WINDOW", skip)
 
 		progressWindow.grab_set()
 		progressWindow.transient(window)
