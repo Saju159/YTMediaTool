@@ -88,6 +88,7 @@ def download(
 		'outtmpl': {'default': f"{directory}/%(title)s [%(id)s].%(ext)s"},
 		'overwrites': True, # FIXME: workaround for ffmpeg failure if already downloaded
 		'continuedl': False,
+		'updatetime': False, # Don't set file modification timestamp to video upload time
 		'progress_hooks': [progress_hook]
 	}
 
