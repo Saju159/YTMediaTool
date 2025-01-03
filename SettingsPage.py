@@ -1,5 +1,6 @@
+import os
 import tkinter as tk
-from Common import openFilePicker
+from Common import openFilePicker, getBaseConfigDir
 from webbrowser import open_new_tab as openInBrowser
 
 import Settings
@@ -109,6 +110,10 @@ def createFrame(window):
 	addSpacer()
 	addLabel("Settings for 'Basic' tab:")
 	addBooleanOption("BasicPage-ShowDialogAfterDLSuccess", "Show dialog after successful download")
+
+	addSpacer()
+	addLabel("Settings for 'SMLD' tab:")
+	addButton("Open SMLD logs", lambda: openInBrowser(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt")))
 
 	buttonsFrame = tk.Frame(frame)
 	tk.Button(buttonsFrame, text="Apply & Save Settings", bg="spring green", command=lambda: applySettings()).grid(row=1, column=1, sticky="E")

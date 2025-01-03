@@ -1,22 +1,27 @@
 import tkinter as tk
 import Settings
+from Common import getBaseConfigDir
 
 
 import os
 
 librarydirectory = os.path.expanduser("~/YTMediaTool/")
 
-if not os.path.exists(librarydirectory + "Temp/"):
-    os.makedirs(librarydirectory + "Temp/")
-
 if not os.path.exists(librarydirectory + "Downloads/"):
     os.makedirs(librarydirectory + "Downloads/")
 
-with open(os.path.expanduser("~/YTMediaTool/Temp/progress.txt"), "w") as f:
+if not os.path.exists(os.path.join(getBaseConfigDir(),"SMLD")):
+    os.makedirs(os.path.join(getBaseConfigDir(),"SMLD"))
+
+if not os.path.exists(os.path.join(getBaseConfigDir(),"SMLD", "Temp")):
+    os.makedirs(os.path.join(getBaseConfigDir(),"SMLD", "Temp"))
+
+
+with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "progress.txt"), "w") as f:
     f.close()
 
 import SettingsPage # Import settings page before anything else
-with open(os.path.expanduser("~/YTMediaTool/Temp/cancel.txt"), "w") as f:
+with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "w") as f:
     f.write("0")
     f.close()
 
@@ -117,7 +122,7 @@ button4 = tk.Radiobutton(
 button4.place(x=455, y=5)
 
 def quit():
-    with open(os.path.expanduser("~/YTMediaTool/Temp/cancel.txt"), "w") as f:
+    with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "w") as f:
         f.write("1")
         f.close()
     window.destroy

@@ -25,7 +25,7 @@ def getBaseConfigDir():
 		configPath = "~\\AppData\\Local\\Roaming\\YTMediaTool"
 
 	configPath = os.path.expanduser(configPath)
-	print("Config path: "+configPath)
+	#print("Config path: "+configPath)
 	if not os.path.exists(configPath):
 		print("Config dir doesn't exist! Creating...")
 		os.makedirs(configPath)

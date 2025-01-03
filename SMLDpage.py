@@ -7,6 +7,7 @@ import SMLDprogressTracker
 import SMLD
 import threading
 from webbrowser import open_new_tab as openInBrowser
+from Common import getBaseConfigDir
 
 #Website: https://www.tunemymusic.com/transfer
 
@@ -21,6 +22,8 @@ librarydirectory, download = None, None
 downloaddirectory1 = os.path.expanduser("~/YTMediaTool/Downloads/")
 
 progress = 0
+rlines = 0
+tlines = 0
 
 librarydirectory1 = " "
 
@@ -33,7 +36,7 @@ fileformats = {
     'flac':	{'video': False, 'audio': True, 'ext': "flac"},
 }
 
-with open(os.path.expanduser("~/YTMediaTool/Temp/cancel.txt"), "w") as f:
+with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "w") as f:
     f.write("0")
     f.close()
 
@@ -124,7 +127,7 @@ def createFrame(window):
 
 
     def refresher():
-        with open(os.path.expanduser("~/YTMediaTool/Temp/cancel.txt"), "r") as f:
+        with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "r") as f:
             cancel = f.read()
             if int(cancel) == 1:
                 print("cancel")
@@ -134,7 +137,7 @@ def createFrame(window):
 
         SMLDprogressTracker.trackprogress()
 
-        with open(os.path.expanduser("~/YTMediaTool/Temp/songinfo.txt"), "r") as f:
+        with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "songinfo.txt"), "r") as f:
             filter = "[]'"
             artist = f.readlines(1)
             for char in filter:
@@ -153,21 +156,36 @@ def createFrame(window):
 
         f.close()
 
-        with open(os.path.expanduser("~/YTMediaTool/Temp/progress.txt"), "r") as f:
-            progress = str(f.readlines())
+        with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "progress.txt"), "r") as f:
+            progress = str(f.readlines(1))
 
             progress = progress.replace("[", "")
             progress = progress.replace("]", "")
             progress = progress.replace("'", "")
+            progress = progress.replace("\\n", "")
 
             print(progress)
             pg.config(text = "Progress: "+ str(progress) + "%")
+
+
+            rlines = str(f.readlines(2))
+            rlines = rlines.replace("[", "")
+            rlines = rlines.replace("]", "")
+            rlines = rlines.replace("'", "")
+            rlines = rlines.replace("\\n", "")
+
+            tlines = str(f.readlines(3))
+            tlines = tlines.replace("[", "")
+            tlines = tlines.replace("]", "")
+            tlines = tlines.replace("'", "")
+            tlines = tlines.replace("\\n", "")
+
+            np.config(text =f"  Songs downloaded: {str(rlines)} / {str(tlines)} ")
+
             f.close()
 
-
     def runSMLD():
-        print("run")
-        with open(os.path.expanduser("~/YTMediaTool/Temp/cancel.txt"), "r") as f:
+        with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "r") as f:
             cancel = f.read()
             f.close()
         if int(cancel) == 1:
@@ -191,19 +209,20 @@ def createFrame(window):
         if os.path.isfile(librarydirectory1):
             cancelb.grid(row=1, column=3, sticky="W")
             pg.grid(row=1, column=4)
-            with open(os.path.expanduser("~/YTMediaTool/Temp/downloaddirectory.txt"), "w") as f:
+            np.grid(row=1, column=5)
+            with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "downloaddirectory.txt"), "w") as f:
                 f.write(downloaddirectory1)
                 f.close()
 
-            with open(os.path.expanduser("~/YTMediaTool/Temp/libraryfiledirectory.txt"), "w") as f:
+            with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "libraryfiledirectory.txt"), "w") as f:
                 f.write(str(librarydirectory1))
                 f.close()
 
-            with open(os.path.expanduser("~/YTMediaTool/Temp/cancel.txt"), "w") as f:
+            with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "w") as f:
                 f.write("0")
                 f.close()
 
-            with open(os.path.expanduser("~/YTMediaTool/Temp/fileformat.txt"), "w") as f:
+            with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "fileformat.txt"), "w") as f:
                 f.write(fileformat.get())
                 f.close()
 
@@ -229,7 +248,7 @@ def createFrame(window):
     fileformatDropdown.grid(row=1, column=2, sticky="W")
 
     def cancel():
-        with open(os.path.expanduser("~/YTMediaTool/Temp/cancel.txt"), "w") as f:
+        with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "w") as f:
             f.write("1")
             f.close()
 
@@ -237,6 +256,7 @@ def createFrame(window):
         downloadb1.config(state="normal")
         fileformatDropdown.config(state="normal")
         pg.grid_forget()
+        np.grid_forget()
         songinfo1.grid_forget()
         songinfo2.grid_forget()
         songinfo3.grid_forget()
@@ -247,6 +267,7 @@ def createFrame(window):
     downloadb1.grid(row=1, column=1, sticky="W")
 
     pg = tk.Label(frame1, text="Progress: "+ str(progress) + "%")
+    np = tk.Label(frame1, text=f"Remaining/Total Songs {str(rlines)}/{str(tlines)} ")
 
 
     global songinfo1

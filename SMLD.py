@@ -6,23 +6,27 @@ import os.path
 import time
 from yt_dlp import YoutubeDL
 from Settings import Settings
+from Common import getBaseConfigDir
 
+if not os.path.isfile(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt")):
+    with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'w') as log:
+        log.close()
 
 def setupSMLD():
     global polku3
     polku3 = (os.getcwd())
 
 
-    with open(os.path.expanduser("~/YTMediaTool/Temp/downloaddirectory.txt")) as f:
+    with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "downloaddirectory.txt")) as f:
         global downloaddirectory
         downloaddirectory = f.read()
         f.close()
 
-    with open(os.path.expanduser("~/YTMediaTool/Temp/libraryfiledirectory.txt")) as f:
+    with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "libraryfiledirectory.txt")) as f:
         libraryfiledirectory = f.read()
         f.close()
 
-    with open(os.path.expanduser("~/YTMediaTool/Temp/fileformat.txt")) as f:
+    with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "fileformat.txt")) as f:
         global fileformat
         fileformat= f.read()
         f.close()
@@ -53,7 +57,7 @@ def setupSMLD():
                 with open(libraryfiledirectory, 'r', encoding='utf-8') as tiedosto:
                     rivit = tiedosto.readlines()
 
-                with open((os.path.expanduser("~/YTMediaTool/Temp/Songlist.txt")), 'w', encoding='utf-8') as tiedosto:
+                with open((os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt")), 'w', encoding='utf-8') as tiedosto:
                     for rivi in rivit:
                         osat = rivi.split('\t')  # Käytetään kahta tabulaattoria erottimena
                         if len(osat) > 4:  # Tarkistetaan, että riittävästi osia löytyy
@@ -69,7 +73,7 @@ def setupSMLD():
                 with open(libraryfiledirectory, 'r', encoding='utf-8') as tiedosto:
                     rivit = tiedosto.readlines()
 
-                with open((os.path.expanduser("~/YTMediaTool/Temp/Songlist.txt")), 'w', encoding='utf-8') as tiedosto:
+                with open((os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt")), 'w', encoding='utf-8') as tiedosto:
                     for rivi in rivit:
                         osat = rivi.split(',')
                         if len(osat) > 2:  # Tarkistetaan, että riittävästi osia löytyy
@@ -80,9 +84,9 @@ def setupSMLD():
                 delete = str(ensimrivi).find("Track name")
 
                 if not delete == -1:
-                    with open(os.path.expanduser("~/YTMediaTool/Temp/Songlist.txt"), 'r') as fin:
+                    with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt"), 'r') as fin:
                         data = fin.read().splitlines(True)
-                    with open(os.path.expanduser("~/YTMediaTool/Temp/Songlist.txt"), 'w') as fout:
+                    with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt"), 'w') as fout:
                         fout.writelines(data[1:])
                     print("Header line removed")
 
@@ -92,13 +96,18 @@ def setupSMLD():
     except Exception as e:
         print(f"An error occured: {e}")
         messagebox.showinfo("An error occured", e)
+        with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
+            log.write("Error: " + str(e))
+            log.write("\n")
+            log.write("While trying to download: {downloaddirectory} {artist} {albumname} {songname}")
+            log.close()
 
     #Poistetaan tyhjät rivit:
 
-    with open(os.path.expanduser("~/YTMediaTool/Temp/Songlist.txt"), 'r', encoding='utf-8') as file:
+    with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt"), 'r', encoding='utf-8') as file:
         lines = file.readlines()
     non_empty_lines = [line for line in lines if line.strip()]
-    with open(os.path.expanduser("~/YTMediaTool/Temp/Songlist.txt"), 'w', encoding='utf-8') as file:
+    with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt"), 'w', encoding='utf-8') as file:
         file.writelines(non_empty_lines)
         file.close()
 
@@ -106,19 +115,19 @@ def setupSMLD():
 def runsmld():
     global downloaddirectory, vaihtoehdot, fileformat, polku3, filetype, albumname, songname, artist
 
-    with open(os.path.expanduser("~/YTMediaTool/Temp/downloaddirectory.txt")) as f:
+    with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "downloaddirectory.txt")) as f:
         global downloaddirectory
         downloaddirectory = f.read()
         f.close()
 
-    with open(os.path.expanduser("~/YTMediaTool/Temp/fileformat.txt")) as f:
+    with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "fileformat.txt")) as f:
         global fileformat
         fileformat= f.read()
         f.close()
 
     while True:
         time.sleep(0.05)
-        with open(os.path.expanduser("~/YTMediaTool/Temp/cancel.txt"), "r") as f:
+        with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "r") as f:
             cancel = f.read()
             f.close()
         if int(cancel) == 1:
@@ -126,7 +135,7 @@ def runsmld():
             break
 
         f.close()
-        tiedostonimi = os.path.expanduser("~/YTMediaTool/Temp/Songlist.txt")
+        tiedostonimi = os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt")
         try:
             # Luetaan tiedoston ensimmäinen rivi
             with open(tiedostonimi, 'r', encoding='utf-8') as tiedosto:
@@ -160,7 +169,7 @@ def runsmld():
                     genre = f"{osat[3]}"
                     rate = f"{osat[4]}"
 
-                    with open(os.path.expanduser("~/YTMediaTool/Temp/songinfo.txt"), "w") as f:
+                    with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "songinfo.txt"), "w") as f:
                         f.write(artist + "\n "+ songname + "\n" + albumname)
                         f.close()
             else:
@@ -175,7 +184,7 @@ def runsmld():
                 genre = ""
                 rate = ""
 
-                with open(os.path.expanduser("~/YTMediaTool/Temp/songinfo.txt"), "w") as f:
+                with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "songinfo.txt"), "w") as f:
                     f.write(artist + "\n "+ songname + "\n" + albumname)
                     f.close()
 
@@ -218,6 +227,14 @@ def runsmld():
                         except Exception as e:
                             print(f"An unexpected error occured e3: {e}")
 
+                            if "Sign in to confirm your age." in str(e):
+                                with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
+                                    log.write(f"Failed to download: {artist} {albumname} {songname} Video is age-restricted.")
+                                    log.write("\n")
+                                    log.write(e)
+                                    log.write("\n")
+                                    log.close()
+
                     # Poistetaan ensimmäinen rivi tiedostosta
                     with open(tiedostonimi, 'w', encoding='utf-8') as tiedosto:
                         tiedosto.writelines(jäljellä_olevat_rivit)
@@ -232,12 +249,8 @@ def runsmld():
                 if os.path.isfile(downloaddirectory + artist +"/" +  albumname + "/" + songname + ".m4a"):
                     print("Files saved")
                 else:
-                    print("The file was not saved due to an unknown error. The video might be age restricted.")
 
-                    with open(os.path.expanduser("~/YTMediaTool/SMLDLog.txt"), 'a', encoding='utf-8') as log:
-                        log.write(downloaddirectory + artist +"/" +  albumname + "/" + songname + ".m4a  " + "Was not saved as it should have been. The video might be age restricted.")
-                        log.write("\n")
-                        log.close()
+                    print("The file was not saved due to an unknown error. The video might be age restricted.")
 
                 tiedosto = downloaddirectory + artist +"/" +  albumname + "/" + songname + ".m4a"
             else:
@@ -272,8 +285,8 @@ def runsmld():
                 print("Metadata added to file: " + downloaddirectory  + artist +"/" +  albumname + "/" + songname + ".m4a")
             except Exception as e:
                 print(f"Error in updating metadata e2: {e}")
-                with open(os.path.expanduser("~/YTMediaTool/SMLDLog.txt"), 'a', encoding='utf-8') as log:
-                    log.write(str(e))
+                with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
+                    log.write("Mutagen error: " + str(e))
                     log.write("\n")
                     log.close()
 
@@ -281,12 +294,12 @@ def runsmld():
         except FileNotFoundError:
             messagebox.showinfo("File not found", f"File: '{tiedostonimi}' cannot be found.")
             #print(f"Tiedostoa '{tiedostonimi}' ei löydy.")
-        # except Exception as e:
-        #     print(f"An unexpected error occured e1: {e}")
-        #     with open(os.path.expanduser("~/YTMediaTool/SMLDLog.txt"), 'a', encoding='utf-8') as log:
-        #         log.write("Error: " + str(e))
-        #         log.write("\n")
-        #         log.write("While trying to run command: {sudo_komento}")
-        #         log.close()
+        except Exception as e:
+            print(f"An unexpected error occured e1: {e}")
+            with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
+                log.write("Main loop error: " + str(e))
+                log.write("\n")
+                log.write("While trying to download: {downloaddirectory} {artist} {albumname} {songname}")
+                log.close()
 
 
