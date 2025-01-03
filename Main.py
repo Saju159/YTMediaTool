@@ -27,6 +27,7 @@ with open(os.path.expanduser("~/YTMediaTool/Temp/cancel.txt"), "w") as f:
 
 import BasicPage
 import SMLDpage
+import AboutPage
 
 
 page1rely = 0
@@ -40,29 +41,34 @@ window.configure(bg='gray')
 page1frame = BasicPage.createFrame(window)
 page2frame = SMLDpage.createFrame(window)
 page3frame = SettingsPage.createFrame(window)
+page4frame = AboutPage.createFrame(window)
 
 def page1():
     BasicPage.showPage()
     SMLDpage.hidePage()
     SettingsPage.hidePage()
+    AboutPage.hidePage()
 
 def page2():
     toggle_button("Vaihtoehto 2")
     BasicPage.hidePage()
     SMLDpage.showPage()
     SettingsPage.hidePage()
+    AboutPage.hidePage()
 
 def page3():
     toggle_button("Vaihtoehto 3")
     BasicPage.hidePage()
     SMLDpage.hidePage()
     SettingsPage.showPage()
+    AboutPage.hidePage()
 
 def page4():
     toggle_button("Vaihtoehto 4")
     BasicPage.hidePage()
     SMLDpage.hidePage()
     SettingsPage.hidePage()
+    AboutPage.showPage()
 
 def toggle_button(selected):
     current_value.set(selected)
