@@ -1,5 +1,6 @@
 import os, math
 import tkinter as tk
+import threading
 from yt_dlp import YoutubeDL
 from Common import getUserDownloadDir, openDirInFileBrowser, openFilePicker
 from Settings import Settings
@@ -32,6 +33,14 @@ videoqualities = {
 	'72p': {'res': 72}
 }
 
+dlStatus = {
+	'downloading': False,
+	'progressWindowLabel': "",
+	'progress': 0,
+	'returnStr': None,
+	'errorStr': None
+}
+
 def download(
 	mode: str,
 	downloadInput: str,
@@ -39,20 +48,33 @@ def download(
 	inputff: str,
 	inputvq: str,
 	dlvideo: bool,
-	dlaudio: bool,
-	progress_hook: callable,
+	dlaudio: bool
 ):
+	global dlStatus
+	dlStatus["returnStr"] = None
+	dlStatus["errorStr"] = None
+	dlStatus["progressWindowLabel"] = "Preparing download..."
+	dlStatus["progress"] = 0
+
 	print(f"Downloading '{downloadInput}' to '{directory}'...")
-	if len(downloadInput) <= 0: print("Invalid download input"); return "invalidDownloadInput", None
-	if len(directory) <= 0 and os.path.exists(directory): print("Invalid directory"); return "invalidDirectory", None
-	if not os.path.isdir(directory): print("Path does not point to a directory!"); return "pathIsNotDir", None
-	if not inputff in fileformats: print("Invalid fileformat"); return "invalidff", None
-	if not inputvq in videoqualities: print("Invalid video quality"); return "invalidvq", None
+	if len(downloadInput) <= 0: print("Invalid download input"); dlStatus["returnStr"] = "invalidDownloadInput"; return
+	if len(directory) <= 0 and os.path.exists(directory): print("Invalid directory"); dlStatus["returnStr"] = "invalidDirectory"; return
+	if not os.path.isdir(directory): print("Path does not point to a directory!"); dlStatus["returnStr"] = "pathIsNotDir"; return
+	if not inputff in fileformats: print("Invalid fileformat"); dlStatus["returnStr"] = "invalidff"; return
+	if not inputvq in videoqualities: print("Invalid video quality"); dlStatus["returnStr"] = "invalidvq"; return
 
 	ff = fileformats[inputff]
 	vq = videoqualities[inputvq]
 
-	print(progress_hook)
+	def progress_hook(d):
+		try:
+			if d['status'] == "downloading":
+				downloadPercent = d['downloaded_bytes']/(d['total_bytes'] or 1)
+				dlStatus["progressWindowLabel"] = "Downloading..."
+				dlStatus["progress"] = math.floor(downloadPercent*100)/100
+		except Exception as err:
+			print("Error in progress hook:\n"+str(err))
+
 	opts = {
 		'verbose': False,
 		'outtmpl': {'default': f"{directory}/%(title)s [%(id)s].%(ext)s"},
@@ -73,7 +95,7 @@ def download(
 		opts["format"] = "ba"
 	else:
 		print("No video or audio selected")
-		return "noVideoOrAudio", None
+		dlStatus["returnStr"] = "noVideoOrAudio"; return
 
 	if "ext" in ff:
 		ext = ff["ext"]
@@ -89,16 +111,21 @@ def download(
 	elif mode == "ytsearch":
 		url = f"ytsearch:{downloadInput}"
 	else:
-		print("Invalid mode"); return "invalidMode", None
+		print("Invalid mode")
+		dlStatus["returnStr"] = "invalidMode"
+		return
 
 	with YoutubeDL(opts) as ydl:
 		try:
 			c = ydl.download(url)
 			print("return code: " + str(c))
-			return "success", None
+			dlStatus["returnStr"] = "success"; return
 		except Exception as err:
 			print("--- Exception in ydl.download() ---\n"+str(err))
-			return "unknownException", err
+			dlStatus["errorStr"] = str(err)
+			dlStatus["returnStr"] = "unknownException"
+			return
+			# return "unknownException", err
 
 def createFrame(window):
 	global frame
@@ -119,7 +146,6 @@ def createFrame(window):
 	def showPage():
 		frame.place(y=34, h=-34, relwidth=1.0, relheight=1.0)
 		if not pageOpenedOnce: showPageFirstTime()
-
 
 	# URL box
 	urlLabel = tk.Label(frame, text="URL: ")
@@ -185,12 +211,15 @@ def createFrame(window):
 	selectDirButton = tk.Button(frame, text="Pick...", command=seldir)
 	selectDirButton.grid(row=19, column=3)
 
+	downloadButton = None
+
 	global modenum
 	modenum = 0
 	def downloadf():
+		downloadButton.config(state="disabled")
+
 		input2 = urlInputBox.get().strip()
 
-		window.update()
 		progressWindow = tk.Toplevel(window)
 		progressWindow.geometry("360x40")
 		progressWindow.resizable(False,False)
@@ -202,38 +231,13 @@ def createFrame(window):
 		pLabel = tk.Label(progressWindow, text="Preparing download...")
 		pLabel.grid(row=1, column=1, columnspan=2)
 
-		pProgressLabel = tk.Label(progressWindow, text="")
+		pProgressLabel = tk.Label(progressWindow, text="Progress: ")
 		pProgressLabel.grid(row=2, column=1, sticky="E")
 
-		pProgressAmount = tk.Label(progressWindow, text="")
+		pProgressAmount = tk.Label(progressWindow, text="0%")
 		pProgressAmount.grid(row=2, column=2, sticky="W")
 
-		def ignore(): pass
-
-		def progress_hook(d):
-			try:
-				if d['status'] == "downloading":
-					downloadPercent = d['downloaded_bytes']/(d['total_bytes'] or 1)
-					pLabel.config(text="Downloading...")
-					pProgressLabel.config(text="Progress: ")
-					pProgressAmount.config(text=f"{math.floor(downloadPercent*100)}%")
-					progressWindow.update()
-			except Exception as err:
-				print("Error in progress hook:\n"+str(err))
-
-		def downloadFunc():
-			progressWindow.update()
-
-			returnStr, r2 = download(
-				mode = (modenum == 1 and "ytsearch" or "url"),
-				downloadInput = input2,
-				directory = dirSV.get(),
-				inputff = fileformat.get(),
-				inputvq = vq.get(),
-				dlvideo = dlvideo.get(),
-				dlaudio = dlaudio.get(),
-				progress_hook = progress_hook
-			)
+		def endFunc(returnStr, r2):
 			progressWindow.destroy()
 
 			dText, success = None, False
@@ -246,7 +250,7 @@ def createFrame(window):
 				if "Sign in to confirm your age." in str(r2): # FIXME: there's probable a way better method for checking if age-restricted
 					dText = "Failed to download:\nVideo is age-restricted."
 				else:
-					dText = "Unknown exception caught while downloading video.\n"+str(r2)
+					dText = "Unknown exception caught while downloading.\n"+str(r2)
 
 			if dText:
 				window.update()
@@ -259,10 +263,34 @@ def createFrame(window):
 					if answer == True:
 						openDirInFileBrowser(dirSV.get())
 
+		def checkStatus():
+			if type(dlStatus["returnStr"]) == str:
+				returnStr = str(dlStatus["returnStr"])
+				errorStr = str(dlStatus["errorStr"])
+				dlStatus["returnStr"] = None
+				dlStatus["errorStr"] = None
+				endFunc(returnStr, errorStr)
+				downloadButton.config(state="normal")
+			else:
+				pLabel.config(text=dlStatus["progressWindowLabel"])
+				pProgressAmount.config(text=str(math.floor(dlStatus["progress"]*100))+"%")
+				frame.after(100, checkStatus)
+
+		dlThread = threading.Thread(target=download, kwargs={
+			'mode': (modenum == 1 and "ytsearch" or "url"),
+			'downloadInput': input2,
+			'directory': dirSV.get(),
+			'inputff': fileformat.get(),
+			'inputvq': vq.get(),
+			'dlvideo': dlvideo.get(),
+			'dlaudio': dlaudio.get()
+		})
+		dlThread.start()
+
+		frame.after(100, checkStatus)
+
 		progressWindow.grab_set()
 		progressWindow.transient(window)
-		progressWindow.after(100, downloadFunc)
-		progressWindow.protocol("WM_DELETE_WINDOW", ignore)
 		progressWindow.mainloop()
 
 	downloadButton = tk.Button(frame, text="Download", command=downloadf)
