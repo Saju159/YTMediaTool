@@ -9,7 +9,8 @@ Settings = {
 	"BasicPage-DLVideo": True,
 	"BasicPage-DLAudio": True,
 	"BasicPage-Format": "Original",
-	"BasicPage-VideoQuality": "Source"
+	"BasicPage-VideoQuality": "Source",
+	"BasicPage-ForceQuality": "Download closest to selected quality",
 }
 SettingsFilePath = os.path.join(getBaseConfigDir(), "settings.json")
 

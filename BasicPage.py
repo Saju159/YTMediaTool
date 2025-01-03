@@ -1,6 +1,6 @@
 import os, math
 import tkinter as tk
-import threading
+import threading, subprocess
 from yt_dlp import YoutubeDL
 from Common import getUserDownloadDir, openDirInFileBrowser, openFilePicker
 from Settings import Settings
@@ -38,7 +38,8 @@ dlStatus = {
 	'progressWindowLabel': "",
 	'progress': 0,
 	'returnStr': None,
-	'errorStr': None
+	'errorStr': None,
+	'final_file_path': None
 }
 
 def download(
@@ -55,6 +56,7 @@ def download(
 	dlStatus["errorStr"] = None
 	dlStatus["progressWindowLabel"] = "Preparing download..."
 	dlStatus["progress"] = 0
+	dlStatus["final_file_path"] = None
 
 	print(f"Downloading '{downloadInput}' to '{directory}'...")
 	if len(downloadInput) <= 0: print("Invalid download input"); dlStatus["returnStr"] = "invalidDownloadInput"; return
@@ -72,6 +74,8 @@ def download(
 				downloadPercent = d['downloaded_bytes']/(d['total_bytes'] or 1)
 				dlStatus["progressWindowLabel"] = "Downloading..."
 				dlStatus["progress"] = math.floor(downloadPercent*100)/100
+			elif d['status'] == "finished":
+				dlStatus["final_file_path"] = d.get("info_dict").get("_filename")
 		except Exception as err:
 			print("Error in progress hook:\n"+str(err))
 
@@ -119,13 +123,41 @@ def download(
 		try:
 			c = ydl.download(url)
 			print("return code: " + str(c))
-			dlStatus["returnStr"] = "success"; return
+			if dlvideo and "res" in vq and Settings["BasicPage-ForceQuality"] == "Resize to selected quality" and "ffmpeg_location" in opts:
+				if os.path.isfile(opts["ffmpeg_location"]):
+					dlStatus["progressWindowLabel"] = "Resizing..."
+
+					ffmpeg_path = opts["ffmpeg_location"]
+
+					final_file_path = dlStatus["final_file_path"]
+					if not final_file_path:
+						print("No file path reported!")
+						dlStatus["errorStr"] = "Video was downloaded but not resized!\nyt-dlp did not report a file path for FFmpeg post processing!"
+						dlStatus["returnStr"] = "unknownException"; return
+
+					fname, fext = os.path.split(final_file_path)
+					ffmpeg_cmd = subprocess.run([
+						ffmpeg_path,
+						"-i", dlStatus["final_file_path"],
+						"-vf", f"scale=-2:{vq["res"]}",
+						"-c:a", "copy",
+						"-y",
+						f"{fname}/.RESIZE.{fext}"
+					])
+					if ffmpeg_cmd.returncode == 0:
+						os.replace(f"{fname}/.RESIZE.{fext}", final_file_path)
+					else:
+						if not final_file_path:
+							print("Error during postprocessing!")
+							dlStatus["errorStr"] = "yt-dlp did not report a file path for FFmpeg post processing!"
+							dlStatus["returnStr"] = "unknownException"; return
 		except Exception as err:
 			print("--- Exception in ydl.download() ---\n"+str(err))
 			dlStatus["errorStr"] = str(err)
-			dlStatus["returnStr"] = "unknownException"
-			return
+			dlStatus["returnStr"] = "unknownException"; return
 			# return "unknownException", err
+
+		dlStatus["returnStr"] = "success"
 
 def createFrame(window):
 	global frame
@@ -209,6 +241,7 @@ def createFrame(window):
 	# Video quality
 	vqLabel = tk.Label(frame, text="Video quality: ")
 	vqLabel.grid(row=6, column=1, sticky="E")
+
 	vqDropdown = tk.OptionMenu(frame, vq, *videoqualities)
 	vqDropdown.grid(row=6, column=2, columnspan=2, sticky="W")
 
@@ -288,7 +321,12 @@ def createFrame(window):
 				downloadButton.config(state="normal")
 			else:
 				pLabel.config(text=dlStatus["progressWindowLabel"])
-				pProgressAmount.config(text=str(math.floor(dlStatus["progress"]*100))+"%")
+				if str(dlStatus["progressWindowLabel"]) == "Downloading...":
+					pProgressLabel.config(text="Progress: ")
+					pProgressAmount.config(text=str(math.floor(dlStatus["progress"]*100))+"%")
+				else:
+					pProgressLabel.config(text="")
+					pProgressAmount.config(text="")
 				frame.after(100, checkStatus)
 
 		dlThread = threading.Thread(target=download, kwargs={

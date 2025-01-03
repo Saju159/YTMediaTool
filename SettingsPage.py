@@ -98,6 +98,22 @@ def createFrame(window):
 
 		nextRow += 1
 
+	def addDropdownOption(optId: str, text: str, choices: list):
+		nonlocal nextRow
+		tk.Label(frame, text=f"{text}: ").grid(row=nextRow, column=1, sticky="E")
+
+		sv = tk.StringVar()
+		tkVars[optId] = sv
+
+		def checkDiff(_):
+			if sv.get() != Settings.Settings[optId]:
+				showButtonsFrame()
+
+		vqDropdown = tk.OptionMenu(frame, sv, *choices, command=checkDiff)
+		vqDropdown.grid(row=nextRow, column=2, columnspan=2, sticky="W")
+
+		nextRow += 1
+
 	def addSpacer():
 		nonlocal nextRow
 		tk.Label(frame, text="\n ").grid(row=nextRow)
@@ -110,6 +126,7 @@ def createFrame(window):
 	addSpacer()
 	addLabel("Settings for 'Basic' tab:")
 	addBooleanOption("BasicPage-ShowDialogAfterDLSuccess", "Show dialog after successful download")
+	addDropdownOption("BasicPage-ForceQuality", "When video quality is not available", ["Resize to selected quality", "Download closest to selected quality"])
 
 	addSpacer()
 	addLabel("Settings for 'SMLD' tab:")
