@@ -9,9 +9,6 @@ librarydirectory = os.path.expanduser("~/YTMediaTool/")
 if not os.path.exists(librarydirectory + "Temp/"):
     os.makedirs(librarydirectory + "Temp/")
 
-if not os.path.exists(librarydirectory + "Librarylist/"):
-    os.makedirs(librarydirectory + "Librarylist/")
-
 if not os.path.exists(librarydirectory + "Downloads/"):
     os.makedirs(librarydirectory + "Downloads/")
 

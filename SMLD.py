@@ -8,7 +8,6 @@ from yt_dlp import YoutubeDL
 from Settings import Settings
 
 
-
 def setupSMLD():
     global polku3
     polku3 = (os.getcwd())
@@ -40,18 +39,56 @@ def setupSMLD():
         f2.write("\n")
         f2.close()
 
+
     try:
         with open(libraryfiledirectory, 'r', encoding='utf-8') as tiedosto:
-            rivit = tiedosto.readlines()
+            ensimrivi = tiedosto.readlines(1)
 
-        with open((os.path.expanduser("~/YTMediaTool/Temp/Songlist.txt")), 'w', encoding='utf-8') as tiedosto:
-            for rivi in rivit:
-                osat = rivi.split('\t')  # Käytetään kahta tabulaattoria erottimena
-                if len(osat) > 4:  # Tarkistetaan, että riittävästi osia löytyy
-                    uusi_rivi = f"{osat[0]}\t{osat[3]}\t{osat[4]}\t{osat[5]}\t{osat[6]}\n"  # Ensimmäinen ja kolmas osa
-                    tiedosto.write(uusi_rivi)
+            global filetype
+            filetype = str(libraryfiledirectory).find(".txt")
 
-        print("File saved successfully.")
+            if not filetype == -1:
+                print("Selected file is a iTunes media library. With .txt file format")
+
+                with open(libraryfiledirectory, 'r', encoding='utf-8') as tiedosto:
+                    rivit = tiedosto.readlines()
+
+                with open((os.path.expanduser("~/YTMediaTool/Temp/Songlist.txt")), 'w', encoding='utf-8') as tiedosto:
+                    for rivi in rivit:
+                        osat = rivi.split('\t')  # Käytetään kahta tabulaattoria erottimena
+                        if len(osat) > 4:  # Tarkistetaan, että riittävästi osia löytyy
+                            uusi_rivi = f"{osat[0]}\t{osat[3]}\t{osat[4]}\t{osat[5]}\t{osat[6]}\n"  # Ensimmäinen ja kolmas osa
+                            tiedosto.write(uusi_rivi)
+
+                print("File saved successfully.")
+
+            else:
+                print("Selected file is a iTunes or Spotify media library.")
+
+
+                with open(libraryfiledirectory, 'r', encoding='utf-8') as tiedosto:
+                    rivit = tiedosto.readlines()
+
+                with open((os.path.expanduser("~/YTMediaTool/Temp/Songlist.txt")), 'w', encoding='utf-8') as tiedosto:
+                    for rivi in rivit:
+                        osat = rivi.split(',')
+                        if len(osat) > 2:  # Tarkistetaan, että riittävästi osia löytyy
+                            uusi_rivi = f"{osat[0]},{osat[1]},{osat[2]}\n"
+                            tiedosto.write(uusi_rivi)
+
+
+                delete = str(ensimrivi).find("Track name")
+
+                if not delete == -1:
+                    with open(os.path.expanduser("~/YTMediaTool/Temp/Songlist.txt"), 'r') as fin:
+                        data = fin.read().splitlines(True)
+                    with open(os.path.expanduser("~/YTMediaTool/Temp/Songlist.txt"), 'w') as fout:
+                        fout.writelines(data[1:])
+                    print("Header line removed")
+
+            print("File saved successfully.")
+
+
     except Exception as e:
         print(f"An error occured: {e}")
         messagebox.showinfo("An error occured", e)
@@ -67,7 +104,7 @@ def setupSMLD():
 
 
 def runsmld():
-    global downloaddirectory, vaihtoehdot, fileformat, polku3
+    global downloaddirectory, vaihtoehdot, fileformat, polku3, spotify, albumname, songname, artist
 
     with open(os.path.expanduser("~/YTMediaTool/Temp/downloaddirectory.txt")) as f:
         global downloaddirectory
@@ -91,7 +128,6 @@ def runsmld():
         f.close()
         tiedostonimi = os.path.expanduser("~/YTMediaTool/Temp/Songlist.txt")
         try:
-
             # Luetaan tiedoston ensimmäinen rivi
             with open(tiedostonimi, 'r', encoding='utf-8') as tiedosto:
                 rivit = tiedosto.readlines()
@@ -112,29 +148,43 @@ def runsmld():
 
             komento2 = komento.replace(" ", "")
 
-            osat = komento2.split('\t')
-            if len(osat) > 2:
-                global albumname
-                global songname
-                global artist
+            if not filetype == -1:
+                print("Expanded iTunes format")
+                osat = komento2.split('\t')
+                if len(osat) > 2:
+                    songname = f"{osat[0]}"
+                    artist = f"{osat[1]}"
+                    albumname2 = f"{osat[2]}"
+                    albumname1 = albumname2.replace(")", "")
+                    albumname = albumname1.replace("(", "")
+                    genre = f"{osat[3]}"
+                    rate = f"{osat[4]}"
+
+                    with open(os.path.expanduser("~/YTMediaTool/Temp/songinfo.txt"), "w") as f:
+                        f.write(artist + "\n "+ songname + "\n" + albumname)
+                        f.close()
+            else:
+                print("Spotify or iTunes lite.")
+                osat = komento2.split(',')
                 songname = f"{osat[0]}"
+                songname = songname.replace('"','')
                 artist = f"{osat[1]}"
-                albumname2 = f"{osat[2]}"
-                albumname1 = albumname2.replace(")", "")
-                albumname = albumname1.replace("(", "")
-                genre = f"{osat[3]}"
-                rate = f"{osat[4]}"
+                artist = artist.replace('"','')
+                albumname = f"{osat[2]}"
+                albumname = albumname.replace('"','')
+                genre = ""
+                rate = ""
 
                 with open(os.path.expanduser("~/YTMediaTool/Temp/songinfo.txt"), "w") as f:
                     f.write(artist + "\n "+ songname + "\n" + albumname)
                     f.close()
 
-                print("----------------------------------------")
-                print("Downloading:")
+            print("----------------------------------------")
+            print("Downloading:")
 
-                print("Artist: " + str(artist))
-                print("Song: " + str(songname))
-                print("Albumname: " + str(albumname))
+            print("Artist: " + str(artist))
+            print("Song: " + str(songname))
+            print("Albumname: " + str(albumname))
 
 
             if not komento:  # Ohitetaan tyhjät rivit
@@ -231,12 +281,12 @@ def runsmld():
         except FileNotFoundError:
             messagebox.showinfo("File not found", f"File: '{tiedostonimi}' cannot be found.")
             #print(f"Tiedostoa '{tiedostonimi}' ei löydy.")
-        except Exception as e:
-            print(f"An unexpected error occured e1: {e}")
-            with open(os.path.expanduser("~/YTMediaTool/SMLDLog.txt"), 'a', encoding='utf-8') as log:
-                log.write("Error: " + str(e))
-                log.write("\n")
-                log.write("While trying to run command: {sudo_komento}")
-                log.close()
+        # except Exception as e:
+        #     print(f"An unexpected error occured e1: {e}")
+        #     with open(os.path.expanduser("~/YTMediaTool/SMLDLog.txt"), 'a', encoding='utf-8') as log:
+        #         log.write("Error: " + str(e))
+        #         log.write("\n")
+        #         log.write("While trying to run command: {sudo_komento}")
+        #         log.close()
 
 
