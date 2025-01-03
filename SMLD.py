@@ -36,7 +36,7 @@ def setupSMLD():
     print(f"Library Directory: {libraryfiledirectory}")
 
     global playlistfile
-    playlistfile = (downloaddirectory + "Favorites.m3u")
+    playlistfile = (os.path.join(downloaddirectory, "Favorites.m3u" ))
 
     with open(playlistfile, 'w', encoding='utf-8') as f2:
         f2.write("#EXTM3U")
@@ -249,13 +249,18 @@ def runsmld():
 
                 print(f"Downloading took: {time.process_time() - start}")
 
-                if os.path.isfile(downloaddirectory + artist +"/" +  albumname + "/" + songname + "." + fileformat):
+                if os.path.isfile(os.path.join(downloaddirectory, artist, albumname, songname + "." + fileformat)):
                     print("Files saved")
                 else:
 
-                    print("The file was not saved due to an unknown error. The video might be age restricted.")
+                    print("The file was not saved due to an unknown error.")
 
-                tiedosto = os.path.join(getBaseConfigDir(), downloaddirectory, artist,albumname, songname + "." + fileformat)
+                    with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
+                        log.write("File was not downloaded: "  + "Song: " + os.path.join(downloaddirectory, artist, albumname, songname + "." + fileformat))
+                        log.write("\n")
+                        log.close()
+
+                tiedosto = os.path.join(downloaddirectory, artist,albumname, songname + "." + fileformat)
             else:
 
                 print ("This file is already in your library.")
@@ -265,7 +270,7 @@ def runsmld():
                     tiedosto.writelines(jäljellä_olevat_rivit)
                 continue
 
-                tiedosto = os.path.join(getBaseConfigDir(), downloaddirectory, artist,albumname, songname + "." + fileformat)
+                tiedosto = os.path.join(downloaddirectory, artist,albumname, songname + "." + fileformat)
 
             if rate == "2":
                 with open(playlistfile, 'a', encoding='utf-8') as playlist:
@@ -282,7 +287,6 @@ def runsmld():
                     # Lisää metatiedot
                     audio["\xa9alb"] = albumname  # Albumin nimi
                     audio["\xa9ART"] = artist  # Artistin nimi
-                    audio["\xa9gen"] = genre
 
                     # Tallenna muutokset
                     audio.save()
@@ -291,7 +295,7 @@ def runsmld():
                 except Exception as e:
                     print(f"Error in updating metadata e2: {e}")
                     with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
-                        log.write("Mutagen error: " + str(e) + artist + albumname + songname + "." + fileformat)
+                        log.write("Mutagen error: " + str(e) + "Song: " +artist + albumname + songname + "." + fileformat)
                         log.write("\n")
                         log.close()
             else:
