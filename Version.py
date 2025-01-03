@@ -1,2 +1,2 @@
 Name = "YTMediaTool"
-Version = "v0.1"
+Version = "v0.2"
