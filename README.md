@@ -8,7 +8,7 @@ YTMediaTool is licensed under the terms of the GNU General Public License Versio
 
 ## Features
  - Download different video formats from a wide selection.
- - Select from multible audio formats to download.
+ - Select from multiple audio formats to download.
  - Download by keyword or with a provided link.
  - Download HUGE music collections with SMLD from YouTube or Spotify.
  
