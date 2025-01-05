@@ -15,6 +15,14 @@ YTMediaTool is licensed under the terms of the GNU General Public License Versio
 ## Usage
 Coming soon...
 
+## Configuration
+The program is configured in the 'Settings' tab within the interface.
+
+Config files are written to:
+ - Linux: `$XDG_CONFIG_HOME/YTMediaTool/` or `~/.config/YTMediaTool/`
+ - Windows: `%USERPROFILE%\AppData\Roaming\YTMediaTool\` (previously `%USERPROFILE%\AppData\Local\Roaming\YTMediaTool\`
+ - Other OSes: `~/.YTMediaTool/`
+
 ## Building
 The program is compiled to a single executable using [PyInstaller](https://pypi.org/project/pyinstaller/).
 
