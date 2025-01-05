@@ -56,7 +56,7 @@ def download(
 	dlStatus["returnStr"] = None
 	dlStatus["errorStr"] = None
 	dlStatus["progressWindowLabel"] = "Preparing download..."
-	dlStatus["progress"] = 0
+	dlStatus["progress"] = -1
 	dlStatus["dlQuality"] = None
 	dlStatus["final_file_path"] = None
 
@@ -73,13 +73,28 @@ def download(
 	def progress_hook(d):
 		try:
 			if d['status'] == "downloading":
-				downloadPercent = d['downloaded_bytes']/(d['total_bytes'] or 1)
-				dlStatus["progressWindowLabel"] = "Downloading..."
-				dlStatus["progress"] = math.floor(downloadPercent*100)/100
+				downloaded_bytes = d['downloaded_bytes']
+				if 'total_bytes' in d:
+					total_bytes = d['total_bytes']
+					dlStatus["progressWindowLabel"] = f"Downloading... ( {round(downloaded_bytes/1000000, 2)}MB / {round(total_bytes/1000000, 2)}MB )"
+					downloadPercent = downloaded_bytes/total_bytes
+					dlStatus["progress"] = math.floor(downloadPercent*100)/100
+				elif 'total_bytes_estimate' in d:
+					total_bytes = d['total_bytes_estimate']
+					dlStatus["progressWindowLabel"] = f"Downloading... ( {round(downloaded_bytes/1000000, 2)}MB / {round(total_bytes/1000000, 2)}MB (estimate) )"
+					downloadPercent = downloaded_bytes/total_bytes
+					dlStatus["progress"] = math.floor(downloadPercent*100)/100
+				else:
+					dlStatus["progressWindowLabel"] = f"Downloading... ( {round(downloaded_bytes/1000000, 2)}MB downloaded )"
+					dlStatus["progress"] = -1
+
 			elif d['status'] == "finished":
+				dlStatus["progressWindowLabel"] = "Postprocessing..."
 				dlStatus["final_file_path"] = d.get("info_dict").get("_filename")
+				dlStatus["progress"] = -1
 			if d.get("info_dict").get("height"):
 				dlStatus["dlQuality"] = str(d.get("info_dict").get("height"))
+
 		except Exception as err:
 			print("Error in progress hook:\n"+str(err))
 
@@ -329,7 +344,7 @@ def createFrame(window):
 				downloadButton.config(state="normal")
 			else:
 				pLabel.config(text=dlStatus["progressWindowLabel"])
-				if str(dlStatus["progressWindowLabel"]) == "Downloading...":
+				if dlStatus["progress"] >= 0:
 					pProgressLabel.config(text="Progress: ")
 					pProgressAmount.config(text=str(math.floor(dlStatus["progress"]*100))+"%")
 				else:
