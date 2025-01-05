@@ -1,4 +1,5 @@
 import os, json
+from sys import platform
 from Common import getUserDownloadDir, getBaseConfigDir
 
 Settings = {
@@ -13,6 +14,10 @@ Settings = {
 	"BasicPage-ForceQuality": "Download closest to selected quality",
 }
 SettingsFilePath = os.path.join(getBaseConfigDir(), "settings.json")
+
+if platform == "linux":
+	# Set default FFmpeg path on linux to use the system installed one
+	Settings["FFmpeg_path"] = "/usr/bin/ffmpeg"
 
 def loadSettingsFromFile():
 	print(f"Loading settings from '{SettingsFilePath}'...")
