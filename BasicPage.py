@@ -145,7 +145,12 @@ def download(
 	with YoutubeDL(opts) as ydl:
 		try:
 			c = ydl.download(url)
-			print("return code: " + str(c))
+			if dlStatus["final_file_path"] and "ext" in ff:
+				# Fix the file path to use correct file ext since yt_dlp only gives the original pre-conversion file path
+				dlStatus["final_file_path"] = os.path.splitext(dlStatus["final_file_path"])[0]+"."+ff["ext"]
+
+			print(f"return code: {c}")
+			print(f"filepath: {dlStatus["final_file_path"]}")
 			if dlvideo and "res" in vq and Settings["BasicPage-ForceQuality"] == "Resize to selected quality" and "ffmpeg_location" in opts:
 				if os.path.isfile(opts["ffmpeg_location"]) and str(dlStatus["dlQuality"]) != str(vq["res"]):
 					dlStatus["progressWindowLabel"] = "Resizing..."
