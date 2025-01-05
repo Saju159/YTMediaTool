@@ -20,106 +20,52 @@ if not os.path.exists(os.path.join(getBaseConfigDir(),"SMLD", "Temp")):
 with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "progress.txt"), "w") as f:
     f.close()
 
-import SettingsPage # Import settings page before anything else
 with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "w") as f:
     f.write("0")
     f.close()
 
-
-
-import BasicPage
-import SMLDpage
-import AboutPage
-
-
-page1rely = 0
-
 window = tk.Tk()
 window.title("YTMediaTool")
-lbl = tk.Label(window, text="YTMediaTool")
 window.geometry('600x480')
-window.configure(bg='gray')
+window.minsize(600, 480)
 
-page1frame = BasicPage.createFrame(window)
-page2frame = SMLDpage.createFrame(window)
-page3frame = SettingsPage.createFrame(window)
-page4frame = AboutPage.createFrame(window)
+tabFrame = tk.Frame(window, bg='gray')
+tabFrame.place(x=0, y=0, relwidth=1.0, height=34)
+tabFrame.rowconfigure(0, weight=1)
 
-def page1():
-    BasicPage.showPage()
-    SMLDpage.hidePage()
-    SettingsPage.hidePage()
-    AboutPage.hidePage()
+pageNames = {
+    "BasicPage": "Basic",
+    "SMLDpage": "SMLD",
+    "SettingsPage": "Settings",
+    "AboutPage": "About"
+}
+pages = []
 
-def page2():
-    toggle_button("Vaihtoehto 2")
-    BasicPage.hidePage()
-    SMLDpage.showPage()
-    SettingsPage.hidePage()
-    AboutPage.hidePage()
+def hideAllPages():
+    for p in pages:
+        p.hidePage()
 
-def page3():
-    toggle_button("Vaihtoehto 3")
-    BasicPage.hidePage()
-    SMLDpage.hidePage()
-    SettingsPage.showPage()
-    AboutPage.hidePage()
+def showSelPage():
+    hideAllPages()
+    pages[currentPage.get()].showPage()
 
-def page4():
-    toggle_button("Vaihtoehto 4")
-    BasicPage.hidePage()
-    SMLDpage.hidePage()
-    SettingsPage.hidePage()
-    AboutPage.showPage()
+currentPage = tk.IntVar(value=0)
 
-def toggle_button(selected):
-    current_value.set(selected)
+i = 0
+for pageName in pageNames.keys():
+    page = __import__(pageName)
+    page.createFrame(window)
 
-current_value = tk.StringVar(value="Vaihtoehto 1")
+    pages.insert(i, page)
 
-button1 = tk.Radiobutton(
-    window,
-    text="Basic",
-    value="Vaihtoehto 1",
-    variable=current_value,
-    indicatoron=False,
-    width=15,
-    command=page1,
-)
-button1.place(x=5, y=5)
+    pageTabBtnFrame = tk.Frame(tabFrame)
+    pageTabBtnFrame.grid(row=0, column=i, sticky="NSWE", padx=5, pady=5)
+    tabFrame.columnconfigure(i, weight=1)
 
-button2 = tk.Radiobutton(
-    window,
-    text="SMLD",
-    value="Vaihtoehto 2",
-    variable=current_value,
-    indicatoron=False,
-    width=15,
-    command=page2,
-)
-button2.place(x=155, y=5)
+    pageTabBtn = tk.Radiobutton(pageTabBtnFrame, text=pageNames[pageName], value=i, variable=currentPage, indicatoron=False, command=showSelPage)
+    pageTabBtn.place(relwidth=1.0, relheight=1.0)
 
-button3 = tk.Radiobutton(
-    window,
-    text="Settings",
-    value="Vaihtoehto 3",
-    variable=current_value,
-    indicatoron=False,
-    width=15,
-    command=page3,
-)
-button3.place(x=305, y=5)
-
-button4 = tk.Radiobutton(
-    window,
-    text="About",
-    value="Vaihtoehto 4",
-    variable=current_value,
-    indicatoron=False,
-    width=15,
-    command=page4,
-)
-button4.place(x=455, y=5)
+    i += 1
 
 def quit():
     with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "w") as f:
@@ -128,7 +74,7 @@ def quit():
     window.destroy
     Settings.saveSettingsToFile()
 
-window.after(1,page1)
+window.after(1, lambda: pages[0].showPage())
 
 window.mainloop()
 quit()
