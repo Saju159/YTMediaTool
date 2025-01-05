@@ -21,7 +21,7 @@ def getBaseConfigDir():
 	if platform == "linux":
 		configPath = os.environ.get('XDG_CONFIG_HOME') and os.path.join(os.environ.get('XDG_CONFIG_HOME'), "YTMediaTool/") or "~/.config/YTMediaTool/"
 	elif platform == "win32":
-		configPath = "~\\AppData\\Local\\Roaming\\YTMediaTool"
+		configPath = "~\\AppData\\Roaming\\YTMediaTool"
 
 	configPath = os.path.expanduser(configPath)
 	#print("Config path: "+configPath)
