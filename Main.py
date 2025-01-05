@@ -1,10 +1,14 @@
-import tkinter as tk
-import Settings
-from Common import getBaseConfigDir
+from sys import argv
 
+if len(argv) > 1 and argv[1] == "--version":
+    import Version
+    print(f"{Version.Name} {Version.Version} - {Version.ShortDesc}\n{Version.GPLNotice}")
+    exit()
 
 import os
-
+import tkinter as tk
+from Common import getBaseConfigDir
+import Settings
 
 if not os.path.exists(os.path.join(getBaseConfigDir(),"SMLD")):
     os.makedirs(os.path.join(getBaseConfigDir(),"SMLD"))
@@ -33,7 +37,7 @@ page1rely = 0
 window = tk.Tk()
 window.title("YTMediaTool")
 lbl = tk.Label(window, text="YTMediaTool")
-window.geometry('600x400')
+window.geometry('600x480')
 window.configure(bg='gray')
 
 page1frame = BasicPage.createFrame(window)

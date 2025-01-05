@@ -5,7 +5,7 @@ import Version
 
 def createFrame(window):
 	global frame
-	frame = tk.Frame(window, width=600, height=380)
+	frame = tk.Frame(window, width=600, height=600)
 	frame.columnconfigure(0, weight=1)
 
 	labels = {}
@@ -18,12 +18,14 @@ def createFrame(window):
 
 	labels["Title"] = tk.Label(frame, text=f"{Version.Name} {Version.Version}", font=font.Font(size=24, weight="bold"))
 	labels["Title"].grid(row=1, pady=16)
-	labels["ShortDesc"] = tk.Label(frame, text="Media downloader")
+	labels["ShortDesc"] = tk.Label(frame, text=Version.ShortDesc)
 	labels["ShortDesc"].grid(row=2)
-	labels["License"] = tk.Label(frame, text="(c) 2025 Saju159 & arttuc\nYTMediaTool is distributed under the terms of the GNU General Public License Version 3.0")
+	labels["License"] = tk.Label(frame, text=Version.GPLNotice)
 	labels["License"].grid(row=3)
 	labels["SourceCodeBtn"] = tk.Button(frame, text="Source code:\nhttps://github.com/Saju159/YTMediaTool", command=lambda: openInBrowser("https://github.com/Saju159/YTMediaTool"))
 	labels["SourceCodeBtn"].grid(row=4)
+	labels["LicenseBtn"] = tk.Button(frame, text="https://www.gnu.org/licenses/", command=lambda: openInBrowser("https://www.gnu.org/licenses/"))
+	labels["LicenseBtn"].grid(row=5)
 
 	def onResize(event):
 		nonlocal labels
