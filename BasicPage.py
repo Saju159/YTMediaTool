@@ -85,7 +85,8 @@ def download(
 
 	opts = {
 		'verbose': False,
-		'outtmpl': {'default': f"{directory}/%(title)s [%(id)s].%(ext)s"},
+		'outtmpl': {'default': f"{directory}/%(title).165B [%(id)s].%(ext)s"},
+		'restrictfilenames': True,
 		'overwrites': True, # FIXME: workaround for ffmpeg failure if already downloaded
 		'continuedl': False,
 		'updatetime': False, # Don't set file modification timestamp to video upload time
