@@ -39,7 +39,7 @@ def openDirInFileBrowser(directory: str):
 		else:
 			print("xdg-open not found! Can't open directory in system file browser!")
 	elif platform == "win32":
-		subprocess.run(["start", directory], stdout=subprocess.PIPE)
+		subprocess.run(["explorer", os.path.normpath(directory)], stdout=subprocess.PIPE)
 
 def openFilePicker(window: tk.Tk, dtype: str, **kwargs):
 	window.update() # Prevent program from freezing if root window is killed while file picker is open
