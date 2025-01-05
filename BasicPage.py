@@ -210,8 +210,15 @@ def createFrame(window):
 	urlLabel = tk.Label(frame, text="URL: ")
 	urlLabel.grid(row=2, column=1, sticky="E")
 
-	urlInputBox = tk.Entry(frame)
-	urlInputBox.grid(row=2, column=2, columnspan=2, sticky="WE")
+	urlInputBoxFrame = tk.Frame(frame)
+	urlInputBoxFrame.grid(row=2, column=2, columnspan=2, sticky="WE")
+	urlInputBoxFrame.columnconfigure(1, weight=1)
+
+	urlInputBox = tk.Entry(urlInputBoxFrame)
+	urlInputBox.grid(row=1, column=1, sticky="WE")
+
+	urlInputClearBtn = tk.Button(urlInputBoxFrame, text="C", command=lambda: urlInputBox.delete(0, 999999))
+	urlInputClearBtn.grid(row=1, column=2)
 
 	# File format
 	tk.Label(frame, text="Format: ").grid(row=5, column=1, sticky="E")
