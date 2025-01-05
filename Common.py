@@ -8,10 +8,9 @@ def getUserDownloadDir():
 	if platform == "linux":
 		c = subprocess.run(["which", "xdg-user-dir"], stdout=subprocess.PIPE)
 		if c.returncode == 0:
-			c = subprocess.run(["xdg-user-dir", "DOWNLOAD"], capture_output=True)
+			c = subprocess.run(["xdg-user-dir", "DOWNLOAD"], capture_output=True, encoding="utf-8")
 			if c.returncode == 0:
-				pathStr = str(c.stdout)
-				pathStr = pathStr[:len(pathStr)-3][2:]
+				pathStr = str(c.stdout)[:-1]
 				return pathStr
 
 	# fallback to a 'Downloads' directory in the user's home
@@ -60,10 +59,9 @@ def openFilePicker(window: tk.Tk, dtype: str, **kwargs):
 			elif dtype == "saveFile": pickerargs.append("--getsavefilename")
 			else: raise Exception("Invalid dtype! Must be 'openDir', 'openFile' or 'saveFile'")
 
-			c = subprocess.run(pickerargs, stdout=subprocess.PIPE)
+			c = subprocess.run(pickerargs, stdout=subprocess.PIPE, encoding="utf-8")
 			if c.returncode == 0:
-				pathStr = str(c.stdout)
-				pathStr = pathStr[:len(pathStr)-3][2:]
+				pathStr = str(c.stdout)[:-1]
 				return pathStr
 			else:
 				return None
