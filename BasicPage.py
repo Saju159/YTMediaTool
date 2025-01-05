@@ -221,6 +221,8 @@ def createFrame(window):
 
 	urlInputBox = tk.Entry(urlInputBoxFrame)
 	urlInputBox.grid(row=1, column=1, sticky="WE")
+	urlInputBox.bind("<Control-KeyRelease-a>", lambda _: urlInputBox.select_range(0, tk.END), urlInputBox.icursor(tk.END))
+	urlInputBox.bind("<Control-KeyRelease-A>", lambda _: urlInputBox.select_range(0, tk.END), urlInputBox.icursor(tk.END))
 
 	urlInputClearBtn = tk.Button(urlInputBoxFrame, text="C", command=lambda: urlInputBox.delete(0, 999999))
 	urlInputClearBtn.grid(row=1, column=2)
@@ -285,13 +287,15 @@ def createFrame(window):
 
 	dirInputBox = tk.Entry(frame, textvariable=dirSV)
 	dirInputBox.grid(row=19, column=2, sticky="WE")
+	dirInputBox.bind("<Control-KeyRelease-a>", lambda _: dirInputBox.select_range(0, tk.END), dirInputBox.icursor(tk.END))
+	dirInputBox.bind("<Control-KeyRelease-A>", lambda _: dirInputBox.select_range(0, tk.END), dirInputBox.icursor(tk.END))
 
 	def seldir():
 		picked_dir = openFilePicker(window, "openDir", title="Select directory to save downloaded files to...")
 		if picked_dir:
 			dirSV.set(picked_dir)
 
-	selectDirButton = tk.Button(frame, text="Pick...", command=seldir)
+	selectDirButton = tk.Button(frame, text="Browse...", command=seldir)
 	selectDirButton.grid(row=19, column=3)
 
 	downloadButton = None

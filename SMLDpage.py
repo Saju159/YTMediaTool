@@ -92,6 +92,8 @@ def createFrame(window):
 
     dirInputBox = tk.Entry(frame, textvariable=downloaddirectory2)
     dirInputBox.grid(row=1, column=2, sticky="WE")
+    dirInputBox.bind("<Control-KeyRelease-a>", lambda _: dirInputBox.select_range(0, tk.END), dirInputBox.icursor(tk.END))
+    dirInputBox.bind("<Control-KeyRelease-A>", lambda _: dirInputBox.select_range(0, tk.END), dirInputBox.icursor(tk.END))
 
     # def seldir():
     #     picked_dir = openFilePicker(window, "openDir")
@@ -107,8 +109,10 @@ def createFrame(window):
     librarydirectory = tk.StringVar()
     librarydirectory.set("Enter library file directory here.")
 
-    dirInputBox = tk.Entry(frame, textvariable=librarydirectory)
-    dirInputBox.grid(row=2, column=2, sticky="WE")
+    libraryDirInputBox = tk.Entry(frame, textvariable=librarydirectory)
+    libraryDirInputBox.grid(row=2, column=2, sticky="WE")
+    libraryDirInputBox.bind("<Control-KeyRelease-a>", lambda _: libraryDirInputBox.select_range(0, tk.END), libraryDirInputBox.icursor(tk.END))
+    libraryDirInputBox.bind("<Control-KeyRelease-A>", lambda _: libraryDirInputBox.select_range(0, tk.END), libraryDirInputBox.icursor(tk.END))
 
     selectDirButton = tk.Button(frame, text="Browse...", command=sellibrarydirectory)
     selectDirButton.grid(row=2, column=3)

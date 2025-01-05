@@ -68,6 +68,8 @@ def createFrame(window):
 			if pathSV.get() != Settings.Settings[optId]:
 				showButtonsFrame()
 
+		pathInputBox.bind("<Control-KeyRelease-a>", lambda _: pathInputBox.select_range(0, tk.END), pathInputBox.icursor(tk.END))
+		pathInputBox.bind("<Control-KeyRelease-A>", lambda _: pathInputBox.select_range(0, tk.END), pathInputBox.icursor(tk.END))
 		pathInputBox.bind('<KeyRelease>', lambda _: checkDiff())
 		pathInputBox.grid(row=nextRow, column=2, sticky="WE")
 
