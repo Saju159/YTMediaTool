@@ -30,8 +30,9 @@ This tool works with many websites not listed here. These websites just have bee
  - Downloading playlists does work, but currently you can not cancel the downloading process.
 
 ### SMLD Page (Primary)
+SMLD works with Spotify, iTunes and Youtube Music.
  - SMLD destination folder is the base folder where SMLD starts building the folder structure by artist and album.
- - You need to select a library list file using the Library list directory picker. Most common iTunes and Spotify library lists are .CSV files and you can generate them using the tool linked under the input bar "Open .csv tool". In the tool select the service you want to download your library from (iTunes or Spotify). Then input the link of a playlist to the URL box on the website. After that select "Choose Destination" and then "Export to file". Select the CSV format.
+ - You need to select a library list file using the Library list directory picker. Most common iTunes, Spotify and YouTube Music library lists are .CSV files and you can generate them using the tool linked under the input bar "Open .csv tool". In the tool select the service you want to download your library from (iTunes, Spotify or YouTube Music). Then input the link of a playlist to the URL box on the website. After that select "Choose Destination" and then "Export to file". Select the CSV format.
  - After downloading the file select it with the Library list file picker, select the format you want and start the download.
  NOTE: Metada can currently only be saved when using the m4a format.
 
