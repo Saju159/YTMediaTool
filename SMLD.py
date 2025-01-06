@@ -210,12 +210,12 @@ def runsmld():
                 continue
 
 
-            if not os.path.isfile(downloaddirectory + artist +"/" +  albumname + "/" + songname + "." + fileformat):
+            if not os.path.isfile(os.path.join(downloaddirectory, artist,albumname, songname + "."+fileformat)):
                 global vaihtoehdot
                 vaihtoehdot = {
                 'format': "ba",
                 'max_downloads': 1,
-                'outtmpl': {'default': os.path.join(getBaseConfigDir(), downloaddirectory, artist,albumname, songname + ".%(ext)s")},
+                'outtmpl': {'default': os.path.join(downloaddirectory, artist,albumname, songname + ".%(ext)s")},
                 'final_ext' : fileformat,
                 'postprocessors' : [{'key': 'FFmpegVideoConvertor', 'preferedformat': fileformat}]
                 }
