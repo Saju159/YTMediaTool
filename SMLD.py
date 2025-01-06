@@ -35,16 +35,15 @@ def setupSMLD():
     print(f"Download Directory: {downloaddirectory}")
     print(f"Library Directory: {libraryfiledirectory}")
 
-    global playlistfile
-    playlistfile = (os.path.join(downloaddirectory, "Favorites.m3u" ))
-
-    with open(playlistfile, 'w', encoding='utf-8') as f2:
-        f2.write("#EXTM3U")
-        f2.write("\n")
-        f2.close()
-
-
     try:
+        global playlistfile1, playlistfile
+        playlistfile1 = (os.path.join(downloaddirectory, "CurrentDownload.m3u" ))
+
+        with open(playlistfile1, 'w', encoding='utf-8') as f2:
+            f2.write("#EXTM3U")
+            f2.write("\n")
+            f2.close()
+
         with open(libraryfiledirectory, 'r', encoding='utf-8') as tiedosto:
             ensimrivi = tiedosto.readlines(1)
 
@@ -53,6 +52,13 @@ def setupSMLD():
 
             if not filetype == -1:
                 print("Selected file is a iTunes media library. With .txt file format")
+
+                playlistfile = (os.path.join(downloaddirectory, "Favorites.m3u" ))
+
+                with open(playlistfile, 'w', encoding='utf-8') as f2:
+                    f2.write("#EXTM3U")
+                    f2.write("\n")
+                    f2.close()
 
                 with open(libraryfiledirectory, 'r', encoding='utf-8') as tiedosto:
                     rivit = tiedosto.readlines()
@@ -113,7 +119,7 @@ def setupSMLD():
 
 
 def runsmld():
-    global downloaddirectory, vaihtoehdot, fileformat, polku3, filetype, albumname, songname, artist
+    global downloaddirectory, vaihtoehdot, fileformat, polku3, filetype, albumname, songname, artist, playlistfile1
 
     with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "downloaddirectory.txt")) as f:
         global downloaddirectory
@@ -169,7 +175,6 @@ def runsmld():
                     albumname2 = f"{osat[2]}"
                     albumname1 = albumname2.replace(")", "")
                     albumname = albumname1.replace("(", "")
-                    genre = f"{osat[3]}"
                     rate = f"{osat[4]}"
 
                     with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "songinfo.txt"), "w") as f:
@@ -184,7 +189,6 @@ def runsmld():
                 artist = artist.replace('"','')
                 albumname = f"{osat[2]}"
                 albumname = albumname.replace('"','')
-                genre = ""
                 rate = ""
 
                 with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "songinfo.txt"), "w") as f:
@@ -272,11 +276,19 @@ def runsmld():
 
                 tiedosto = os.path.join(downloaddirectory, artist,albumname, songname + "." + fileformat)
 
-            if rate == "2":
-                with open(playlistfile, 'a', encoding='utf-8') as playlist:
-                    playlist.write(artist +"/" +  albumname + "/" + songname + "." + fileformat)
-                    playlist.write("\n")
-                    playlist.close()
+            if not filetype == -1:
+                if rate == "2":
+                    with open(playlistfile, 'a', encoding='utf-8') as playlist:
+                        playlist.write(artist +"/" +  albumname + "/" + songname + "." + fileformat)
+                        playlist.write("\n")
+                        playlist.close()
+
+
+            with open(playlistfile1, 'a', encoding='utf-8') as playlist:
+                playlist.write(artist +"/" +  albumname + "/" + songname + "." + fileformat)
+                playlist.write("\n")
+                playlist.close()
+
     #Metadata:
             if fileformat == "m4a":
                 print("m4a detected")
