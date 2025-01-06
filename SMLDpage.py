@@ -57,15 +57,6 @@ def createFrame(window):
 
     print (librarydirectory)
 
-    # def sellibdir():
-    #     global librarydirectory
-    #     picked_dir = openFilePicker(window, "openDir")
-    #     if picked_dir:
-    #         librarydirectory = picked_dir
-    #
-    #     if not librarydirectory:
-    #         librarydirectory = "~/YTMediaTool/Downloads/"
-
     def seldownloaddir1():
         global downloaddirectory1
         picked_dir = openFilePicker(window, "openDir")
@@ -73,12 +64,9 @@ def createFrame(window):
         if picked_dir:
             downloaddirectory1 = picked_dir
 
-        # if not downloaddirectory1:
-        #     downloaddirectory1 = os.path.expanduser("~/YTMediaTool/Downloads/")
 
     def sellibrarydirectory():
         global librarydirectory1
-        #librarydirectory = filedialog.askdirectory(mustexist=True)
         librarydirectory1 = openFilePicker(window, "openFile")
         if librarydirectory1:
             print(librarydirectory1)
@@ -95,10 +83,6 @@ def createFrame(window):
     dirInputBox.bind("<Control-KeyRelease-a>", lambda _: dirInputBox.select_range(0, tk.END), dirInputBox.icursor(tk.END))
     dirInputBox.bind("<Control-KeyRelease-A>", lambda _: dirInputBox.select_range(0, tk.END), dirInputBox.icursor(tk.END))
 
-    # def seldir():
-    #     picked_dir = openFilePicker(window, "openDir")
-    #     if picked_dir:
-    #         downloaddirectory2.set(picked_dir)
 
     selectDirButton = tk.Button(frame, text="Browse...", command=seldownloaddir1)
     selectDirButton.grid(row=1, column=3)
@@ -196,31 +180,32 @@ def createFrame(window):
             f.close()
 
     def runSMLD():
-        with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "r") as f:
-            cancel = f.read()
-            f.close()
-        if int(cancel) == 1:
-            print("cancel")
-        else:
-            print("Päällä")
-            def smld_a():
-                SMLD.runsmld()
+        if os.path.isfile(librarydirectory1):
+            with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "r") as f:
+                cancel = f.read()
+                f.close()
+            if int(cancel) == 1:
+                print("cancel")
+            else:
+                print("Päällä")
+                def smld_a():
+                    SMLD.runsmld()
 
-            smld_b = threading.Thread(target=smld_a)
-            smld_b.start()
+                smld_b = threading.Thread(target=smld_a)
+                smld_b.start()
 
     def setupSMLD():
-        downloadb1.config(state="disabled")
-        fileformatDropdown.config(state="disabled")
-        global process1
-        global smld_a
-        window.after(100, runSMLD)
-
-        with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Done.txt"), 'w') as f:
-            f.write("0")
-            f.close()
-
         if os.path.isfile(librarydirectory1):
+            downloadb1.config(state="disabled")
+            fileformatDropdown.config(state="disabled")
+            global process1
+            global smld_a
+            window.after(100, runSMLD)
+
+            with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Done.txt"), 'w') as f:
+                f.write("0")
+                f.close()
+
             cancelb.grid(row=1, column=3, sticky="W")
             pg.grid(row=1, column=4)
             np.grid(row=1, column=5)
