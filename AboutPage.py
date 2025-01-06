@@ -17,7 +17,7 @@ def createFrame(window):
 		frame.place(y=34, h=-34, relwidth=1.0, relheight=1.0)
 
 	labels["Title"] = tk.Label(frame, text=f"{Version.Name} {Version.Version}", font=font.Font(size=24, weight="bold"))
-	labels["Title"].grid(row=1, pady=16)
+	labels["Title"].grid(row=1, pady=10)
 	labels["ShortDesc"] = tk.Label(frame, text=Version.ShortDesc)
 	labels["ShortDesc"].grid(row=2)
 	labels["License"] = tk.Label(frame, text=Version.GPLNotice)
