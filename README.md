@@ -52,3 +52,4 @@ The binaries in the releases are currently made by using the included build scri
  - [yt-dlp](https://github.com/yt-dlp/yt-dlp)
  - [mutagen](https://github.com/quodlibet/mutagen)
  - [ffmpeg](https://www.ffmpeg.org/) (runtime only)
+ - kdialog (optional, linux only)
