@@ -63,6 +63,7 @@ def createFrame(window):
         print(downloaddirectory1)
         if picked_dir:
             downloaddirectory1 = picked_dir
+            downloaddirectory2.set(downloaddirectory1)
 
 
     def sellibrarydirectory():
