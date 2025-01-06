@@ -125,7 +125,7 @@ def createFrame(window):
 	addFilePathOption("FFmpeg_path", "Path to FFmpeg executable")
 	addLabel("FFmpeg is required for merging the downloaded video + audio and for converting formats.")
 	if platform == "win32":
-		addButton("Download FFmpeg for Windows from GitHub", lambda: openInBrowser("https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip"))
+		addButton("Download FFmpeg for Windows from github.com/BtbN/FFmpeg-Builds", lambda: openInBrowser("https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip"))
 	addButton("Get binaries from https://www.ffmpeg.org/download.html", lambda: openInBrowser("https://www.ffmpeg.org/download.html"))
 
 	addSpacer()
