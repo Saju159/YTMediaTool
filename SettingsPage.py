@@ -131,6 +131,8 @@ def createFrame(window):
 	addSpacer()
 	addLabel("Settings for 'Basic' tab:")
 	addBooleanOption("BasicPage-ShowDialogAfterDLSuccess", "Show dialog after successful download")
+	addBooleanOption("BasicPage-Cookies", "Use browser cookies")
+	addDropdownOption("BasicPage-browser", "Select your primary browser", ["brave","chrome" , "chromium", "edge", "firefox", "opera"])
 	addDropdownOption("BasicPage-ForceQuality", "When video quality is not available", ["Resize to selected quality", "Download closest to selected quality"])
 
 	addSpacer()

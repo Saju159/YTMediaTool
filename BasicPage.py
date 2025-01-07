@@ -98,15 +98,28 @@ def download(
 		except Exception as err:
 			print("Error in progress hook:\n"+str(err))
 
-	opts = {
-		'verbose': False,
-		'outtmpl': {'default': f"{directory}/%(title).165B [%(id)s].%(ext)s"},
-		'restrictfilenames': True,
-		'overwrites': True, # FIXME: workaround for ffmpeg failure if already downloaded
-		'continuedl': False,
-		'updatetime': False, # Don't set file modification timestamp to video upload time
-		'progress_hooks': [progress_hook]
+	if Settings["BasicPage-Cookies"]:
+		cookies = (Settings["BasicPage-browser"])
+		opts = {
+			'verbose': False,
+			'outtmpl': {'default': f"{directory}/%(title).165B [%(id)s].%(ext)s"},
+			'restrictfilenames': True,
+			'overwrites': True, # FIXME: workaround for ffmpeg failure if already downloaded
+			'continuedl': False,
+			'updatetime': False, # Don't set file modification timestamp to video upload time
+			'progress_hooks': [progress_hook],
+			'cookiesfrombrowser':(cookies, None, None, None)
 	}
+	else:
+		opts = {
+			'verbose': False,
+			'outtmpl': {'default': f"{directory}/%(title).165B [%(id)s].%(ext)s"},
+			'restrictfilenames': True,
+			'overwrites': True, # FIXME: workaround for ffmpeg failure if already downloaded
+			'continuedl': False,
+			'updatetime': False, # Don't set file modification timestamp to video upload time
+			'progress_hooks': [progress_hook],
+		}
 
 	if ff["video"] == False: dlvideo = False
 	if ff["audio"] == False: dlaudio = False

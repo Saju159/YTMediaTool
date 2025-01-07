@@ -12,6 +12,8 @@ Settings = {
 	"BasicPage-Format": "Original",
 	"BasicPage-VideoQuality": "Source",
 	"BasicPage-ForceQuality": "Download closest to selected quality",
+	"BasicPage-Cookies": False,
+	"BasicPage-browser": "firefox",
 }
 SettingsFilePath = os.path.join(getBaseConfigDir(), "settings.json")
 
