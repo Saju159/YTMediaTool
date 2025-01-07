@@ -164,11 +164,9 @@ def runsmld():
             for char in filter:
                 komento = komento.replace(char, "")
 
-            komento2 = komento.replace(" ", "")
-
             if not filetype == -1:
                 print("Expanded iTunes format")
-                osat = komento2.split('\t')
+                osat = komento.split('\t')
                 if len(osat) > 2:
                     songname = f"{osat[0]}"
                     artist = f"{osat[1]}"
@@ -182,7 +180,7 @@ def runsmld():
                         f.close()
             else:
                 print("Spotify or iTunes lite.")
-                osat = komento2.split(',')
+                osat = komento.split(',')
                 songname = f"{osat[0]}"
                 songname = songname.replace('"','')
                 artist = f"{osat[1]}"
@@ -209,13 +207,17 @@ def runsmld():
                     tiedosto.writelines(jäljellä_olevat_rivit)
                 continue
 
+            lopullinentiedosto = os.path.join(downloaddirectory, artist ,albumname, songname)
+            filter = '?ü"[];:,.()®'
+            for char in filter:
+                lopullinentiedosto = lopullinentiedosto.replace(char, "")
 
-            if not os.path.isfile(os.path.join(downloaddirectory, artist,albumname, songname + "."+fileformat)):
+            if not os.path.isfile(lopullinentiedosto + "."+fileformat):
                 global vaihtoehdot
                 vaihtoehdot = {
                 'format': "ba",
                 'max_downloads': 1,
-                'outtmpl': {'default': os.path.join(downloaddirectory, artist,albumname, songname + ".%(ext)s")},
+                'outtmpl': {'default': lopullinentiedosto + ".%(ext)s"},
                 'final_ext' : fileformat,
                 'postprocessors' : [{'key': 'FFmpegVideoConvertor', 'preferedformat': fileformat}]
                 }
@@ -253,18 +255,18 @@ def runsmld():
 
                 print(f"Downloading took: {time.process_time() - start}")
 
-                if os.path.isfile(os.path.join(downloaddirectory, artist, albumname, songname + "." + fileformat)):
+                if os.path.isfile(lopullinentiedosto + "." + fileformat):
                     print("Files saved")
                 else:
 
                     print("The file was not saved due to an unknown error.")
 
                     with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
-                        log.write("File was not downloaded: "  + "Song: " + os.path.join(downloaddirectory, artist, albumname, songname + "." + fileformat))
+                        log.write("File was not downloaded: "  + "Song: " + lopullinentiedosto + "." + fileformat)
                         log.write("\n")
                         log.close()
 
-                tiedosto = os.path.join(downloaddirectory, artist,albumname, songname + "." + fileformat)
+                tiedosto = lopullinentiedosto + "." + fileformat
             else:
 
                 print ("This file is already in your library.")
@@ -274,7 +276,7 @@ def runsmld():
                     tiedosto.writelines(jäljellä_olevat_rivit)
                 continue
 
-                tiedosto = os.path.join(downloaddirectory, artist,albumname, songname + "." + fileformat)
+                tiedosto = lopullinentiedosto + "." + fileformat
 
             if not filetype == -1:
                 if rate == "2":
