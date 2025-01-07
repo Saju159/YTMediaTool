@@ -160,9 +160,7 @@ def createFrame(window):
             progress = progress.replace("'", "")
             progress = progress.replace("\\n", "")
 
-            print(progress)
             pg.config(text = "Progress: "+ str(progress) + "%")
-
 
             rlines = str(f.readlines(2))
             rlines = rlines.replace("[", "")

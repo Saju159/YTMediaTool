@@ -165,7 +165,7 @@ def runsmld():
                 komento = komento.replace(char, "")
 
             if not filetype == -1:
-                print("Expanded iTunes format")
+                #print("Expanded iTunes format")
                 osat = komento.split('\t')
                 if len(osat) > 2:
                     songname = f"{osat[0]}"
@@ -179,7 +179,7 @@ def runsmld():
                         f.write(artist + "\n "+ songname + "\n" + albumname)
                         f.close()
             else:
-                print("Spotify or iTunes lite.")
+                #print("Spotify or iTunes lite.")
                 osat = komento.split(',')
                 songname = f"{osat[0]}"
                 songname = songname.replace('"','')
@@ -192,14 +192,6 @@ def runsmld():
                 with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "songinfo.txt"), "w") as f:
                     f.write(artist + "\n "+ songname + "\n" + albumname)
                     f.close()
-
-            print("----------------------------------------")
-            print("Downloading:")
-
-            print("Artist: " + str(artist))
-            print("Song: " + str(songname))
-            print("Albumname: " + str(albumname))
-
 
             if not komento:  # Ohitetaan tyhjät rivit
                 # Päivitetään tiedosto ilman ensimmäistä riviä
@@ -225,7 +217,6 @@ def runsmld():
                 if "FFmpeg_path" in Settings:
                     vaihtoehdot["ffmpeg_location"] = Settings["FFmpeg_path"]
 
-                start = time.process_time()
                 try:
 
                     with YoutubeDL(vaihtoehdot) as ydl:
@@ -238,11 +229,18 @@ def runsmld():
 
                             if "Sign in to confirm your age." in str(e):
                                 with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
-                                    log.write(f"Failed to download: {artist} {albumname} {songname} Video is age-restricted.")
-                                    log.write("\n")
-                                    #log.write(str(e))
+                                    log.write(f"Failed to download: {lopullinentiedosto}.{fileformat} Video is age-restricted.")
                                     log.write("\n")
                                     log.close()
+                            else:
+                                if "--max-downloads" in str(e):
+                                    print("Max downloads reached")
+                                else:
+                                    with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
+                                        log.write(f"Failed to download: {lopullinentiedosto}.{fileformat} Error occured: {e}")
+                                        log.write("\n")
+                                        log.close()
+
 
                     # Poistetaan ensimmäinen rivi tiedostosta
                     with open(tiedostonimi, 'w', encoding='utf-8') as tiedosto:
@@ -253,23 +251,16 @@ def runsmld():
                     with open(tiedostonimi, 'w', encoding='utf-8') as tiedosto:
                         tiedosto.writelines(jäljellä_olevat_rivit)
 
-                print(f"Downloading took: {time.process_time() - start}")
 
                 if os.path.isfile(lopullinentiedosto + "." + fileformat):
-                    print("Files saved")
+                    #print("Files saved")
+                    continue
                 else:
 
                     print("The file was not saved due to an unknown error.")
 
-                    with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
-                        log.write("File was not downloaded: "  + "Song: " + lopullinentiedosto + "." + fileformat)
-                        log.write("\n")
-                        log.close()
-
                 tiedosto = lopullinentiedosto + "." + fileformat
             else:
-
-                print ("This file is already in your library.")
 
                 # Poistetaan ensimmäinen rivi tiedostosta
                 with open(tiedostonimi, 'w', encoding='utf-8') as tiedosto:
@@ -309,7 +300,7 @@ def runsmld():
                 except Exception as e:
                     print(f"Error in updating metadata e2: {e}")
                     with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
-                        log.write("Mutagen error: " + str(e) + "Song: " +artist + albumname + songname + "." + fileformat)
+                        log.write("Mutagen error: " + str(e))
                         log.write("\n")
                         log.close()
             else:
