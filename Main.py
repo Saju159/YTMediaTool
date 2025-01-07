@@ -9,13 +9,13 @@ import os
 import tkinter as tk
 from Common import getBaseConfigDir
 import Settings
+from tkinter import messagebox
 
 if not os.path.exists(os.path.join(getBaseConfigDir(),"SMLD")):
     os.makedirs(os.path.join(getBaseConfigDir(),"SMLD"))
 
 if not os.path.exists(os.path.join(getBaseConfigDir(),"SMLD", "Temp")):
     os.makedirs(os.path.join(getBaseConfigDir(),"SMLD", "Temp"))
-
 
 with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "progress.txt"), "w") as f:
     f.close()
@@ -75,6 +75,9 @@ def quit():
     Settings.saveSettingsToFile()
 
 window.after(1, lambda: pages[0].showPage())
+
+if not os.path.isfile(Settings.Settings["FFmpeg_path"]):
+    messagebox.showinfo("FFmpeg not found", f'FFmpeg cannot be found in: "{Settings.Settings["FFmpeg_path"]}". Please enter a valid FFmpeg path in the settings.')
 
 window.mainloop()
 quit()
