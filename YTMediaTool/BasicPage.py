@@ -2,7 +2,7 @@ import math
 import tkinter as tk
 import tkinter.ttk as ttk
 from queue import Empty as QueueEmpty
-from Common import openDirInFileBrowser, openFilePicker, createYDLProcess
+from Common import openDirInFileBrowser, openFilePicker, createYDLProcess, cleanupYDLTemp
 import Info
 from Settings import Settings
 
@@ -148,12 +148,6 @@ def createFrame(window):
 		pProgressBar = ttk.Progressbar(progressWindow, variable=pProgressVar, maximum=100)
 		pProgressBar.grid(row=4, column=1, sticky="WE")
 
-		pCancelBtn = tk.Button(progressWindow, text="Cancel")
-		pCancelBtn.grid(row=5, column=1, sticky="E")
-		pCancelBtn.config(state="disabled")
-
-		# progressWindow.update()
-
 		def endFunc(returnStr, r2):
 			progressWindow.destroy()
 
@@ -189,25 +183,32 @@ def createFrame(window):
 						openDirInFileBrowser(dirSV.get())
 
 		def checkStatus():
+			if canceled:
+				endFunc("canceled", None)
+				downloadButton.config(state="normal")
 			dataAvailable = returnPipe.poll(0)
 			if dataAvailable:
-				rTuple = returnPipe.recv()
-				if type(rTuple) == str:
-					returnStr, errorStr = rTuple, None
-				elif type(rTuple) == tuple:
-					returnStr, errorStr = rTuple[0], rTuple[1]
-				endFunc(returnStr, errorStr)
-				downloadButton.config(state="normal")
+				try:
+					rTuple = returnPipe.recv()
+					if type(rTuple) == str:
+						returnStr, errorStr = rTuple, None
+					elif type(rTuple) == tuple:
+						returnStr, errorStr = rTuple[0], rTuple[1]
+					endFunc(returnStr, errorStr)
+					downloadButton.config(state="normal")
+				except EOFError:
+					# return pipe broken prematurely (most likely just canceled)
+					downloadButton.config(state="normal")
 			else:
 				try:
 					dlStatus = statusQueue.get(False)
 					pLabel.config(text=dlStatus["progressWindowLabel"])
 					if dlStatus["phase"] == "download":
-						downloaded_bytes = dlStatus["downloaded_bytes"]
+						downloaded_bytes = float(dlStatus["downloaded_bytes"])
 						pDownloadedLabel.config(text="Downloaded:")
 
 						if "total_bytes" in dlStatus:
-							total_bytes = dlStatus["total_bytes"]
+							total_bytes = float(dlStatus["total_bytes"])
 							downloadPercent = downloaded_bytes/total_bytes
 
 							pDownloadedLabel.config(text=f"{round(downloaded_bytes/1000000, 2)}MB/{round(total_bytes/1000000, 2)}MB {("total_bytes_is_estimate" in dlStatus and "(estimate) " or "")}downloaded {("speed" in dlStatus and f"at {round(dlStatus["speed"]/1000000, 2)}MB/s" or "")}")
@@ -238,6 +239,17 @@ def createFrame(window):
 		process.start()
 
 		frame.after(100, checkStatus)
+
+		canceled = False
+		def cancelf():
+			pCancelBtn.config(state="disabled")
+			nonlocal canceled
+			canceled = True
+			process.terminate()
+			frame.after(200, cleanupYDLTemp)
+
+		pCancelBtn = tk.Button(progressWindow, text="Cancel", command=cancelf)
+		pCancelBtn.grid(row=5, column=1, sticky="E")
 
 		def skip(): pass
 		progressWindow.protocol("WM_DELETE_WINDOW", skip)

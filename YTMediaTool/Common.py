@@ -102,17 +102,17 @@ def ydlProcessTarget(returnPipe, queue, url, path, fileformat, dlvideo, dlaudio,
 				datatable = {
 					"phase": "download",
 					"progressWindowLabel": "Downloading...",
-					"downloaded_bytes": downloaded_bytes
+					"downloaded_bytes": float(downloaded_bytes)
 				}
 
 				if 'total_bytes' in d:
-					datatable["total_bytes"] = d['total_bytes']
+					datatable["total_bytes"] = float(d['total_bytes'])
 				elif 'total_bytes_estimate' in d:
-					datatable["total_bytes"] = d['total_bytes_estimate']
+					datatable["total_bytes"] = float(d['total_bytes_estimate'])
 					datatable["total_bytes_is_estimate"]: True
 
 				if 'speed' in d:
-					datatable["speed"] = d["speed"]
+					datatable["speed"] = float(d["speed"])
 
 				try: queue.get(False)
 				except: pass
@@ -236,6 +236,12 @@ def createYDLProcess(
 	process = multiprocessing.Process(target=ydlProcessTarget, args=(returnPipeSender, statusQueue, url, path, fileformat, dlvideo, dlaudio, videoquality))
 
 	return process, returnPipeReceiver, statusQueue
+
+def cleanupYDLTemp():
+	for f in os.listdir(tmpPath):
+		if os.path.isfile(os.path.join(tmpPath, f)):
+			os.remove(os.path.join(tmpPath, f))
+	print("Cleaned up YDL temp directory!")
 
 if __name__ == "__main__" and platform == "linux":
 	multiprocessing.set_start_method("fork")
