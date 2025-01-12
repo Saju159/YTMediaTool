@@ -99,34 +99,32 @@ def ydlProcessTarget(returnPipe, queue, url, path, fileformat, dlvideo, dlaudio,
 			nonlocal final_file_path, dlQuality
 			if d['status'] == "downloading":
 				downloaded_bytes = d['downloaded_bytes']
-				try: queue.get(False)
-				except: pass # empty the queue
+				datatable = {
+					"phase": "download",
+					"progressWindowLabel": "Downloading...",
+					"downloaded_bytes": downloaded_bytes
+				}
+
 				if 'total_bytes' in d:
-					total_bytes = d['total_bytes']
-					downloadPercent = downloaded_bytes/total_bytes
-					queue.put({
-						"progressWindowLabel": f"Downloading... ( {round(downloaded_bytes/1000000, 2)}MB / {round(total_bytes/1000000, 2)}MB )",
-						"progress": math.floor(downloadPercent*100)/100
-					}, False)
+					datatable["total_bytes"] = d['total_bytes']
 				elif 'total_bytes_estimate' in d:
-					total_bytes = d['total_bytes_estimate']
-					downloadPercent = downloaded_bytes/total_bytes
-					queue.put({
-						"progressWindowLabel": f"Downloading... ( {round(downloaded_bytes/1000000, 2)}MB / {round(total_bytes/1000000, 2)}MB (estimate) )",
-						"progress": math.floor(downloadPercent*100)/100
-					}, False)
-				else:
-					queue.put({
-						"progressWindowLabel": f"Downloading... ( {round(downloaded_bytes/1000000, 2)}MB downloaded )",
-						"progress": -1
-					}, False)
+					datatable["total_bytes"] = d['total_bytes_estimate']
+					datatable["total_bytes_is_estimate"]: True
+
+				if 'speed' in d:
+					datatable["speed"] = d["speed"]
+
+				try: queue.get(False)
+				except: pass
+				queue.put(datatable, False)
+
 			elif d['status'] == "finished":
 				final_file_path = d.get("info_dict").get("_filename")
 				try: queue.get(False)
-				except: pass # empty the queue
+				except: pass
 				queue.put({
-					"progressWindowLabel": "Postprocessing...",
-					"progress": -1
+					"phase": "postprocess",
+					"progressWindowLabel": "Postprocessing..."
 				}, False)
 
 			if d.get("info_dict").get("height"):
@@ -187,8 +185,8 @@ def ydlProcessTarget(returnPipe, queue, url, path, fileformat, dlvideo, dlaudio,
 					try: queue.get(False)
 					except: pass # empty the queue
 					queue.put({
-						"progressWindowLabel": "Resizing...",
-						"progress": -1
+						"phase": "resize",
+						"progressWindowLabel": "Resizing..."
 					}, False)
 
 					ffmpeg_path = opts["ffmpeg_location"]

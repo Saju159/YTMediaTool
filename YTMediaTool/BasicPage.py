@@ -1,5 +1,6 @@
 import math
 import tkinter as tk
+import tkinter.ttk as ttk
 from queue import Empty as QueueEmpty
 from Common import openDirInFileBrowser, openFilePicker, createYDLProcess
 import Info
@@ -126,21 +127,32 @@ def createFrame(window):
 		input2 = urlInputBox.get().strip()
 
 		progressWindow = tk.Toplevel(window)
-		progressWindow.geometry("360x40")
 		progressWindow.resizable(False,False)
-		progressWindow.minsize(360, 40)
+		progressWindow.minsize(340, 20)
+		progressWindow.columnconfigure(0, minsize=4)
+		progressWindow.columnconfigure(2, minsize=4)
+		progressWindow.rowconfigure(0, minsize=2)
+		progressWindow.rowconfigure(6, minsize=4)
+		progressWindow.columnconfigure(1, weight=1)
 
-		progressWindow.rowconfigure(1, weight=1)
-		progressWindow.columnconfigure(2, weight=1)
+		pLabel = tk.Label(progressWindow, text="Preparing download...", font=tk.font.Font(weight="bold"))
+		pLabel.grid(row=1, column=1, sticky="W")
 
-		pLabel = tk.Label(progressWindow, text="Preparing download...")
-		pLabel.grid(row=1, column=1, columnspan=2)
+		pDownloadedLabel = tk.Label(progressWindow)
+		pDownloadedLabel.grid(row=2, column=1, sticky="W")
 
-		pProgressLabel = tk.Label(progressWindow, text="Progress: ")
-		pProgressLabel.grid(row=2, column=1, sticky="E")
+		pProgressLabel = tk.Label(progressWindow)
+		pProgressLabel.grid(row=3, column=1, sticky="W")
 
-		pProgressAmount = tk.Label(progressWindow, text="0%")
-		pProgressAmount.grid(row=2, column=2, sticky="W")
+		pProgressVar = tk.IntVar()
+		pProgressBar = ttk.Progressbar(progressWindow, variable=pProgressVar, maximum=100)
+		pProgressBar.grid(row=4, column=1, sticky="WE")
+
+		pCancelBtn = tk.Button(progressWindow, text="Cancel")
+		pCancelBtn.grid(row=5, column=1, sticky="E")
+		pCancelBtn.config(state="disabled")
+
+		# progressWindow.update()
 
 		def endFunc(returnStr, r2):
 			progressWindow.destroy()
@@ -179,12 +191,27 @@ def createFrame(window):
 				try:
 					dlStatus = statusQueue.get(False)
 					pLabel.config(text=dlStatus["progressWindowLabel"])
-					if dlStatus["progress"] >= 0:
-						pProgressLabel.config(text="Progress: ")
-						pProgressAmount.config(text=str(math.floor(dlStatus["progress"]*100))+"%")
+					if dlStatus["phase"] == "download":
+						downloaded_bytes = dlStatus["downloaded_bytes"]
+						pDownloadedLabel.config(text="Downloaded:")
+
+						if "total_bytes" in dlStatus:
+							total_bytes = dlStatus["total_bytes"]
+							downloadPercent = downloaded_bytes/total_bytes
+
+							pDownloadedLabel.config(text=f"{round(downloaded_bytes/1000000, 2)}MB/{round(total_bytes/1000000, 2)}MB {("total_bytes_is_estimate" in dlStatus and "(estimate) " or "")}downloaded {("speed" in dlStatus and f"at {round(dlStatus["speed"]/1000000, 2)}MB/s" or "")}")
+							pProgressLabel.config(text=str(math.floor(downloadPercent*100))+"%")
+							pProgressVar.set(math.floor(downloadPercent*100))
+						else:
+							pDownloadedLabel.config(text=f"{round(downloaded_bytes/1000000, 2)}MB downloaded")
+							pProgressLabel.config(text="")
+							pProgressVar.set(0)
+
 					else:
+						pDownloadedLabel.config(text="")
 						pProgressLabel.config(text="")
-						pProgressAmount.config(text="")
+						pProgressVar.set(0)
+
 				except QueueEmpty:
 					pass
 				frame.after(100, checkStatus)
