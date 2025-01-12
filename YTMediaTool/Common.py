@@ -78,12 +78,12 @@ def openFilePicker(window: tk.Tk, dtype: str, **kwargs):
 
 tmpPath = pathlib.PurePath(getBaseConfigDir(), "YDL_temp")
 def ydlProcessTarget(returnPipe, queue, url, path, fileformat, dlvideo, dlaudio, videoquality):
-	import Info, math
+	import Info
 	from Settings import Settings
 	from yt_dlp import YoutubeDL
 
 	print(f"Downloading \"{url}\" to \"{path}\"...")
-	if len(url) <= 0: print("Invalid url"); returnPipe.send(("invalidDownloadInput")); return
+	if len(url) <= 0 or url == "ytsearch:": print("Invalid url"); returnPipe.send(("invalidDownloadInput")); return
 	if len(str(path)) <= 0: print("Invalid path"); returnPipe.send(("invalidDirectory")); return
 	if not os.path.isdir(path): print("Path does not point to a directory!"); returnPipe.send(("pathIsNotDir")); return
 	if not fileformat in Info.fileformats: print("Invalid fileformat"); returnPipe.send(("invalidff")); return
@@ -140,6 +140,7 @@ def ydlProcessTarget(returnPipe, queue, url, path, fileformat, dlvideo, dlaudio,
 		'overwrites': True, # FIXME: workaround for ffmpeg failure if already downloaded
 		'continuedl': False,
 		'updatetime': False, # Don't set file modification timestamp to video upload time
+		'color': {'stderr': 'never', 'stdout': 'never'},
 		'progress_hooks': [progress_hook]
 	}
 

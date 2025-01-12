@@ -158,16 +158,24 @@ def createFrame(window):
 			progressWindow.destroy()
 
 			dText, success = None, False
-			if returnStr == "invalidDownloadInput": dText = mode.get() == 1 and "Invalid search term!" or "Invalid URL!"
+			if returnStr == "invalidDownloadInput": dText = (modenum == 1 and "Blank search term!" or "Invalid URL!")
 			elif returnStr == "invalidDirectory": dText = "Invalid destination directory!\nMake sure the path is entered correctly."
-			elif returnStr == "pathIsNotDir": dText = "Destination directory must be a directory!"
+			elif returnStr == "pathIsNotDir": dText = "Destination path must be a directory!\nMake sure the path is entered correctly."
 			elif returnStr == "noVideoOrAudio": dText = "Neither video nor audio is selected."
 			elif returnStr == "success": success = True
 			elif returnStr == "unknownException":
 				if "Sign in to confirm your age." in str(r2): # FIXME: there's probable a way better method for checking if age-restricted
 					dText = "Failed to download:\nVideo is age-restricted."
+				elif "HTTP Error 403" in str(r2):
+					dText = "Failed to download:\nHTTP Error 403: Forbidden\n\nWait a while and try again later."
+				elif "Temporary failure in name resolution" in str(r2):
+					dText = "Failed to download:\nTemporary failure in name resolution\n\nAre you connected to the internet?"
+				elif "Failed to resolve" in str(r2):
+					dText = "Failed to download!\n\nAre you connected to the internet?"
+				elif "is not a valid URL" in str(r2):
+					dText = "Invalid URL!"
 				else:
-					dText = "Unknown exception caught while downloading.\n"+str(r2)
+					dText = "Unknown exception caught during download!\n\n"+str(r2)
 
 			if dText:
 				window.update()
@@ -184,7 +192,10 @@ def createFrame(window):
 			dataAvailable = returnPipe.poll(0)
 			if dataAvailable:
 				rTuple = returnPipe.recv()
-				returnStr, errorStr = rTuple[0], rTuple[1]
+				if type(rTuple) == str:
+					returnStr, errorStr = rTuple, None
+				elif type(rTuple) == tuple:
+					returnStr, errorStr = rTuple[0], rTuple[1]
 				endFunc(returnStr, errorStr)
 				downloadButton.config(state="normal")
 			else:
