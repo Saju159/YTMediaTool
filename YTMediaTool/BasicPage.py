@@ -1,195 +1,9 @@
-import os, math
+import math
 import tkinter as tk
-import threading, subprocess
-from yt_dlp import YoutubeDL
-from Common import getUserDownloadDir, openDirInFileBrowser, openFilePicker
+from queue import Empty as QueueEmpty
+from Common import openDirInFileBrowser, openFilePicker, createYDLProcess
+import Info
 from Settings import Settings
-
-fileformats = {
-	'Original':	{'video': True, 'audio': True},
-	'MP4':	{'video': True, 'audio': True, 'ext': "mp4"},
-	'M4A':	{'video': False, 'audio': True, 'ext': "m4a"},
-	'WebM':	{'video': True, 'audio': True, 'ext': "webm"},
-	'MP3':	{'video': False, 'audio': True, 'ext': "mp3"},
-	'Ogg':	{'video': False, 'audio': True, 'ext': "ogg"},
-	'FLAC':	{'video': False, 'audio': True, 'ext': "flac", 'warn': "Downloading to FLAC does not magically make your audio high-quality, as audio is almost always converted from a lossy format to this!"},
-	'WAV':	{'video': False, 'audio': True, 'ext': "wav", 'warn': "WAV files are uncompressed and will result in very large files! Use with caution."},
-	'Theora (ogv)':	{'video': True, 'audio': True, 'ext': "ogv"},
-	'Matroska (mkv)':	{'video': True, 'audio': True, 'ext': "mkv"},
-	'QuickTime Movie (mov)':	{'video': True, 'audio': True, 'ext': "mov"}
-}
-
-videoqualities = {
-	'Source': {},
-	'2160p (4K)': {'res': 2160},
-	'1440p': {'res': 1440},
-	'1080p (FHD)': {'res': 1080},
-	'720p': {'res': 720},
-	'480p': {'res': 480},
-	'360p': {'res': 360},
-	'288p': {'res': 288},
-	'240p': {'res': 240},
-	'144p': {'res': 144},
-	'72p': {'res': 72}
-}
-
-dlStatus = {
-	'downloading': False,
-	'progressWindowLabel': "",
-	'progress': 0,
-	'returnStr': None,
-	'errorStr': None,
-	'dlQuality': None,
-	'final_file_path': None
-}
-
-def download(
-	mode: str,
-	downloadInput: str,
-	directory: str,
-	inputff: str,
-	inputvq: str,
-	dlvideo: bool,
-	dlaudio: bool
-):
-	global dlStatus
-	dlStatus["returnStr"] = None
-	dlStatus["errorStr"] = None
-	dlStatus["progressWindowLabel"] = "Preparing download..."
-	dlStatus["progress"] = -1
-	dlStatus["dlQuality"] = None
-	dlStatus["final_file_path"] = None
-
-	print(f"Downloading '{downloadInput}' to '{directory}'...")
-	if len(downloadInput) <= 0: print("Invalid download input"); dlStatus["returnStr"] = "invalidDownloadInput"; return
-	if len(directory) <= 0 and os.path.exists(directory): print("Invalid directory"); dlStatus["returnStr"] = "invalidDirectory"; return
-	if not os.path.isdir(directory): print("Path does not point to a directory!"); dlStatus["returnStr"] = "pathIsNotDir"; return
-	if not inputff in fileformats: print("Invalid fileformat"); dlStatus["returnStr"] = "invalidff"; return
-	if not inputvq in videoqualities: print("Invalid video quality"); dlStatus["returnStr"] = "invalidvq"; return
-
-	ff = fileformats[inputff]
-	vq = videoqualities[inputvq]
-
-	def progress_hook(d):
-		try:
-			if d['status'] == "downloading":
-				downloaded_bytes = d['downloaded_bytes']
-				if 'total_bytes' in d:
-					total_bytes = d['total_bytes']
-					dlStatus["progressWindowLabel"] = f"Downloading... ( {round(downloaded_bytes/1000000, 2)}MB / {round(total_bytes/1000000, 2)}MB )"
-					downloadPercent = downloaded_bytes/total_bytes
-					dlStatus["progress"] = math.floor(downloadPercent*100)/100
-				elif 'total_bytes_estimate' in d:
-					total_bytes = d['total_bytes_estimate']
-					dlStatus["progressWindowLabel"] = f"Downloading... ( {round(downloaded_bytes/1000000, 2)}MB / {round(total_bytes/1000000, 2)}MB (estimate) )"
-					downloadPercent = downloaded_bytes/total_bytes
-					dlStatus["progress"] = math.floor(downloadPercent*100)/100
-				else:
-					dlStatus["progressWindowLabel"] = f"Downloading... ( {round(downloaded_bytes/1000000, 2)}MB downloaded )"
-					dlStatus["progress"] = -1
-
-			elif d['status'] == "finished":
-				dlStatus["progressWindowLabel"] = "Postprocessing..."
-				dlStatus["final_file_path"] = d.get("info_dict").get("_filename")
-				dlStatus["progress"] = -1
-			if d.get("info_dict").get("height"):
-				dlStatus["dlQuality"] = str(d.get("info_dict").get("height"))
-
-		except Exception as err:
-			print("Error in progress hook:\n"+str(err))
-
-	opts = {
-		'verbose': False,
-		'outtmpl': {'default': f"{directory}/%(title).165B [%(id)s].%(ext)s"},
-		'restrictfilenames': True,
-		'overwrites': True, # FIXME: workaround for ffmpeg failure if already downloaded
-		'continuedl': False,
-		'updatetime': False, # Don't set file modification timestamp to video upload time
-		'progress_hooks': [progress_hook]
-	}
-
-	if ff["video"] == False: dlvideo = False
-	if ff["audio"] == False: dlaudio = False
-
-	if "FFmpeg_path" in Settings:
-		opts["ffmpeg_location"] = Settings["FFmpeg_path"]
-
-	if dlvideo and dlaudio:
-		opts["format"] = "bv*+ba/b"
-	elif dlvideo and not dlaudio:
-		opts["format"] = "bv"
-	elif not dlvideo and dlaudio:
-		opts["format"] = "ba"
-	else:
-		print("No video or audio selected")
-		dlStatus["returnStr"] = "noVideoOrAudio"; return
-
-	if "ext" in ff:
-		ext = ff["ext"]
-		opts['final_ext'] = ext
-		opts['postprocessors'] = [{'key': 'FFmpegVideoConvertor', 'preferedformat': ext}]
-
-	if dlvideo and "res" in vq:
-		print(f'res:{vq["res"]}')
-		opts['format_sort'] = [f'res:{vq["res"]}']
-
-	if Settings["BasicPage-Cookies"]:
-		cookies = (Settings["BasicPage-browser"])
-		opts["cookiesfrombrowser"] = (cookies, None, None, None)
-
-	if mode == "url":
-		url = downloadInput
-	elif mode == "ytsearch":
-		url = f"ytsearch:{downloadInput}"
-	else:
-		print("Invalid mode")
-		dlStatus["returnStr"] = "invalidMode"
-		return
-
-	with YoutubeDL(opts) as ydl:
-		try:
-			c = ydl.download(url)
-			if dlStatus["final_file_path"] and "ext" in ff:
-				# Fix the file path to use correct file ext since yt_dlp only gives the original pre-conversion file path
-				dlStatus["final_file_path"] = os.path.splitext(dlStatus["final_file_path"])[0]+"."+ff["ext"]
-
-			print(f"return code: {c}")
-			print(f"filepath: {dlStatus["final_file_path"]}")
-			if dlvideo and "res" in vq and Settings["BasicPage-ForceQuality"] == "Resize to selected quality" and "ffmpeg_location" in opts:
-				if os.path.isfile(opts["ffmpeg_location"]) and str(dlStatus["dlQuality"]) != str(vq["res"]):
-					dlStatus["progressWindowLabel"] = "Resizing..."
-
-					ffmpeg_path = opts["ffmpeg_location"]
-
-					final_file_path = dlStatus["final_file_path"]
-					if not final_file_path:
-						print("No file path reported!")
-						dlStatus["errorStr"] = "Video was downloaded but not resized!\nyt-dlp did not report a file path for FFmpeg post processing!"
-						dlStatus["returnStr"] = "unknownException"; return
-
-					fname, fext = os.path.split(final_file_path)
-					ffmpeg_cmd = subprocess.run([
-						ffmpeg_path,
-						"-i", dlStatus["final_file_path"],
-						"-vf", f"scale=-2:{vq["res"]}",
-						"-c:a", "copy",
-						"-y",
-						f"{fname}/.RESIZE.{fext}"
-					])
-					if ffmpeg_cmd.returncode == 0:
-						os.replace(f"{fname}/.RESIZE.{fext}", final_file_path)
-					else:
-						if not final_file_path:
-							print("Error during postprocessing!")
-							dlStatus["errorStr"] = "yt-dlp did not report a file path for FFmpeg post processing!"
-							dlStatus["returnStr"] = "unknownException"; return
-		except Exception as err:
-			print("--- Exception in ydl.download() ---\n"+str(err))
-			dlStatus["errorStr"] = str(err)
-			dlStatus["returnStr"] = "unknownException"; return
-			# return "unknownException", err
-
-		dlStatus["returnStr"] = "success"
 
 def createFrame(window):
 	global frame
@@ -266,7 +80,7 @@ def createFrame(window):
 	dlaudioCheckbox.grid(row=1, column=3, sticky="W")
 
 	def ffselection():
-		ff = fileformats[fileformat.get()]
+		ff = Info.fileformats[fileformat.get()]
 		if "video" in ff and ff["video"] == True:
 			dlvideoCheckbox.config(state="normal")
 			if dlvideo.get() == True: vqDropdown.grid(row=6, column=2, columnspan=2, sticky="W"); vqLabel.grid(row=6, column=1, sticky="E")
@@ -276,14 +90,14 @@ def createFrame(window):
 		if "warn" in ff:
 			tk.messagebox.showwarning("Warning", ff["warn"]) # FIXME make this into a button next to the format dropdown instead of a popup
 
-	fileformatDropdown = tk.OptionMenu(ffFrame, fileformat, *fileformats, command=lambda _: ffselection())
+	fileformatDropdown = tk.OptionMenu(ffFrame, fileformat, *Info.fileformats, command=lambda _: ffselection())
 	fileformatDropdown.grid(row=1, column=1, sticky="W")
 
 	# Video quality
 	vqLabel = tk.Label(frame, text="Video quality: ")
 	vqLabel.grid(row=6, column=1, sticky="E")
 
-	vqDropdown = tk.OptionMenu(frame, vq, *videoqualities)
+	vqDropdown = tk.OptionMenu(frame, vq, *Info.videoqualities)
 	vqDropdown.grid(row=6, column=2, columnspan=2, sticky="W")
 
 	# Destination Directory
@@ -355,33 +169,35 @@ def createFrame(window):
 						openDirInFileBrowser(dirSV.get())
 
 		def checkStatus():
-			if type(dlStatus["returnStr"]) == str:
-				returnStr = str(dlStatus["returnStr"])
-				errorStr = str(dlStatus["errorStr"])
-				dlStatus["returnStr"] = None
-				dlStatus["errorStr"] = None
+			dataAvailable = returnPipe.poll(0)
+			if dataAvailable:
+				rTuple = returnPipe.recv()
+				returnStr, errorStr = rTuple[0], rTuple[1]
 				endFunc(returnStr, errorStr)
 				downloadButton.config(state="normal")
 			else:
-				pLabel.config(text=dlStatus["progressWindowLabel"])
-				if dlStatus["progress"] >= 0:
-					pProgressLabel.config(text="Progress: ")
-					pProgressAmount.config(text=str(math.floor(dlStatus["progress"]*100))+"%")
-				else:
-					pProgressLabel.config(text="")
-					pProgressAmount.config(text="")
+				try:
+					dlStatus = statusQueue.get(False)
+					pLabel.config(text=dlStatus["progressWindowLabel"])
+					if dlStatus["progress"] >= 0:
+						pProgressLabel.config(text="Progress: ")
+						pProgressAmount.config(text=str(math.floor(dlStatus["progress"]*100))+"%")
+					else:
+						pProgressLabel.config(text="")
+						pProgressAmount.config(text="")
+				except QueueEmpty:
+					pass
 				frame.after(100, checkStatus)
 
-		dlThread = threading.Thread(target=download, kwargs={
-			'mode': (modenum == 1 and "ytsearch" or "url"),
-			'downloadInput': input2,
-			'directory': dirSV.get(),
-			'inputff': fileformat.get(),
-			'inputvq': vq.get(),
-			'dlvideo': dlvideo.get(),
-			'dlaudio': dlaudio.get()
-		})
-		dlThread.start()
+		process, returnPipe, statusQueue = createYDLProcess(
+			url=(modenum == 1 and "ytsearch:"+input2 or input2),
+			path=dirSV.get(),
+			fileformat=fileformat.get(),
+			dlvideo=dlvideo.get(),
+			dlaudio=dlaudio.get(),
+			videoquality=vq.get()
+		)
+		process.start()
 
 		frame.after(100, checkStatus)
 
@@ -418,4 +234,3 @@ def createFrame(window):
 
 	modeDropdown = tk.OptionMenu(frame, mode, *modes, command=lambda _: selection())
 	modeDropdown.grid(row=1, column=2, columnspan=2, sticky="W")
-
