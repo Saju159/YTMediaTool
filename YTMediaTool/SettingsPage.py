@@ -94,7 +94,7 @@ def createFrame(window):
 		return optFrame
 
 	def baseHelpBtn(text: str, optFrame: tk.Frame, column: int):
-		btn = ttk.Button(optFrame, text="?", width=2, command=lambda: tk.messagebox.showinfo("Help", text))
+		btn = ttk.Button(optFrame, text="?", width=2, padding=0, command=lambda: tk.messagebox.showinfo("Help", text))
 		btn.grid(row=1, column=column+1, sticky="W")
 		optFrame.columnconfigure(column, minsize=4)
 
@@ -136,8 +136,11 @@ def createFrame(window):
 				pathSV.set(picked_dir)
 				showButtonsFrame()
 
-		selectDirButton = ttk.Button(optFrame, text="Browse...", command=seldir)
+		selectDirButton = ttk.Button(optFrame, width=7, text="Browse...", command=seldir)
 		selectDirButton.grid(row=1, column=3)
+
+		if type(helptext) == str:
+			baseHelpBtn(helptext, optFrame, 4)
 
 	def addBooleanOption(optId: str, text: str, helptext: None=str|None):
 		optFrame = baseOptFrame()
@@ -177,6 +180,11 @@ def createFrame(window):
 		tk.Label(frame2, text="\n ").grid(row=nextRow)
 		nextRow += 1
 
+	def addShortSpacer():
+		nonlocal nextRow
+		frame2.rowconfigure(nextRow, minsize=12)
+		nextRow += 1
+
 	addFilePathOption("FFmpeg_path", "Path to FFmpeg executable")
 	addLabel("FFmpeg is required for merging the downloaded video + audio and for converting formats.")
 	if platform == "win32":
@@ -187,8 +195,10 @@ def createFrame(window):
 	addLabel("Settings for 'Basic' tab:")
 	addBooleanOption("BasicPage-ShowDialogAfterDLSuccess", "Show dialog after successful download")
 	addDropdownOption("BasicPage-ForceQuality", "When video quality is not available", ["Resize to selected quality", "Download closest to selected quality"], "If \"Resize to selected quality\" is selected:\nCalls FFmpeg to resize the video after download if resolution doesn't match. This can be quite slow depending on the video's length and quality selected.")
-	addBooleanOption("BasicPage-Cookies", "Use browser cookies", "Allows yt-dlp to grab your browser's cookies for authentication.\n\nOnly use if you are downloading private videos that require logging in to download.")
-	addDropdownOption("BasicPage-browser", "Browser to grab cookies from", ["brave", "chrome", "chromium", "edge", "firefox", "opera", "safari", "vivaldi", "whale"])
+	addShortSpacer()
+	addFilePathOption("YDL-CookiesFilePath", "Path to cookies.txt", "Path to a Netscape formatted cookies file.\nLeave blank to not use a cookie file.\n\nCookies should only be used if you keep getting blocked by YouTube or are downloading private videos.\n\nDisables \"Grab browser cookies\".")
+	addBooleanOption("BasicPage-Cookies", "Grab browser cookies", "Allows yt-dlp to grab your browser's cookies for authentication.\n\nIgnored if path to cookies.txt is not blank.")
+	addDropdownOption("BasicPage-browser", "Browser to grab cookies from", ["brave", "chrome", "chromium", "edge", "firefox", "opera", "safari", "vivaldi", "whale"], "This list is populated with browsers that yt-dlp supports grabbing cookies from.")
 
 	addSpacer()
 	addLabel("Settings for 'SMLD' tab:")

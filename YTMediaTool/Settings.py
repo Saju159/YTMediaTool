@@ -14,6 +14,7 @@ Settings = {
 	"BasicPage-ForceQuality": "Download closest to selected quality",
 	"BasicPage-Cookies": False,
 	"BasicPage-browser": "firefox",
+	"YDL-CookiesFilePath": "",
 }
 SettingsFilePath = os.path.join(getBaseConfigDir(), "settings.json")
 
@@ -29,7 +30,6 @@ def loadSettingsFromFile():
 			for key in loadedSettings:
 				if key in Settings:
 					Settings[key] = loadedSettings[key]
-
 
 def saveSettingsToFile():
 	print(f"Saving settings to '{SettingsFilePath}'...")

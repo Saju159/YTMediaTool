@@ -168,9 +168,13 @@ def ydlProcessTarget(returnPipe, queue, url, path, fileformat, dlvideo, dlaudio,
 	if dlvideo and "res" in vq:
 		opts['format_sort'] = [f'res:{vq["res"]}']
 
-	if Settings["BasicPage-Cookies"]:
-		cookies = (Settings["BasicPage-browser"])
-		opts["cookiesfrombrowser"] = (cookies, None, None, None)
+	if len(Settings["YDL-CookiesFilePath"]) > 2:
+		print("Using cookie file!")
+		opts["cookiefile"] = str(Settings["YDL-CookiesFilePath"])
+	elif Settings["BasicPage-Cookies"]:
+		browser_to_grab_from = (Settings["BasicPage-browser"])
+		print(f"Grabbing cookies from {browser_to_grab_from}!")
+		opts["cookiesfrombrowser"] = (browser_to_grab_from, None, None, None)
 
 	with YoutubeDL(opts) as ydl:
 		try:
