@@ -1,5 +1,6 @@
 import os
 import tkinter as tk
+import tkinter.ttk as ttk
 from Common import openFilePicker, getBaseConfigDir
 from webbrowser import open_new_tab as openInBrowser
 from sys import platform
@@ -9,40 +10,85 @@ import Settings
 def createFrame(window):
 	global frame
 	frame = tk.Frame(window, width=600, height=380)
-	frame.columnconfigure(2, weight=1)
+	frame.rowconfigure(1, weight=1)
+	frame.columnconfigure(1, weight=1)
+
+	scrollbar = ttk.Scrollbar(frame, orient="vertical")
+	scrollbar.grid(row=1, column=2, sticky="NS")
+	canvas = tk.Canvas(frame, yscrollcommand=scrollbar.set)
+	canvas.grid(row=1, column=1, sticky="NSWE")
+	frame2 = tk.Frame(canvas)
+	frame2_win = canvas.create_window(0, 0, window=frame2, anchor="nw")
+	frame2.columnconfigure(2, weight=1)
+	scrollbar.config(command=canvas.yview)
+
+	canvas.xview_moveto(0)
+	canvas.yview_moveto(0)
 
 	nextRow = 1
+	scrollable = False
 	labels = []
 	tkVars = {}
 
-	buttonsFrame = None
+	def _frame2_reconf(event):
+		canvas.config(scrollregion=f"0 0 {event.width} {event.height}")
+		canvas.config(width=event.width)
+
+		nonlocal labels
+		width = event.width - 20
+		for label in labels:
+			label.config(wraplength=width)
+
+	def _canvas_reconf(event):
+		nonlocal scrollable
+		scrollable = event.height <= frame2.winfo_height()
+		canvas.itemconfigure(frame2_win, width=event.width)
+
+	frame2.bind("<Configure>", _frame2_reconf)
+	canvas.bind("<Configure>", _canvas_reconf)
+
+	def _scroll(delta):
+		if scrollable:
+			canvas.yview_scroll(int(-1*delta), "units")
+
+	applyBtn, undoBtn = None, None
 
 	def loadSettings():
 		for key in tkVars:
 			if key in Settings.Settings:
 				tkVars[key].set(Settings.Settings[key])
-		buttonsFrame.grid_forget()
+		applyBtn.configure(state="disabled")
+		undoBtn.configure(state="disabled")
 
 	def applySettings():
 		for key in tkVars:
 			if key in Settings.Settings:
 				Settings.Settings[key] = tkVars[key].get()
 		Settings.saveSettingsToFile()
-		buttonsFrame.grid_forget()
+		applyBtn.configure(state="disabled")
+		undoBtn.configure(state="disabled")
 
 	def showButtonsFrame():
-		buttonsFrame.grid(row=nextRow, column=1, columnspan=3, sticky="E")
+		applyBtn.configure(state="normal")
+		undoBtn.configure(state="normal")
 
 	global showPage, hidePage
 	def hidePage():
 		frame.place_forget()
+		frame.unbind_all("<MouseWheel>")
+		frame.unbind_all("<Button-4>")
+		frame.unbind_all("<Button-5>")
 	def showPage():
 		frame.place(y=34, h=-34, relwidth=1.0, relheight=1.0)
+		# <MouseWheel> for windows and <Button-4/5> for linux/x11
+		frame.bind_all("<MouseWheel>", lambda event: _scroll(event.delta/120))
+		frame.bind_all("<Button-4>", lambda _: _scroll(3))
+		frame.bind_all("<Button-5>", lambda _: _scroll(-3))
 		loadSettings()
 
 	def addLabel(text: str):
 		nonlocal nextRow, labels
-		label = tk.Label(frame, text=text, justify="left")
+		label = tk.Label(frame2, text=text, justify="left")
 		label.grid(row=nextRow, column=1, columnspan=3, sticky="W", ipadx=10)
 		labels.append(label)
 		nextRow += 1
@@ -50,7 +96,7 @@ def createFrame(window):
 
 	def addButton(text: str, func: callable):
 		nonlocal nextRow
-		button = tk.Button(frame, text=text, command=lambda: func())
+		button = tk.Button(frame2, text=text, command=lambda: func())
 		button.grid(row=nextRow, column=1, columnspan=3, sticky="W")
 		labels.append(button)
 		nextRow += 1
@@ -58,12 +104,12 @@ def createFrame(window):
 
 	def addFilePathOption(optId: str, text: str):
 		nonlocal nextRow
-		tk.Label(frame, text=f"{text}: ").grid(row=nextRow, column=1, sticky="E")
+		tk.Label(frame2, text=f"{text}: ").grid(row=nextRow, column=1, sticky="E")
 
 		pathSV = tk.StringVar()
 		tkVars[optId] = pathSV
 
-		pathInputBox = tk.Entry(frame, textvariable=pathSV)
+		pathInputBox = tk.Entry(frame2, textvariable=pathSV)
 
 		def checkDiff():
 			if pathSV.get() != Settings.Settings[optId]:
@@ -80,7 +126,7 @@ def createFrame(window):
 				pathSV.set(picked_dir)
 				showButtonsFrame()
 
-		selectDirButton = tk.Button(frame, text="Browse...", command=seldir)
+		selectDirButton = tk.Button(frame2, text="Browse...", command=seldir)
 		selectDirButton.grid(row=nextRow, column=3)
 
 		nextRow += 1
@@ -96,14 +142,14 @@ def createFrame(window):
 			if boolSV.get() != Settings.Settings[optId]:
 				showButtonsFrame()
 
-		pathCheckbox = tk.Checkbutton(frame, text=text, variable=boolSV, onvalue=True, offvalue=False, command=lambda: checkDiff())
+		pathCheckbox = tk.Checkbutton(frame2, text=text, variable=boolSV, onvalue=True, offvalue=False, command=lambda: checkDiff())
 		pathCheckbox.grid(row=nextRow, column=1, columnspan=3, sticky="W")
 
 		nextRow += 1
 
 	def addDropdownOption(optId: str, text: str, choices: list):
 		nonlocal nextRow
-		tk.Label(frame, text=f"{text}: ").grid(row=nextRow, column=1, sticky="E")
+		tk.Label(frame2, text=f"{text}: ").grid(row=nextRow, column=1, sticky="E")
 
 		sv = tk.StringVar()
 		tkVars[optId] = sv
@@ -112,14 +158,14 @@ def createFrame(window):
 			if sv.get() != Settings.Settings[optId]:
 				showButtonsFrame()
 
-		vqDropdown = tk.OptionMenu(frame, sv, *choices, command=checkDiff)
+		vqDropdown = tk.OptionMenu(frame2, sv, *choices, command=checkDiff)
 		vqDropdown.grid(row=nextRow, column=2, columnspan=2, sticky="W")
 
 		nextRow += 1
 
 	def addSpacer():
 		nonlocal nextRow
-		tk.Label(frame, text="\n ").grid(row=nextRow)
+		tk.Label(frame2, text="\n ").grid(row=nextRow)
 		nextRow += 1
 
 	addFilePathOption("FFmpeg_path", "Path to FFmpeg executable")
@@ -139,14 +185,10 @@ def createFrame(window):
 	addLabel("Settings for 'SMLD' tab:")
 	addButton("Open SMLD logs", lambda: openInBrowser(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt")))
 
-	buttonsFrame = tk.Frame(frame)
-	tk.Button(buttonsFrame, text="Apply & Save Settings", bg="spring green", command=lambda: applySettings()).grid(row=1, column=1, sticky="E")
-	tk.Button(buttonsFrame, text="Cancel", command=lambda: loadSettings()).grid(row=1, column=2, sticky="E")
-
-	def onResize(event):
-		nonlocal labels
-		width = event.width - 20
-		for label in labels:
-			label.config(wraplength=width)
-
-	frame.bind("<Configure>", onResize)
+	buttonsFrame = tk.Frame(frame, padx=4, pady=4)
+	buttonsFrame.columnconfigure(2, pad=4)
+	buttonsFrame.grid(row=2, column=1, columnspan=2, sticky="E")
+	applyBtn = ttk.Button(buttonsFrame, text="Apply & Save changes", command=lambda: applySettings())
+	applyBtn.grid(row=1, column=1, sticky="E")
+	undoBtn = ttk.Button(buttonsFrame, text="Undo", command=lambda: loadSettings())
+	undoBtn.grid(row=1, column=2, sticky="E")
