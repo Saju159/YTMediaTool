@@ -137,9 +137,11 @@ def ydlProcessTarget(returnPipe, queue, url, path, fileformat, dlvideo, dlaudio,
 		'verbose': False,
 		'outtmpl': {'default': "%(title).165B [%(id)s].%(ext)s"},
 		'paths': {'home': str(path), 'temp': str(tmpPath)},
-		'overwrites': True, # FIXME: workaround for ffmpeg failure if already downloaded
+		'overwrites': not Settings["YDL-SkipIfExists"], # FIXME: workaround for ffmpeg failure if already downloaded
 		'continuedl': False,
+		'restrictfilenames': True,
 		'updatetime': False, # Don't set file modification timestamp to video upload time
+		'noplaylist': not Settings["YDL-EnablePlaylistDL"],
 		'color': {'stderr': 'never', 'stdout': 'never'},
 		'progress_hooks': [progress_hook]
 	}
@@ -185,7 +187,7 @@ def ydlProcessTarget(returnPipe, queue, url, path, fileformat, dlvideo, dlaudio,
 
 			print(f"return code: {c}")
 			print(f"filepath: {final_file_path}")
-			if dlvideo and "res" in vq and Settings["BasicPage-ForceQuality"] == "Resize to selected quality" and "ffmpeg_location" in opts:
+			if final_file_path and dlvideo and "res" in vq and Settings["BasicPage-ForceQuality"] == "Resize to selected quality" and "ffmpeg_location" in opts:
 				if os.path.isfile(opts["ffmpeg_location"]) and str(dlQuality) != str(vq["res"]):
 					try: queue.get(False)
 					except: pass # empty the queue

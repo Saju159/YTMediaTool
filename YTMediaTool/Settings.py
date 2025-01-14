@@ -15,6 +15,9 @@ Settings = {
 	"BasicPage-Cookies": False,
 	"BasicPage-browser": "firefox",
 	"YDL-CookiesFilePath": "",
+	"YDL-EnablePlaylistDL": False,
+	"YDL-SkipIfExists": False,
+	"YDL-MaxNumberOfRetries": 10 # unimplemented
 }
 SettingsFilePath = os.path.join(getBaseConfigDir(), "settings.json")
 

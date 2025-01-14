@@ -193,6 +193,8 @@ def createFrame(window):
 
 	addSpacer()
 	addLabel("Settings for 'Basic' tab:")
+	addBooleanOption("YDL-EnablePlaylistDL", "Download playlist if URL leads to both a video and a playlist")
+	addBooleanOption("YDL-SkipIfExists", "Skip download if already downloaded", "Will still show \"Download completed\" even if the file was already downloaded.")
 	addBooleanOption("BasicPage-ShowDialogAfterDLSuccess", "Show dialog after successful download")
 	addDropdownOption("BasicPage-ForceQuality", "When video quality is not available", ["Resize to selected quality", "Download closest to selected quality"], "If \"Resize to selected quality\" is selected:\nCalls FFmpeg to resize the video after download if resolution doesn't match. This can be quite slow depending on the video's length and quality selected.")
 	addShortSpacer()
