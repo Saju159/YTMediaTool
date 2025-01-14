@@ -15,11 +15,11 @@ def createFrame(window):
 
 	scrollbar = ttk.Scrollbar(frame, orient="vertical")
 	scrollbar.grid(row=1, column=2, sticky="NS")
-	canvas = tk.Canvas(frame, yscrollcommand=scrollbar.set)
+	canvas = tk.Canvas(frame, yscrollcommand=scrollbar.set, highlightthickness=0)
 	canvas.grid(row=1, column=1, sticky="NSWE")
-	frame2 = tk.Frame(canvas)
+	frame2 = tk.Frame(canvas, padx=4, pady=4)
 	frame2_win = canvas.create_window(0, 0, window=frame2, anchor="nw")
-	frame2.columnconfigure(2, weight=1)
+	frame2.columnconfigure(1, weight=1)
 	scrollbar.config(command=canvas.yview)
 
 	canvas.xview_moveto(0)
@@ -86,30 +86,35 @@ def createFrame(window):
 		frame.bind_all("<Button-5>", lambda _: _scroll(-3))
 		loadSettings()
 
+	def baseOptFrame():
+		nonlocal nextRow
+		optFrame = tk.Frame(frame2)
+		optFrame.grid(row=nextRow, column=1, sticky="WE")
+		nextRow += 1
+		return optFrame
+
 	def addLabel(text: str):
 		nonlocal nextRow, labels
-		label = tk.Label(frame2, text=text, justify="left")
-		label.grid(row=nextRow, column=1, columnspan=3, sticky="W", ipadx=10)
+		label = ttk.Label(frame2, text=text, justify="left")
+		label.grid(row=nextRow, column=1, sticky="W")
 		labels.append(label)
 		nextRow += 1
-		return label
 
 	def addButton(text: str, func: callable):
 		nonlocal nextRow
-		button = tk.Button(frame2, text=text, command=lambda: func())
-		button.grid(row=nextRow, column=1, columnspan=3, sticky="W")
-		labels.append(button)
+		button = ttk.Button(frame2, text=text, command=lambda: func())
+		button.grid(row=nextRow, column=1, sticky="W")
 		nextRow += 1
-		return button
 
 	def addFilePathOption(optId: str, text: str):
-		nonlocal nextRow
-		tk.Label(frame2, text=f"{text}: ").grid(row=nextRow, column=1, sticky="E")
+		optFrame = baseOptFrame()
+		optFrame.columnconfigure(2, weight=1)
+		ttk.Label(optFrame, text=f"{text}: ").grid(row=1, column=1, sticky="E")
 
 		pathSV = tk.StringVar()
 		tkVars[optId] = pathSV
 
-		pathInputBox = tk.Entry(frame2, textvariable=pathSV)
+		pathInputBox = ttk.Entry(optFrame, textvariable=pathSV)
 
 		def checkDiff():
 			if pathSV.get() != Settings.Settings[optId]:
@@ -118,7 +123,7 @@ def createFrame(window):
 		pathInputBox.bind("<Control-KeyRelease-a>", lambda _: pathInputBox.select_range(0, tk.END), pathInputBox.icursor(tk.END))
 		pathInputBox.bind("<Control-KeyRelease-A>", lambda _: pathInputBox.select_range(0, tk.END), pathInputBox.icursor(tk.END))
 		pathInputBox.bind('<KeyRelease>', lambda _: checkDiff())
-		pathInputBox.grid(row=nextRow, column=2, sticky="WE")
+		pathInputBox.grid(row=1, column=2, sticky="WE")
 
 		def seldir():
 			picked_dir = openFilePicker(window, "openFile")
@@ -126,14 +131,11 @@ def createFrame(window):
 				pathSV.set(picked_dir)
 				showButtonsFrame()
 
-		selectDirButton = tk.Button(frame2, text="Browse...", command=seldir)
-		selectDirButton.grid(row=nextRow, column=3)
-
-		nextRow += 1
+		selectDirButton = ttk.Button(optFrame, text="Browse...", command=seldir)
+		selectDirButton.grid(row=1, column=3)
 
 	def addBooleanOption(optId: str, text: str):
 		nonlocal nextRow
-		# tk.Label(frame, text=f"{text}: ").grid(row=nextRow, column=1, sticky="E")
 
 		boolSV = tk.BooleanVar()
 		tkVars[optId] = boolSV
@@ -142,14 +144,15 @@ def createFrame(window):
 			if boolSV.get() != Settings.Settings[optId]:
 				showButtonsFrame()
 
-		pathCheckbox = tk.Checkbutton(frame2, text=text, variable=boolSV, onvalue=True, offvalue=False, command=lambda: checkDiff())
+		pathCheckbox = ttk.Checkbutton(frame2, text=text, variable=boolSV, onvalue=True, offvalue=False, command=lambda: checkDiff())
 		pathCheckbox.grid(row=nextRow, column=1, columnspan=3, sticky="W")
 
 		nextRow += 1
+		return boolSV
 
 	def addDropdownOption(optId: str, text: str, choices: list):
-		nonlocal nextRow
-		tk.Label(frame2, text=f"{text}: ").grid(row=nextRow, column=1, sticky="E")
+		optFrame = baseOptFrame()
+		ttk.Label(optFrame, text=f"{text}: ").grid(row=1, column=1, sticky="E")
 
 		sv = tk.StringVar()
 		tkVars[optId] = sv
@@ -158,10 +161,8 @@ def createFrame(window):
 			if sv.get() != Settings.Settings[optId]:
 				showButtonsFrame()
 
-		vqDropdown = tk.OptionMenu(frame2, sv, *choices, command=checkDiff)
-		vqDropdown.grid(row=nextRow, column=2, columnspan=2, sticky="W")
-
-		nextRow += 1
+		vqDropdown = ttk.OptionMenu(optFrame, sv, choices[0], *choices, command=checkDiff)
+		vqDropdown.grid(row=1, column=2, sticky="W")
 
 	def addSpacer():
 		nonlocal nextRow
@@ -178,7 +179,7 @@ def createFrame(window):
 	addLabel("Settings for 'Basic' tab:")
 	addBooleanOption("BasicPage-ShowDialogAfterDLSuccess", "Show dialog after successful download")
 	addBooleanOption("BasicPage-Cookies", "Use browser cookies")
-	addDropdownOption("BasicPage-browser", "Select your primary browser", ["brave","chrome" , "chromium", "edge", "firefox", "opera"])
+	addDropdownOption("BasicPage-browser", "Select your primary browser", ["brave", "chrome", "chromium", "edge", "firefox", "opera"])
 	addDropdownOption("BasicPage-ForceQuality", "When video quality is not available", ["Resize to selected quality", "Download closest to selected quality"])
 
 	addSpacer()
