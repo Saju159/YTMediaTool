@@ -8,16 +8,12 @@ from Settings import Settings
 
 def createFrame(window):
 	global frame
-	frame = tk.Frame(window, width=600, height=380)
+	frame = tk.Frame(window, width=600, height=380, padx=4, pady=4)
 	frame.columnconfigure(2, weight=1)
 
 	global pageOpenedOnce
 	pageOpenedOnce = False
 	def showPageFirstTime():
-		if Settings["BasicPage-DLVideo"] == True:
-			dlvideoCheckbox.select()
-		if Settings["BasicPage-DLAudio"] == True:
-			dlaudioCheckbox.select()
 		dlvideoselection()
 		ffselection()
 		global pageOpenedOnce
@@ -31,23 +27,23 @@ def createFrame(window):
 		if not pageOpenedOnce: showPageFirstTime()
 
 	# URL box
-	urlLabel = tk.Label(frame, text="URL: ")
+	urlLabel = ttk.Label(frame, text="URL: ")
 	urlLabel.grid(row=2, column=1, sticky="E")
 
 	urlInputBoxFrame = tk.Frame(frame)
 	urlInputBoxFrame.grid(row=2, column=2, columnspan=2, sticky="WE")
 	urlInputBoxFrame.columnconfigure(1, weight=1)
 
-	urlInputBox = tk.Entry(urlInputBoxFrame)
+	urlInputBox = ttk.Entry(urlInputBoxFrame)
 	urlInputBox.grid(row=1, column=1, sticky="WE")
 	urlInputBox.bind("<Control-KeyRelease-a>", lambda _: urlInputBox.select_range(0, tk.END), urlInputBox.icursor(tk.END))
 	urlInputBox.bind("<Control-KeyRelease-A>", lambda _: urlInputBox.select_range(0, tk.END), urlInputBox.icursor(tk.END))
 
-	urlInputClearBtn = tk.Button(urlInputBoxFrame, text="C", command=lambda: urlInputBox.delete(0, 999999))
+	urlInputClearBtn = ttk.Button(urlInputBoxFrame, width=2, padding=0, text="C", command=lambda: urlInputBox.delete(0, 999999))
 	urlInputClearBtn.grid(row=1, column=2)
 
 	# File format
-	tk.Label(frame, text="Format: ").grid(row=5, column=1, sticky="E")
+	ttk.Label(frame, text="Format: ").grid(row=5, column=1, sticky="E")
 	ffFrame = tk.Frame(frame)
 	ffFrame.grid(row=5, column=2, columnspan=2, sticky="W")
 
@@ -74,11 +70,11 @@ def createFrame(window):
 		if dlvideo.get() == True: vqDropdown.grid(row=6, column=2, columnspan=2, sticky="W"); vqLabel.grid(row=6, column=1, sticky="E")
 		else: vqDropdown.grid_forget(); vqLabel.grid_forget()
 
-	dlvideoCheckbox = tk.Checkbutton(ffFrame, text="Video", variable=dlvideo, onvalue=True, offvalue=False, command=dlvideoselection)
-	dlvideoCheckbox.grid(row=1, column=2, sticky="W")
+	dlvideoCheckbox = ttk.Checkbutton(ffFrame, padding=3, text="Video", variable=dlvideo, onvalue=True, offvalue=False, command=dlvideoselection)
+	dlvideoCheckbox.grid(row=1, column=2, sticky="W", padx=3)
 
-	dlaudioCheckbox = tk.Checkbutton(ffFrame, text="Audio", variable=dlaudio, onvalue=True, offvalue=False)
-	dlaudioCheckbox.grid(row=1, column=3, sticky="W")
+	dlaudioCheckbox = ttk.Checkbutton(ffFrame, padding=3, text="Audio", variable=dlaudio, onvalue=True, offvalue=False)
+	dlaudioCheckbox.grid(row=1, column=3, sticky="W", padx=3)
 
 	def ffselection():
 		ff = Info.fileformats[fileformat.get()]
@@ -91,20 +87,20 @@ def createFrame(window):
 		if "warn" in ff:
 			tk.messagebox.showwarning("Warning", ff["warn"]) # FIXME make this into a button next to the format dropdown instead of a popup
 
-	fileformatDropdown = tk.OptionMenu(ffFrame, fileformat, *Info.fileformats, command=lambda _: ffselection())
+	fileformatDropdown = ttk.OptionMenu(ffFrame, fileformat, next(iter(Info.fileformats)), *Info.fileformats, command=lambda _: ffselection())
 	fileformatDropdown.grid(row=1, column=1, sticky="W")
 
 	# Video quality
-	vqLabel = tk.Label(frame, text="Video quality: ")
+	vqLabel = ttk.Label(frame, text="Video quality: ")
 	vqLabel.grid(row=6, column=1, sticky="E")
 
-	vqDropdown = tk.OptionMenu(frame, vq, *Info.videoqualities)
+	vqDropdown = ttk.OptionMenu(frame, vq, next(iter(Info.videoqualities)), *Info.videoqualities)
 	vqDropdown.grid(row=6, column=2, columnspan=2, sticky="W")
 
 	# Destination Directory
-	tk.Label(frame, text="Destination directory: ").grid(row=19, column=1, sticky="E")
+	ttk.Label(frame, text="Destination directory: ").grid(row=19, column=1, sticky="E")
 
-	dirInputBox = tk.Entry(frame, textvariable=dirSV)
+	dirInputBox = ttk.Entry(frame, textvariable=dirSV)
 	dirInputBox.grid(row=19, column=2, sticky="WE")
 	dirInputBox.bind("<Control-KeyRelease-a>", lambda _: dirInputBox.select_range(0, tk.END), dirInputBox.icursor(tk.END))
 	dirInputBox.bind("<Control-KeyRelease-A>", lambda _: dirInputBox.select_range(0, tk.END), dirInputBox.icursor(tk.END))
@@ -114,7 +110,7 @@ def createFrame(window):
 		if picked_dir:
 			dirSV.set(picked_dir)
 
-	selectDirButton = tk.Button(frame, text="Browse...", command=seldir)
+	selectDirButton = ttk.Button(frame, width=7, text="Browse...", command=seldir)
 	selectDirButton.grid(row=19, column=3)
 
 	downloadButton = None
@@ -135,13 +131,13 @@ def createFrame(window):
 		progressWindow.rowconfigure(6, minsize=4)
 		progressWindow.columnconfigure(1, weight=1)
 
-		pLabel = tk.Label(progressWindow, text="Preparing download...", font=tk.font.Font(weight="bold"))
+		pLabel = ttk.Label(progressWindow, text="Preparing download...", font=tk.font.Font(weight="bold"))
 		pLabel.grid(row=1, column=1, sticky="W")
 
-		pDownloadedLabel = tk.Label(progressWindow)
+		pDownloadedLabel = ttk.Label(progressWindow)
 		pDownloadedLabel.grid(row=2, column=1, sticky="W")
 
-		pProgressLabel = tk.Label(progressWindow)
+		pProgressLabel = ttk.Label(progressWindow)
 		pProgressLabel.grid(row=3, column=1, sticky="W")
 
 		pProgressVar = tk.IntVar()
@@ -248,7 +244,7 @@ def createFrame(window):
 			process.terminate()
 			frame.after(200, cleanupYDLTemp)
 
-		pCancelBtn = tk.Button(progressWindow, text="Cancel", command=cancelf)
+		pCancelBtn = ttk.Button(progressWindow, text="Cancel", command=cancelf)
 		pCancelBtn.grid(row=5, column=1, sticky="E")
 
 		def skip(): pass
@@ -258,11 +254,11 @@ def createFrame(window):
 		progressWindow.transient(window)
 		progressWindow.mainloop()
 
-	downloadButton = tk.Button(frame, text="Download", command=downloadf)
+	downloadButton = ttk.Button(frame, text="Download", command=downloadf)
 	downloadButton.grid(row=20, column=1, columnspan=3, sticky="E")
 
 	# Mode
-	modeLabel = tk.Label(frame, text="Mode: ")
+	modeLabel = ttk.Label(frame, text="Mode: ")
 	modeLabel.grid(row=1,column=1,sticky="E")
 
 	modes = [
@@ -282,5 +278,5 @@ def createFrame(window):
 			urlLabel.config(text="Search term: ")
 	selection()
 
-	modeDropdown = tk.OptionMenu(frame, mode, *modes, command=lambda _: selection())
+	modeDropdown = ttk.OptionMenu(frame, mode, modes[0], *modes, command=lambda _: selection())
 	modeDropdown.grid(row=1, column=2, columnspan=2, sticky="W")
