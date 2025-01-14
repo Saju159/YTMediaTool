@@ -93,6 +93,11 @@ def createFrame(window):
 		nextRow += 1
 		return optFrame
 
+	def baseHelpBtn(text: str, optFrame: tk.Frame, column: int):
+		btn = ttk.Button(optFrame, text="?", width=2, command=lambda: tk.messagebox.showinfo("Help", text))
+		btn.grid(row=1, column=column+1, sticky="W")
+		optFrame.columnconfigure(column, minsize=4)
+
 	def addLabel(text: str):
 		nonlocal nextRow, labels
 		label = ttk.Label(frame2, text=text, justify="left")
@@ -106,7 +111,7 @@ def createFrame(window):
 		button.grid(row=nextRow, column=1, sticky="W")
 		nextRow += 1
 
-	def addFilePathOption(optId: str, text: str):
+	def addFilePathOption(optId: str, text: str, helptext: None=str|None):
 		optFrame = baseOptFrame()
 		optFrame.columnconfigure(2, weight=1)
 		ttk.Label(optFrame, text=f"{text}: ").grid(row=1, column=1, sticky="E")
@@ -134,8 +139,8 @@ def createFrame(window):
 		selectDirButton = ttk.Button(optFrame, text="Browse...", command=seldir)
 		selectDirButton.grid(row=1, column=3)
 
-	def addBooleanOption(optId: str, text: str):
-		nonlocal nextRow
+	def addBooleanOption(optId: str, text: str, helptext: None=str|None):
+		optFrame = baseOptFrame()
 
 		boolSV = tk.BooleanVar()
 		tkVars[optId] = boolSV
@@ -144,13 +149,13 @@ def createFrame(window):
 			if boolSV.get() != Settings.Settings[optId]:
 				showButtonsFrame()
 
-		pathCheckbox = ttk.Checkbutton(frame2, text=text, variable=boolSV, onvalue=True, offvalue=False, command=lambda: checkDiff())
-		pathCheckbox.grid(row=nextRow, column=1, columnspan=3, sticky="W")
+		pathCheckbox = ttk.Checkbutton(optFrame, text=text, variable=boolSV, onvalue=True, offvalue=False, command=lambda: checkDiff())
+		pathCheckbox.grid(row=1, column=1, sticky="W")
 
-		nextRow += 1
-		return boolSV
+		if type(helptext) == str:
+			baseHelpBtn(helptext, optFrame, 2)
 
-	def addDropdownOption(optId: str, text: str, choices: list):
+	def addDropdownOption(optId: str, text: str, choices: list, helptext: None=str|None):
 		optFrame = baseOptFrame()
 		ttk.Label(optFrame, text=f"{text}: ").grid(row=1, column=1, sticky="E")
 
@@ -163,6 +168,9 @@ def createFrame(window):
 
 		vqDropdown = ttk.OptionMenu(optFrame, sv, choices[0], *choices, command=checkDiff)
 		vqDropdown.grid(row=1, column=2, sticky="W")
+
+		if type(helptext) == str:
+			baseHelpBtn(helptext, optFrame, 3)
 
 	def addSpacer():
 		nonlocal nextRow
@@ -178,9 +186,9 @@ def createFrame(window):
 	addSpacer()
 	addLabel("Settings for 'Basic' tab:")
 	addBooleanOption("BasicPage-ShowDialogAfterDLSuccess", "Show dialog after successful download")
-	addBooleanOption("BasicPage-Cookies", "Use browser cookies")
-	addDropdownOption("BasicPage-browser", "Select your primary browser", ["brave", "chrome", "chromium", "edge", "firefox", "opera"])
-	addDropdownOption("BasicPage-ForceQuality", "When video quality is not available", ["Resize to selected quality", "Download closest to selected quality"])
+	addDropdownOption("BasicPage-ForceQuality", "When video quality is not available", ["Resize to selected quality", "Download closest to selected quality"], "If \"Resize to selected quality\" is selected:\nCalls FFmpeg to resize the video after download if resolution doesn't match. This can be quite slow depending on the video's length and quality selected.")
+	addBooleanOption("BasicPage-Cookies", "Use browser cookies", "Allows yt-dlp to grab your browser's cookies for authentication.\n\nOnly use if you are downloading private videos that require logging in to download.")
+	addDropdownOption("BasicPage-browser", "Browser to grab cookies from", ["brave", "chrome", "chromium", "edge", "firefox", "opera", "safari", "vivaldi", "whale"])
 
 	addSpacer()
 	addLabel("Settings for 'SMLD' tab:")
