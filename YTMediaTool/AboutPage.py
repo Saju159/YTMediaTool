@@ -15,7 +15,7 @@ def createFrame(window):
 		frame.place_forget()
 	def showPage():
 		frame.place(y=34, relwidth=1.0)
-		window.after(1, lambda: window.geometry(f"{window.winfo_width()}x{frame.winfo_height()+34}"))
+		window.after(1, lambda: window.config(height=frame.winfo_height()+34))
 
 	labels["Title"] = tk.Label(frame, text=f"{Version.Name} {Version.Version}", font=font.Font(size=24, weight="bold"))
 	labels["Title"].grid(row=1, pady=10)

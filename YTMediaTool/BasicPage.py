@@ -19,12 +19,17 @@ def createFrame(window):
 		global pageOpenedOnce
 		pageOpenedOnce = True
 
+	def _frame_reconf(event):
+		window.config(height=event.height+34)
+
 	global showPage, hidePage
 	def hidePage():
+		frame.unbind("<Configure>")
 		frame.place_forget()
 	def showPage():
+		frame.bind("<Configure>", _frame_reconf)
 		frame.place(y=34, relwidth=1.0)
-		window.after(1, lambda: window.geometry(f"{window.winfo_width()}x{frame.winfo_height()+34}"))
+		window.after(1, lambda: window.config(height=frame.winfo_height()+34))
 		if not pageOpenedOnce: showPageFirstTime()
 
 	# URL box
@@ -99,10 +104,10 @@ def createFrame(window):
 	vqDropdown.grid(row=6, column=2, columnspan=2, sticky="W")
 
 	# Destination Directory
-	ttk.Label(frame, text="Destination directory: ").grid(row=19, column=1, sticky="E")
+	ttk.Label(frame, text="Destination directory: ").grid(row=18, column=1, sticky="E")
 
 	dirInputBox = ttk.Entry(frame, textvariable=dirSV)
-	dirInputBox.grid(row=19, column=2, sticky="WE")
+	dirInputBox.grid(row=18, column=2, sticky="WE")
 	dirInputBox.bind("<Control-KeyRelease-a>", lambda _: dirInputBox.select_range(0, tk.END), dirInputBox.icursor(tk.END))
 	dirInputBox.bind("<Control-KeyRelease-A>", lambda _: dirInputBox.select_range(0, tk.END), dirInputBox.icursor(tk.END))
 
@@ -112,7 +117,10 @@ def createFrame(window):
 			dirSV.set(picked_dir)
 
 	selectDirButton = ttk.Button(frame, text="Browse...", command=seldir)
-	selectDirButton.grid(row=19, column=3)
+	selectDirButton.grid(row=18, column=3)
+
+	statusBarSeparator = ttk.Separator(frame, orient="horizontal")
+	statusBarSeparator.grid(row=19, column=1, columnspan=3, sticky="WE", pady=4)
 
 	downloadButton = None
 

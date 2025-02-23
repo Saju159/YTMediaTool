@@ -47,12 +47,17 @@ def createFrame(window):
 	frame = tk.Frame(window, width=600, height=380)
 	frame.columnconfigure(2, weight=1)
 
+	def _frame_reconf(event):
+		window.config(height=event.height+34)
+
 	global showPage, hidePage, cancel
 	def hidePage():
+		frame.unbind("<Configure>")
 		frame.place_forget()
 	def showPage():
+		frame.bind("<Configure>", _frame_reconf)
 		frame.place(y=34, relwidth=1.0)
-		window.after(1, lambda: window.geometry(f"{window.winfo_width()}x{frame.winfo_height()+34}"))
+		window.after(1, lambda: window.config(height=frame.winfo_height()+34))
 
 	librarydirectory = os.path.expanduser("~/YTMediaTool/")
 
