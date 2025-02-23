@@ -140,7 +140,7 @@ def createFrame(window):
 				pathSV.set(picked_dir)
 				showButtonsFrame()
 
-		selectDirButton = ttk.Button(optFrame, width=7, text="Browse...", command=seldir)
+		selectDirButton = ttk.Button(optFrame, text="Browse...", command=seldir)
 		selectDirButton.grid(row=1, column=3)
 
 		if type(helptext) == str:

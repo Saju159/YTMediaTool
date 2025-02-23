@@ -111,7 +111,7 @@ def createFrame(window):
 		if picked_dir:
 			dirSV.set(picked_dir)
 
-	selectDirButton = ttk.Button(frame, width=7, text="Browse...", command=seldir)
+	selectDirButton = ttk.Button(frame, text="Browse...", command=seldir)
 	selectDirButton.grid(row=19, column=3)
 
 	downloadButton = None
