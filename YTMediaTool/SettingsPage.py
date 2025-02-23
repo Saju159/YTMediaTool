@@ -29,6 +29,7 @@ def createFrame(window):
 	scrollable = False
 	labels = []
 	tkVars = {}
+	windowheight = 480
 
 	def _frame2_reconf(event):
 		canvas.config(scrollregion=f"0 0 {event.width} {event.height}")
@@ -75,11 +76,14 @@ def createFrame(window):
 	global showPage, hidePage
 	def hidePage():
 		frame.place_forget()
+		window.resizable(width=True, height=False)
 		frame.unbind_all("<MouseWheel>")
 		frame.unbind_all("<Button-4>")
 		frame.unbind_all("<Button-5>")
 	def showPage():
 		frame.place(y=34, h=-34, relwidth=1.0, relheight=1.0)
+		window.resizable(width=True, height=True)
+		window.after(1, lambda: window.geometry(f"{window.winfo_width()}x{windowheight}"))
 		# <MouseWheel> for windows and <Button-4/5> for linux/x11
 		frame.bind_all("<MouseWheel>", lambda event: _scroll(event.delta/120))
 		frame.bind_all("<Button-4>", lambda _: _scroll(3))

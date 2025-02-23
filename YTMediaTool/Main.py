@@ -27,8 +27,9 @@ if __name__ == "__main__": # Only run if this is the main process.
 
 	window = tk.Tk()
 	window.title("YTMediaTool")
-	window.geometry('600x480')
-	window.minsize(600, 480)
+	# window.geometry('600x480')
+	window.minsize(600, 34)
+	window.resizable(width=True, height=False)
 
 	tabFrame = tk.Frame(window, bg='gray')
 	tabFrame.place(x=0, y=0, relwidth=1.0, height=34)

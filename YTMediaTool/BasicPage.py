@@ -23,7 +23,8 @@ def createFrame(window):
 	def hidePage():
 		frame.place_forget()
 	def showPage():
-		frame.place(y=34, h=-34, relwidth=1.0, relheight=1.0)
+		frame.place(y=34, relwidth=1.0)
+		window.after(1, lambda: window.geometry(f"{window.winfo_width()}x{frame.winfo_height()+34}"))
 		if not pageOpenedOnce: showPageFirstTime()
 
 	# URL box
