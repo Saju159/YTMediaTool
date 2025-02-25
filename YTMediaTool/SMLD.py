@@ -8,7 +8,7 @@ from yt_dlp import YoutubeDL
 from Settings import Settings
 from Common import getBaseConfigDir
 
-filter = '?ü"[];:,.()®*' #global filter for song album and artist names
+filter = '?ü"[];:,.()®*\'' #global filter for song album and artist names
 
 if not os.path.isfile(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt")):
 	with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'w') as log:
