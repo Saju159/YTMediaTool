@@ -219,6 +219,14 @@ def runsmld():
 				if "FFmpeg_path" in Settings:
 					vaihtoehdot["ffmpeg_location"] = Settings["FFmpeg_path"]
 
+				if len(Settings["YDL-CookiesFilePath"]) > 2:
+					print("Using cookie file!")
+					vaihtoehdot["cookiefile"] = str(Settings["YDL-CookiesFilePath"])
+				elif Settings["BasicPage-Cookies"]:
+					browser_to_grab_from = (Settings["BasicPage-browser"])
+					print(f"Grabbing cookies from {browser_to_grab_from}!")
+					vaihtoehdot["cookiesfrombrowser"] = (browser_to_grab_from, None, None, None)
+
 				try:
 
 					with YoutubeDL(vaihtoehdot) as ydl:
