@@ -161,12 +161,12 @@ def runsmld():
 			komento = rivit[0].strip()  # Poista rivin ympäriltä tyhjät merkit
 			jäljellä_olevat_rivit = rivit[1:]  # Jäljellä olevat rivit
 
-
-			for char in filter:
+			filter1 = "/?ü"
+			for char in filter1:
 				komento = komento.replace(char, "")
 
 			if not filetype == -1:
-				#print("Expanded iTunes format")
+				print("Expanded iTunes format")
 				osat = komento.split('\t')
 				if len(osat) > 2:
 					songname = f"{osat[0]}"
@@ -180,8 +180,9 @@ def runsmld():
 						f.write(artist + "\n "+ songname + "\n" + albumname)
 						f.close()
 			else:
-				#print("Spotify or iTunes lite.")
+				print("Spotify or iTunes lite.")
 				osat = komento.split(',')
+				songname = f"{osat[0]}"
 				for char in filter:
 					songname = songname.replace(char, "")
 				artist = f"{osat[1]}"
@@ -200,7 +201,6 @@ def runsmld():
 				# Päivitetään tiedosto ilman ensimmäistä riviä
 				with open(tiedostonimi, 'w', encoding='utf-8') as tiedosto:
 					tiedosto.writelines(jäljellä_olevat_rivit)
-				continue
 
 			lopullinentiedosto = os.path.join(downloaddirectory, artist ,albumname, songname)
 			for char in filter:
@@ -255,8 +255,7 @@ def runsmld():
 
 
 				if os.path.isfile(lopullinentiedosto + "." + fileformat):
-					#print("Files saved")
-					continue
+					print("Files saved")
 				else:
 
 					print("The file was not saved due to an unknown error.")
@@ -270,7 +269,6 @@ def runsmld():
 				# Poistetaan ensimmäinen rivi tiedostosta
 				with open(tiedostonimi, 'w', encoding='utf-8') as tiedosto:
 					tiedosto.writelines(jäljellä_olevat_rivit)
-				continue
 
 				tiedosto = lopullinentiedosto + "." + fileformat
 
@@ -286,7 +284,7 @@ def runsmld():
 				playlist.write(artist +"/" +  albumname + "/" + songname + "." + fileformat)
 				playlist.write("\n")
 				playlist.close()
-				print("Crurrent downlaod writen")
+				print("Current download playlist written")
 
 	#Metadata:
 			if fileformat == "m4a":
@@ -321,7 +319,10 @@ def runsmld():
 			with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
 				log.write("Main loop error: " + str(e))
 				log.write("\n")
-				log.write(f"While trying to download: {downloaddirectory} {artist} {albumname} {songname}")
+				try:
+					log.write(f"While trying to download: {downloaddirectory} {artist} {albumname} {songname}")
+				except:
+					print("Error while trying to write error log.")
 				log.close()
 
 
