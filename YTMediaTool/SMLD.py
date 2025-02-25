@@ -8,6 +8,8 @@ from yt_dlp import YoutubeDL
 from Settings import Settings
 from Common import getBaseConfigDir
 
+filter = '?ü"[];:,.()®*' #global filter for song album and artist names
+
 if not os.path.isfile(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt")):
 	with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'w') as log:
 		log.close()
@@ -160,7 +162,6 @@ def runsmld():
 			jäljellä_olevat_rivit = rivit[1:]  # Jäljellä olevat rivit
 
 
-			filter = "/?ü"
 			for char in filter:
 				komento = komento.replace(char, "")
 
@@ -181,12 +182,14 @@ def runsmld():
 			else:
 				#print("Spotify or iTunes lite.")
 				osat = komento.split(',')
-				songname = f"{osat[0]}"
-				songname = songname.replace('"','')
+				for char in filter:
+					songname = songname.replace(char, "")
 				artist = f"{osat[1]}"
-				artist = artist.replace('"','')
+				for char in filter:
+					artist = artist.replace(char, "")
 				albumname = f"{osat[2]}"
-				albumname = albumname.replace('"','')
+				for char in filter:
+					albumname = albumname.replace(char, "")
 				rate = ""
 
 				with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "songinfo.txt"), "w") as f:
@@ -200,7 +203,6 @@ def runsmld():
 				continue
 
 			lopullinentiedosto = os.path.join(downloaddirectory, artist ,albumname, songname)
-			filter = '?ü"[];:,.()®*'
 			for char in filter:
 				lopullinentiedosto = lopullinentiedosto.replace(char, "")
 
@@ -258,6 +260,9 @@ def runsmld():
 				else:
 
 					print("The file was not saved due to an unknown error.")
+					with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
+						log.write(f"File save error while trying to download: {lopullinentiedosto}")
+						log.close()
 
 				tiedosto = lopullinentiedosto + "." + fileformat
 			else:
@@ -276,15 +281,17 @@ def runsmld():
 						playlist.write("\n")
 						playlist.close()
 
-
+			print(artist +"/" +  albumname + "/" + songname + "." + fileformat)
 			with open(playlistfile1, 'a', encoding='utf-8') as playlist:
 				playlist.write(artist +"/" +  albumname + "/" + songname + "." + fileformat)
 				playlist.write("\n")
 				playlist.close()
+				print("Crurrent downlaod writen")
 
 	#Metadata:
 			if fileformat == "m4a":
 				print("m4a detected")
+
 				try:
 					# Lataa M4A-tiedosto
 					audio = MP4(tiedosto)
