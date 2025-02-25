@@ -14,7 +14,7 @@ if not os.path.isfile(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt")):
 	with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'w') as log:
 		log.close()
 
-def setupSMLD():
+def setupSMLD(threadnumber, threadcount):
 	global polku3
 	polku3 = (os.getcwd())
 
@@ -25,8 +25,11 @@ def setupSMLD():
 		f.close()
 
 	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "libraryfiledirectory.txt")) as f:
-		libraryfiledirectory = f.read()
+		libraryfiledirectory2 = f.read()
 		f.close()
+
+
+	libraryfiledirectory = os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist" + str(threadnumber) + ".txt")
 
 	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "fileformat.txt")) as f:
 		global fileformat
@@ -46,11 +49,12 @@ def setupSMLD():
 			f2.write("\n")
 			f2.close()
 
+
 		with open(libraryfiledirectory, 'r', encoding='utf-8') as tiedosto:
 			ensimrivi = tiedosto.readlines(1)
 
 			global filetype
-			filetype = str(libraryfiledirectory).find(".txt")
+			filetype = str(libraryfiledirectory2).find(".txt")
 
 			if not filetype == -1:
 				print("Selected file is a iTunes media library. With .txt file format")
@@ -65,7 +69,7 @@ def setupSMLD():
 				with open(libraryfiledirectory, 'r', encoding='utf-8') as tiedosto:
 					rivit = tiedosto.readlines()
 
-				with open((os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt")), 'w', encoding='utf-8') as tiedosto:
+				with open((os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist" + str(threadnumber) + ".txt")), 'w', encoding='utf-8') as tiedosto:
 					for rivi in rivit:
 						osat = rivi.split('\t')  # Käytetään kahta tabulaattoria erottimena
 						if len(osat) > 4:  # Tarkistetaan, että riittävästi osia löytyy
@@ -77,24 +81,22 @@ def setupSMLD():
 			else:
 				print("Selected file is a iTunes or Spotify media library.")
 
-
 				with open(libraryfiledirectory, 'r', encoding='utf-8') as tiedosto:
 					rivit = tiedosto.readlines()
 
-				with open((os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt")), 'w', encoding='utf-8') as tiedosto:
+				with open((os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist" + str(threadnumber) + ".txt")), 'w', encoding='utf-8') as tiedosto:
 					for rivi in rivit:
 						osat = rivi.split(',')
 						if len(osat) > 2:  # Tarkistetaan, että riittävästi osia löytyy
 							uusi_rivi = f"{osat[0]},{osat[1]},{osat[2]}\n"
 							tiedosto.write(uusi_rivi)
 
-
 				delete = str(ensimrivi).find("Track name")
 
 				if not delete == -1:
-					with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt"), 'r') as fin:
+					with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist" + str(threadnumber) + ".txt"), 'r') as fin:
 						data = fin.read().splitlines(True)
-					with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt"), 'w') as fout:
+					with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist" + str(threadnumber) + ".txt"), 'w') as fout:
 						fout.writelines(data[1:])
 					print("Header line removed")
 
@@ -112,15 +114,15 @@ def setupSMLD():
 
 	#Poistetaan tyhjät rivit:
 
-	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt"), 'r', encoding='utf-8') as file:
+	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist" + str(threadnumber) + ".txt"), 'r', encoding='utf-8') as file:
 		lines = file.readlines()
 	non_empty_lines = [line for line in lines if line.strip()]
-	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt"), 'w', encoding='utf-8') as file:
+	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist" + str(threadnumber) + ".txt"), 'w', encoding='utf-8') as file:
 		file.writelines(non_empty_lines)
 		file.close()
 
 
-def runsmld():
+def runsmld(threadnumber):
 	global downloaddirectory, vaihtoehdot, fileformat, polku3, filetype, albumname, songname, artist, playlistfile1
 
 	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "downloaddirectory.txt")) as f:
@@ -143,7 +145,7 @@ def runsmld():
 			break
 
 		f.close()
-		tiedostonimi = os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt")
+		tiedostonimi = os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist" + str(threadnumber) + ".txt")
 		try:
 			# Luetaan tiedoston ensimmäinen rivi
 			with open(tiedostonimi, 'r', encoding='utf-8') as tiedosto:
@@ -154,7 +156,6 @@ def runsmld():
 				with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Done.txt"), 'w') as f:
 					f.write("1")
 				messagebox.showinfo("Done", "Downloading has been completed")
-
 				break
 
 			# Ota ensimmäinen rivi ja poista se tiedoston riveistä
@@ -239,7 +240,7 @@ def runsmld():
 
 							if "Sign in to confirm your age." in str(e):
 								with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
-									log.write(f"Failed to download: {lopullinentiedosto}.{fileformat} Video is age-restricted.")
+									log.write(f"Failed to download: {lopullinentiedosto}.{fileformat} Video is age-restricted. Enabling browser cookies in the settings might help.")
 									log.write("\n")
 									log.close()
 							else:
@@ -323,7 +324,7 @@ def runsmld():
 			messagebox.showinfo("File not found", f"File: '{tiedostonimi}' cannot be found.")
 			#print(f"Tiedostoa '{tiedostonimi}' ei löydy.")
 		except Exception as e:
-			print(f"An unexpected error occured e1: {e}")
+			print(f"An unexpected error occured e12: {e}")
 			with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
 				log.write("Main loop error: " + str(e))
 				log.write("\n")

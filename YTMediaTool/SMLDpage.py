@@ -8,6 +8,7 @@ import SMLD
 import threading
 from webbrowser import open_new_tab as openInBrowser
 from Common import getBaseConfigDir
+from Settings import Settings
 
 #Website: https://www.tunemymusic.com/transfer
 
@@ -116,6 +117,7 @@ def createFrame(window):
 
 
 	def refresher():
+		global threadnumber
 		librarydirectory1 = os.path.expanduser("~/YTMediaTool/")
 
 		if not os.path.exists(librarydirectory1 + "Downloads/"):
@@ -133,7 +135,7 @@ def createFrame(window):
 					if done == "1":
 						cancel()
 						print("Done")
-				window.after(2000, refresher)
+				window.after(1000, refresher)
 
 			f.close()
 
@@ -185,6 +187,7 @@ def createFrame(window):
 			f.close()
 
 	def runSMLD():
+		global threadnumber
 		if os.path.isfile(librarydirectory1):
 			with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "r") as f:
 				cancel = f.read()
@@ -193,13 +196,27 @@ def createFrame(window):
 				print("cancel")
 			else:
 				print("Päällä")
-				def smld_a():
-					SMLD.runsmld()
 
+			threadnumber = 1
+			def smld_a():
+				SMLD.runsmld(threadnumber)
+
+			threadcount = int(Settings["SMLD-mutithreading"])
+			for threadnumber in range(threadcount):
+				print("Threadcount:" + str(threadnumber))
 				smld_b = threading.Thread(target=smld_a)
 				smld_b.start()
 
 	def setupSMLD():
+		number = 0
+		while number < 17:
+			poistettava = os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist" + str(number) +".txt")
+			if os.path.isfile(poistettava):
+
+				os.remove(poistettava)
+				print("Removed songlist: "+ str(number))
+			number = number + 1
+
 		if os.path.isfile(librarydirectory1):
 			downloadb1.config(state="disabled")
 			fileformatDropdown.config(state="disabled")
@@ -230,15 +247,34 @@ def createFrame(window):
 				f.write(fileformat.get())
 				f.close()
 
-			SMLD.setupSMLD()
+			window.after(1, refresher)
 
+			threadcount = int(Settings["SMLD-mutithreading"])
+			#for threadnumber in range(threadcount):
+				#print("Threadnumber:" + str(threadnumber))
+
+			with open(librarydirectory1, 'r', encoding='utf-8') as f:
+				lines = f.readlines()
+
+			total_lines = len(lines)
+			lines_per_part = total_lines // threadcount
+			remainder = total_lines % threadcount
+
+			start = 0
+			for threadnumber in range(threadcount):
+				extra_line = 1 if threadnumber < remainder else 0  # Jakojäännös jaetaan tasaisesti osiin
+				end = start + lines_per_part + extra_line
+				part_filename = os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist" + str(threadnumber) + ".txt")
+				with open(part_filename, 'w', encoding='utf-8') as part_file:
+					part_file.writelines(lines[start:end])
+				start = end
+				SMLD.setupSMLD(threadnumber, threadcount)
+			print(f"Tiedosto jaettu {threadcount} osaan.")
 
 			songinfo2.grid(row=6, column=1, columnspan = 3, sticky="W")
 			songinfo1.grid(row=5, column=1, columnspan = 3, sticky="W")
 			songinfo3.grid(row=7, column=1, columnspan = 3, sticky="W")
 
-
-			window.after(1, refresher)
 
 		else:
 			messagebox.showinfo("File not found", "File cannot be found or it doesn't exist. Please enter a valid file path.")

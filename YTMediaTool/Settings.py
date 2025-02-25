@@ -17,7 +17,8 @@ Settings = {
 	"YDL-CookiesFilePath": "",
 	"YDL-EnablePlaylistDL": False,
 	"YDL-SkipIfExists": False,
-	"YDL-MaxNumberOfRetries": 10 # unimplemented
+	"YDL-MaxNumberOfRetries": 10, # unimplemented
+	"SMLD-mutithreading": 4
 }
 SettingsFilePath = os.path.join(getBaseConfigDir(), "settings.json")
 
