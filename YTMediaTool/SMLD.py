@@ -7,6 +7,9 @@ import time
 from yt_dlp import YoutubeDL
 from Settings import Settings
 from Common import getBaseConfigDir
+import ytmusicapi
+
+diagnosis = 0 #1 = on, 0 = off
 
 filter = '?ü"[];:,.()®*\'' #global filter for song album and artist names
 
@@ -36,9 +39,9 @@ def setupSMLD(threadnumber, threadcount):
 		fileformat= f.read()
 		f.close()
 
-
-	print(f"Download Directory: {downloaddirectory}")
-	print(f"Library Directory: {libraryfiledirectory}")
+	if diagnosis == 1:
+		print(f"Download Directory: {downloaddirectory}")
+		print(f"Library Directory: {libraryfiledirectory}")
 
 	try:
 		global playlistfile1, playlistfile
@@ -57,7 +60,8 @@ def setupSMLD(threadnumber, threadcount):
 			filetype = str(libraryfiledirectory2).find(".txt")
 
 			if not filetype == -1:
-				print("Selected file is a iTunes media library. With .txt file format")
+				if diagnosis == 1:
+					print("Selected file is a iTunes media library. With .txt file format")
 
 				playlistfile = (os.path.join(downloaddirectory, "Favorites.m3u" ))
 
@@ -75,11 +79,12 @@ def setupSMLD(threadnumber, threadcount):
 						if len(osat) > 4:  # Tarkistetaan, että riittävästi osia löytyy
 							uusi_rivi = f"{osat[0]}\t{osat[3]}\t{osat[4]}\t{osat[5]}\t{osat[6]}\n"  # Ensimmäinen ja kolmas osa
 							tiedosto.write(uusi_rivi)
-
-				print("File saved successfully.")
+				if diagnosis == 1:
+					print("File saved successfully.")
 
 			else:
-				print("Selected file is a iTunes or Spotify media library.")
+				if diagnosis == 1:
+					print("Selected file is a iTunes or Spotify media library.")
 
 				with open(libraryfiledirectory, 'r', encoding='utf-8') as tiedosto:
 					rivit = tiedosto.readlines()
@@ -98,9 +103,11 @@ def setupSMLD(threadnumber, threadcount):
 						data = fin.read().splitlines(True)
 					with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist" + str(threadnumber) + ".txt"), 'w') as fout:
 						fout.writelines(data[1:])
-					print("Header line removed")
 
-			print("File saved successfully.")
+					if diagnosis == 1:
+						print("Header line removed")
+			if diagnosis == 1:
+				print("File saved successfully.")
 
 
 	except Exception as e:
@@ -125,6 +132,11 @@ def setupSMLD(threadnumber, threadcount):
 def runsmld(threadnumber):
 	global downloaddirectory, vaihtoehdot, fileformat, polku3, filetype, albumname, songname, artist, playlistfile1
 
+	if diagnosis == 1:
+
+		if diagnosis == 1:
+			print("-------------------------------------------------Next file----------------------------------------------------------------------------")
+
 	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "downloaddirectory.txt")) as f:
 		global downloaddirectory
 		downloaddirectory = f.read()
@@ -144,8 +156,20 @@ def runsmld(threadnumber):
 			print("cancel")
 			break
 
+		with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Done" + str(threadnumber) + ".txt"), "r") as f:
+			done = f.read()
+			f.close()
+
+		if int(done) == 1:
+			print("done")
+			break
+
 		f.close()
 		tiedostonimi = os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist" + str(threadnumber) + ".txt")
+		if diagnosis == 1:
+			if diagnosis == 1:
+				print("Theadnumeber:"  + str(threadnumber))
+			#print(f"While trying to download: {downloaddirectory} {artist} {albumname} {songname}")
 		try:
 			# Luetaan tiedoston ensimmäinen rivi
 			with open(tiedostonimi, 'r', encoding='utf-8') as tiedosto:
@@ -153,55 +177,56 @@ def runsmld(threadnumber):
 
 			if not rivit:  # Lopeta, jos tiedosto on tyhjä
 				print("File is empty. No more files to add.")
-				with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Done.txt"), 'w') as f:
+				with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Done" + str(threadnumber) + ".txt"), 'w') as f:
 					f.write("1")
-				messagebox.showinfo("Done", "Downloading has been completed")
 				break
 
 			# Ota ensimmäinen rivi ja poista se tiedoston riveistä
-			komento = rivit[0].strip()  # Poista rivin ympäriltä tyhjät merkit
-			jäljellä_olevat_rivit = rivit[1:]  # Jäljellä olevat rivit
+			if not rivit == "":
+				komento = rivit[0].strip()  # Poista rivin ympäriltä tyhjät merkit
+				jäljellä_olevat_rivit = rivit[1:]  # Jäljellä olevat rivit
 
-			filter1 = "/?ü"
+			else:
+				print ("Thread" + threadnumber +"file is empty")
+
+			filter1 = "/?ü()"
 			for char in filter1:
 				komento = komento.replace(char, "")
 
-			if not filetype == -1:
-				print("Expanded iTunes format")
-				osat = komento.split('\t')
-				if len(osat) > 2:
+			if not rivit == "":
+				if not filetype == -1:
+					if diagnosis == 1:
+						print("Expanded iTunes format")
+					osat = komento.split('\t')
+					if len(osat) > 2:
+						songname = f"{osat[0]}"
+						artist = f"{osat[1]}"
+						albumname2 = f"{osat[2]}"
+						albumname1 = albumname2.replace(")", "")
+						albumname = albumname1.replace("(", "")
+						rate = f"{osat[4]}"
+
+						with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "songinfo.txt"), "w") as f:
+							f.write(artist + "\n "+ songname + "\n" + albumname)
+							f.close()
+				else:
+					if diagnosis == 1:
+						print("Spotify or iTunes lite.")
+					osat = komento.split(',')
 					songname = f"{osat[0]}"
+					for char in filter:
+						songname = songname.replace(char, "")
 					artist = f"{osat[1]}"
-					albumname2 = f"{osat[2]}"
-					albumname1 = albumname2.replace(")", "")
-					albumname = albumname1.replace("(", "")
-					rate = f"{osat[4]}"
+					for char in filter:
+						artist = artist.replace(char, "")
+					albumname = f"{osat[2]}"
+					for char in filter:
+						albumname = albumname.replace(char, "")
+					rate = ""
 
 					with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "songinfo.txt"), "w") as f:
 						f.write(artist + "\n "+ songname + "\n" + albumname)
 						f.close()
-			else:
-				print("Spotify or iTunes lite.")
-				osat = komento.split(',')
-				songname = f"{osat[0]}"
-				for char in filter:
-					songname = songname.replace(char, "")
-				artist = f"{osat[1]}"
-				for char in filter:
-					artist = artist.replace(char, "")
-				albumname = f"{osat[2]}"
-				for char in filter:
-					albumname = albumname.replace(char, "")
-				rate = ""
-
-				with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "songinfo.txt"), "w") as f:
-					f.write(artist + "\n "+ songname + "\n" + albumname)
-					f.close()
-
-			if not komento:  # Ohitetaan tyhjät rivit
-				# Päivitetään tiedosto ilman ensimmäistä riviä
-				with open(tiedostonimi, 'w', encoding='utf-8') as tiedosto:
-					tiedosto.writelines(jäljellä_olevat_rivit)
 
 			lopullinentiedosto = os.path.join(downloaddirectory, artist ,albumname, songname)
 			for char in filter:
@@ -210,11 +235,13 @@ def runsmld(threadnumber):
 			if not os.path.isfile(lopullinentiedosto + "."+fileformat):
 				global vaihtoehdot
 				vaihtoehdot = {
-				'format': "ba",
+				'format': 'bestaudio',
 				'max_downloads': 1,
 				'outtmpl': {'default': lopullinentiedosto + ".%(ext)s"},
 				'final_ext' : fileformat,
-				'postprocessors' : [{'key': 'FFmpegVideoConvertor', 'preferedformat': fileformat}]
+				'postprocessors' : [{'key': 'FFmpegVideoConvertor', 'preferedformat': fileformat}],
+				'quiet': True,
+				'noprogress': True
 				}
 
 				if "FFmpeg_path" in Settings:
@@ -230,27 +257,109 @@ def runsmld(threadnumber):
 
 				try:
 
+					hakusana = str(songname + artist)
+					source = Settings["SMLD-source"]
 					with YoutubeDL(vaihtoehdot) as ydl:
-						try:
-							c = ydl.download(f"ytsearch:{komento}")
-							print("return code: " + str(c))
+						if source == "YouTube":
+							try:
+								c = ydl.download(f"ytsearch:{hakusana}")
+								if diagnosis == 1:
+									print("return code: " + str(c))
 
-						except Exception as e:
-							print(f"An unexpected error occured e3: {e}")
+							except Exception as e:
+								print(f"An unexpected error occured e3: {e}")
 
-							if "Sign in to confirm your age." in str(e):
-								with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
-									log.write(f"Failed to download: {lopullinentiedosto}.{fileformat} Video is age-restricted. Enabling browser cookies in the settings might help.")
-									log.write("\n")
-									log.close()
-							else:
-								if "--max-downloads" in str(e):
-									print("Max downloads reached")
-								else:
+								if "Sign in to confirm your age." in str(e):
 									with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
-										log.write(f"Failed to download: {lopullinentiedosto}.{fileformat} Error occured: {e}")
+										log.write(f"Failed to download: {lopullinentiedosto}.{fileformat} Video is age-restricted. Enabling browser cookies in the settings might help.")
 										log.write("\n")
 										log.close()
+								else:
+									if "--max-downloads" in str(e):
+										if diagnosis == 1:
+											print("Max downloads reached")
+									else:
+										with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
+											log.write(f"Failed to download: {lopullinentiedosto}.{fileformat} Error occured: {e}")
+											log.write("\n")
+											log.close()
+
+						if source == "YouTube Music":
+							try:
+								yt = ytmusicapi.YTMusic()
+								videoid = yt.search(hakusana)[0]["videoId"]
+								if not "ERROR" in videoid:
+									try:
+										c = ydl.download(f"https://music.youtube.com/watch?v={videoid}")
+										if diagnosis == 1:
+											print("return code: " + str(c))
+
+									except Exception as e:
+										print(f"An unexpected error occured e3: {e}")
+
+										if "Sign in to confirm your age." in str(e):
+											with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
+												log.write(f"Failed to download: {lopullinentiedosto}.{fileformat} Video is age-restricted. Enabling browser cookies in the settings might help.")
+												log.write("\n")
+												log.close()
+										else:
+											if "--max-downloads" in str(e):
+												if diagnosis == 1:
+													print("Max downloads reached")
+											else:
+												with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
+													log.write(f"Failed to download: {lopullinentiedosto}.{fileformat} Error occured: {e}, keyword: {komento}")
+													log.write("\n")
+													log.close()
+								else:
+									try:
+										c = ydl.download(f"ytsearch:{hakusana}")
+										if diagnosis == 1:
+											print("return code: " + str(c))
+
+									except Exception as e:
+										print(f"An unexpected error occured e3: {e}")
+
+										if "Sign in to confirm your age." in str(e):
+											with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
+												log.write(f"Failed to download: {lopullinentiedosto}.{fileformat} Video is age-restricted. Enabling browser cookies in the settings might help.")
+												log.write("\n")
+												log.close()
+										else:
+											if "--max-downloads" in str(e):
+												if diagnosis == 1:
+													print("Max downloads reached")
+											else:
+												with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
+													log.write(f"Failed to download: {lopullinentiedosto}.{fileformat} Error occured: {e}")
+													log.write("\n")
+													log.close()
+
+							except Exception as e:
+								print("Downloading from YouTube Music failed. Downloading from YouTube. Error: "+ str(e))
+
+								try:
+									c = ydl.download(f"ytsearch:{hakusana}")
+									if diagnosis == 1:
+										print("return code: " + str(c))
+
+								except Exception as e:
+									print(f"An unexpected error occured e3: {e}")
+
+									if "Sign in to confirm your age." in str(e):
+										with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
+											log.write(f"Failed to download: {lopullinentiedosto}.{fileformat} Video is age-restricted. Enabling browser cookies in the settings might help.")
+											log.write("\n")
+											log.close()
+									else:
+										if "--max-downloads" in str(e):
+											if diagnosis == 1:
+												print("Max downloads reached")
+										else:
+											with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
+												log.write(f"Failed to download: {lopullinentiedosto}.{fileformat} Error occured: {e}")
+												log.write("\n")
+												log.close()
 
 
 					# Poistetaan ensimmäinen rivi tiedostosta
@@ -264,12 +373,13 @@ def runsmld(threadnumber):
 
 
 				if os.path.isfile(lopullinentiedosto + "." + fileformat):
-					print("Files saved")
+					if diagnosis == 1:
+						print(f"File {lopullinentiedosto}.{fileformat} was saved")
 				else:
 
 					print("The file was not saved due to an unknown error.")
 					with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
-						log.write(f"File save error while trying to download: {lopullinentiedosto}")
+						log.write(f"File save error while trying to download: {lopullinentiedosto} on thread {threadnumber}")
 						log.close()
 
 				tiedosto = lopullinentiedosto + "." + fileformat
@@ -287,38 +397,137 @@ def runsmld(threadnumber):
 						playlist.write(artist +"/" +  albumname + "/" + songname + "." + fileformat)
 						playlist.write("\n")
 						playlist.close()
-
-			print(artist +"/" +  albumname + "/" + songname + "." + fileformat)
+			if diagnosis == 1:
+				print(artist +"/" +  albumname + "/" + songname + "." + fileformat)
 			with open(playlistfile1, 'a', encoding='utf-8') as playlist:
 				playlist.write(artist +"/" +  albumname + "/" + songname + "." + fileformat)
 				playlist.write("\n")
 				playlist.close()
-				print("Current download playlist written")
+				if diagnosis == 1:
+					print("Current download playlist written")
 
 	#Metadata:
 			if fileformat == "m4a":
-				print("m4a detected")
+				if diagnosis == 1:
+					print("m4a detected")
 
 				try:
 					# Lataa M4A-tiedosto
+					tiedosto = os.path.join(downloaddirectory, artist ,albumname, songname)
+					for char in filter:
+						tiedosto = str(tiedosto.replace(char, ""))
+
+					tiedosto = str(tiedosto + "." + fileformat)
+					if diagnosis == 1:
+						print("Tiedosto on: " + tiedosto +" on thread" + str(threadnumber))
+
+					if not os.path.isfile(tiedosto):
+						print(f"ERROR. File {tiedosto} . {fileformat} was not found when adding metadata.")
+
+					if albumname == "":
+						print("ERROR albumname is empty on thread " + str(threadnumber))
+
+					if artist == "":
+						print("ERROR artist name is empty on thread " + str(threadnumber))
+
 					audio = MP4(tiedosto)
 
-					# Lisää metatiedot
-					audio["\xa9alb"] = albumname  # Albumin nimi
-					audio["\xa9ART"] = artist  # Artistin nimi
+					try:
+						# Lisää metatiedot
+						audio["\xa9alb"] = albumname  # Albumin nimi
+						audio["\xa9ART"] = artist  # Artistin nimi
+					except Exception as e:
+						print(f"Error in updating metadata e211: {e}")
 
-					# Tallenna muutokset
-					audio.save()
+					try:
+						# Tallenna muutokset
+						audio.save()
+					except Exception as e:
+						print(f"Error in updating metadata e212: {e}")
 
-					print("Metadata added to file: " + downloaddirectory  + artist +"/" +  albumname + "/" + songname + "." + fileformat)
+					if diagnosis == 1:
+						print("Metadata added to file: " + str(tiedosto))
+						print(f"Metadata: artist: {artist} album: {albumname}")
 				except Exception as e:
 					print(f"Error in updating metadata e2: {e}")
-					with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
-						log.write("Mutagen error: " + str(e))
-						log.write("\n")
-						log.close()
+					if "only a top-level atom can have zero length" in str(e):
+						with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
+							log.write("File " + tiedosto + " might be currpted for an unknown reason.")
+							log.write("\n")
+							log.close()
+						print("File corrupted")
+						os.remove(tiedosto)
+						print("Corrupted file deleted.")
+
+						try:
+							c = ydl.download(f"ytsearch:{hakusana}")
+							if diagnosis == 1:
+								print("return code: " + str(c))
+
+						except Exception as e:
+							print(f"An unexpected error occured e3: {e}")
+
+							if "Sign in to confirm your age." in str(e):
+								with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
+									log.write(f"Failed to download: {lopullinentiedosto}.{fileformat} Video is age-restricted. Enabling browser cookies in the settings might help.")
+									log.write("\n")
+									log.close()
+							else:
+								if "--max-downloads" in str(e):
+									if diagnosis == 1:
+										print("Max downloads reached")
+								else:
+									with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
+										log.write(f"Failed to download: {lopullinentiedosto}.{fileformat} Error occured: {e}")
+										log.write("\n")
+										log.close()
+
+					elif "not a MP4 file" in str(e):
+						print("File download not finished")
+						with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
+						 	log.write("File " + tiedosto + " download was not finished for an unknown reason.")
+						 	log.write("\n")
+						 	log.close()
+						os.remove(tiedosto)
+						print("Corrupted file deleted.")
+
+						try:
+							c = ydl.download(f"ytsearch:{hakusana}")
+							if diagnosis == 1:
+								print("return code: " + str(c))
+
+						except Exception as e:
+							print(f"An unexpected error occured e3: {e}")
+
+							if "Sign in to confirm your age." in str(e):
+								with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
+									log.write(f"Failed to download: {lopullinentiedosto}.{fileformat} Video is age-restricted. Enabling browser cookies in the settings might help.")
+									log.write("\n")
+									log.close()
+							else:
+								if "--max-downloads" in str(e):
+									if diagnosis == 1:
+										print("Max downloads reached")
+								else:
+									with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
+										log.write(f"Failed to download: {lopullinentiedosto}.{fileformat} Error occured: {e}")
+										log.write("\n")
+										log.close()
+					else:
+						with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
+							log.write("Mutagen error: " + str(e) + " In thread " + str(threadnumber))
+							log.write("\n")
+							log.write("With file: " + tiedosto+ " Artist " + artist + " Albumn " + albumname)
+							log.write("\n")
+							log.close()
 			else:
-				print("File is not a m4a. Skipping metadata.")
+				if diagnosis == 1:
+					print("File is not a m4a. Skipping metadata.")
+
+			if not komento:  # Ohitetaan tyhjät rivit
+				# Päivitetään tiedosto ilman ensimmäistä riviä
+				with open(tiedostonimi, 'w', encoding='utf-8') as tiedosto:
+					tiedosto.writelines(jäljellä_olevat_rivit)
 
 		except FileNotFoundError:
 			messagebox.showinfo("File not found", f"File: '{tiedostonimi}' cannot be found.")
@@ -326,10 +535,10 @@ def runsmld(threadnumber):
 		except Exception as e:
 			print(f"An unexpected error occured e12: {e}")
 			with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
-				log.write("Main loop error: " + str(e))
+				log.write("Main loop error: " + str(e) + " on thread" + str(threadnumber))
 				log.write("\n")
 				try:
-					log.write(f"While trying to download: {downloaddirectory} {artist} {albumname} {songname}")
+					log.write(f"While trying to download: {downloaddirectory} {artist} {albumname} {songname} Thread: {threadnumber}")
 				except:
 					print("Error while trying to write error log.")
 				log.close()

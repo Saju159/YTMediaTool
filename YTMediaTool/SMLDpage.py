@@ -139,6 +139,7 @@ def createFrame(window):
 
 			f.close()
 
+		SMLDprogressTracker.check_status()
 		SMLDprogressTracker.trackprogress()
 
 		with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "songinfo.txt"), "r") as f:
@@ -197,7 +198,6 @@ def createFrame(window):
 			else:
 				print("Päällä")
 
-			threadnumber = 1
 			def smld_a():
 				SMLD.runsmld(threadnumber)
 
@@ -208,6 +208,10 @@ def createFrame(window):
 				smld_b.start()
 
 	def setupSMLD():
+		with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'w', encoding='utf-8') as log:
+			log.write("")
+			log.close()
+
 		number = 0
 		while number < 17:
 			poistettava = os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist" + str(number) +".txt")
@@ -223,10 +227,6 @@ def createFrame(window):
 			global process1
 			global smld_a
 			window.after(100, runSMLD)
-
-			with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Done.txt"), 'w') as f:
-				f.write("0")
-				f.close()
 
 			cancelb.grid(row=1, column=3, sticky="W")
 			pg.grid(row=1, column=4)
@@ -268,6 +268,12 @@ def createFrame(window):
 				with open(part_filename, 'w', encoding='utf-8') as part_file:
 					part_file.writelines(lines[start:end])
 				start = end
+				with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Done" + str(threadnumber) + ".txt"), 'w') as f:
+					f.write("0")
+					f.close()
+				with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Done.txt"), 'w') as f:
+					f.write("0")
+					f.close()
 				SMLD.setupSMLD(threadnumber, threadcount)
 			print(f"Tiedosto jaettu {threadcount} osaan.")
 
