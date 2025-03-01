@@ -3,20 +3,24 @@ from Common import getBaseConfigDir
 from Settings import Settings
 from tkinter import messagebox
 import SMLDpage
+import time
+
+track1 = 0
 
 def trackprogress():
+	global track1
 
 	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "libraryfiledirectory.txt")) as f:
 		libraryfiledirectory = f.read()
 		f.close()
 
 	rlines = 0
-	i = 0
-	threadnumber = int(Settings["SMLD-mutithreading"])
+	threadnumber = 0
+	threadcount = int(Settings["SMLD-mutithreading"])
 
-	if not threadnumber == 1:
-		threadnumber = (int(Settings["SMLD-mutithreading"])-1)
-		for i in range(threadnumber):
+	if not threadcount == 1:
+		threadcount = (int(Settings["SMLD-mutithreading"]))
+		for threadnumber in range(threadcount):
 			with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist" + str(threadnumber) + ".txt"), 'r', encoding='utf-8') as file:
 				threadrlines = file.readlines()
 				file.close()
@@ -30,9 +34,9 @@ def trackprogress():
 		tlines = file.readlines()
 		file.close()
 
-
 	edistyminen = (100 - (rlines / len(tlines) * 100))
 	edistyminen2 = round(edistyminen, 2)
+	track1 = len(tlines)-rlines
 
 	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "progress.txt"), "w") as f:
 		f.write(str(edistyminen2) + "\n" + str(len(tlines)-rlines) + "\n" + str(len(tlines)))
@@ -81,6 +85,35 @@ def check_status():
 			SMLDpage.cancel()
 
 			messagebox.showinfo("Done", "Downloading has been completed")
+
+def measurerate():
+	while True:
+		with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "r") as f:
+			cancel = f.read()
+			f.close()
+			if int(cancel) == 1:
+				print("cancel")
+				break
+
+		#print(str(track1))
+		measurement1 = int(track1)
+		#print(str(measurement1))
+		time.sleep(30)
+
+		measurement2 = int(track1)
+		#print(str(measurement2))
+
+		time.sleep(30)
+
+		measurement3 = int(track1)
+		#print(str(measurement3))
+
+		rate = ((measurement2 - measurement1) + (measurement3 - measurement2))
+
+		with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "rate.txt"), "w") as f:
+			f.write(str(rate))
+			f.close()
+			print("RATE CHANGED ________________________________________________________________________________________________________________________________________________________________")
 
 
 
