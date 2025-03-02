@@ -6,3 +6,8 @@ build/
 dist/
 *.manifest
 *.spec
+
+PKGBUILD/pkg/
+PKGBUILD/src/
+PKGBUILD/*.tar.zst
+PKGBUILD/*.tar.gz
