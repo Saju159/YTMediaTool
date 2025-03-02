@@ -6,8 +6,8 @@ import tkinter.messagebox as tkmsg
 import tkinter.ttk as ttk
 
 # Change these to the release tag that will be downloaded
-Tag = "v0.3"
-SHA256 = "7150649a744221d10faffab337ebec8ce2ecfa31686add6a296cbde45d34d5ae"
+Tag = "v0.4"
+SHA256 = "14ccc349c835595879235595ba730d75d771b7aa96f4a2f6772b862f9af337ee"
 # -------------------------------------------------------
 
 DownloadURL = f"https://github.com/Saju159/YTMediaTool/releases/download/{Tag}/YTMediaTool-{Tag}-win32.zip"
