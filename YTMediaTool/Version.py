@@ -1,6 +1,6 @@
 Name = "YTMediaTool"
 ShortDesc = "Tool to download large and small quantities of video and audio files"
-Version = "v0.3"
+Version = "v0.4"
 GPLNotice = """Copyright (C) 2025  Saju159 & arttuc
 
 This program is free software: you can redistribute it and/or modify
