@@ -180,16 +180,24 @@ def getsonginfo(threadnumber):
 	if diagnosis == 1:
 		print("Lopullinen tiedosto on: " + songfilewithoutformat)
 
-	return albumname, songname, artist, songfilewithoutformat, filteredsongline
+	return albumname, songname, artist, songfilewithoutformat, filteredsongline, rating
 
+def addtoplaylists(threadnumber):
+	albumname, songname, artist, songfilewithoutformat, filteredsongline, rating = getsonginfo(threadnumber)
 	currentdownloadplaylist = (os.path.join(downloaddirectory, "CurrentDownload.m3u" ))
+	favoritesplaylist = (os.path.join(downloaddirectory, "Favorites.m3u" ))
 	with open(currentdownloadplaylist, 'a', encoding='utf-8') as playlist:
 		playlist.write(artist +"/" +  albumname + "/" + songname + "." + fileformat)
 		playlist.write("\n")
 		playlist.close()
 		if diagnosis == 1:
 			print("Current download playlist written")
-	return albumname, songname, artist, songfilewithoutformat, filteredsongline
+
+	if rating == "2":
+		with open(favoritesplaylist, 'a', encoding='utf-8') as playlist:
+			playlist.write(artist +"/" +  albumname + "/" + songname + "." + fileformat)
+			playlist.write("\n")
+			playlist.close()
 
 def setupplaylists(songfilewithoutformat):
 	global currentdownloadplaylist, favoritesplaylist
@@ -208,7 +216,7 @@ def setupplaylists(songfilewithoutformat):
 		print("Playlists were setup")
 
 def setytoptions(threadnumber):
-	albumname, songname, artist, songfilewithoutformat, filteredsongline = getsonginfo(threadnumber)
+	albumname, songname, artist, songfilewithoutformat, filteredsongline, rating = getsonginfo(threadnumber)
 	if diagnosis == 1:
 		print("Download location: " + songfilewithoutformat + "." + fileformat)
 	ytoptions = {
@@ -241,7 +249,7 @@ def setytoptions(threadnumber):
 	return ytoptions
 
 def yterror(e, artist, albumname, songname, threadnumber):
-	albumname, songname, artist, songfilewithoutformat, filteredsongline = getsonginfo(threadnumber)
+	albumname, songname, artist, songfilewithoutformat, filteredsongline, rating = getsonginfo(threadnumber)
 	if "Sign in to confirm your age." in str(e):
 		with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
 			log.write(f"Failed to download: {songfilewithoutformat}.{fileformat} Video is age-restricted. Enabling browser cookies in the settings might help.")
@@ -296,7 +304,7 @@ def downloadyt(songname, artist, albumname, threadnumber):
 	if diagnosis == 1:
 		print("Trying to download from Youtube")
 	hakusana = str(songname + artist)
-	albumname, songname, artist, songfilewithoutformat, filteredsongline = getsonginfo(threadnumber)
+	albumname, songname, artist, songfilewithoutformat, filteredsongline, rating = getsonginfo(threadnumber)
 	ytoptions = setytoptions(threadnumber)
 	if diagnosis == 1:
 		print("Hakusana: " + str(hakusana))
@@ -311,7 +319,7 @@ def downloadyt(songname, artist, albumname, threadnumber):
 			yterror(e, artist, albumname, songname, threadnumber)
 
 def downloadytmusic(threadnumber, songname, artist, albumname):
-	albumname, songname, artist, songfilewithoutformat, filteredsongline = getsonginfo(threadnumber)
+	albumname, songname, artist, songfilewithoutformat, filteredsongline, rating = getsonginfo(threadnumber)
 	ytoptions = setytoptions(threadnumber)
 	if diagnosis == 1:
 		print("Trying to download from YTMusic")
@@ -422,7 +430,7 @@ def setupSMLD(threadcount, libraryfilelocation):
 		getinfo()
 		createsonglist()
 		dividesonglist()
-		songfilewithoutformat = getsonginfo(threadnumber)
+		albumname, songname, artist, songfilewithoutformat, filteredsongline, rating  = getsonginfo(threadnumber)
 		setupplaylists(songfilewithoutformat)
 		#tiedostonimi = os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist0.txt")
 		if startrunloop_after_setup:
@@ -467,7 +475,7 @@ def runsmld(threadnumber):
 			getinfo()
 			getsonginfo(threadnumber)
 
-			albumname, songname, artist, songfilewithoutformat, filteredsongline = getsonginfo(threadnumber)
+			albumname, songname, artist, songfilewithoutformat, filteredsongline, rating = getsonginfo(threadnumber)
 			print(artist, songname, albumname)
 			if diagnosis == 1:
 				print("Checking if file exists before downloading. File: " + songfilewithoutformat + "."+fileformat)
@@ -480,6 +488,7 @@ def runsmld(threadnumber):
 			if diagnosis == 1:
 				print("Filtered song line: " + filteredsongline +" on thread " + str(threadnumber))
 			updatemetadata(artist, albumname, songname, threadnumber)
+			addtoplaylists(threadnumber)
 			if os.path.isfile(songfilewithoutformat + "." + fileformat):
 				if filteredsongline:  # Ohitetaan tyhjät rivit
 					# Päivitetään tiedosto ilman ensimmäistä riviä
