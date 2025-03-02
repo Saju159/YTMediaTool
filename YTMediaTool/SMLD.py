@@ -129,8 +129,9 @@ def createsonglist():
 
 def getsonginfo(threadnumber):
 	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist" + str(threadnumber) + ".txt"), 'r') as tiedosto:
-		songlistlines = tiedosto.readlines()
+		 songlistlines = tiedosto.readlines()
 	# Ota ensimmäinen rivi ja poista se tiedoston riveistä
+
 	if not songlistlines == "":
 		filteredsongline = songlistlines[0].strip()  # Poista rivin ympäriltä tyhjät merkit
 	else:
@@ -435,10 +436,10 @@ def setupSMLD(threadcount, libraryfilelocation):
 		#tiedostonimi = os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist0.txt")
 		if startrunloop_after_setup:
 			SMLDpage.startthreads()
-		def measurerate_a():
-			SMLDprogressTracker.measurerating()
-		measurerate_b = threading.Thread(target=measurerate_a)
-		measurerate_b.start()
+		# def measurerate_a():
+		# 	SMLDprogressTracker.measurerate()
+		# measurerate_b = threading.Thread(target=measurerate_a)
+		# measurerate_b.start()
 	else:
 		print("ERROR. Given path is not a file. Path: " + libraryfilelocation)
 
@@ -471,11 +472,11 @@ def runsmld(threadnumber):
 				print("File is empty. No more files to add.")
 				with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Done" + str(threadnumber) + ".txt"), 'w') as f:
 					f.write("1")
-				break
 			getinfo()
-			getsonginfo(threadnumber)
+			if rivit:
+				getsonginfo(threadnumber)
+				albumname, songname, artist, songfilewithoutformat, filteredsongline, rating = getsonginfo(threadnumber)
 
-			albumname, songname, artist, songfilewithoutformat, filteredsongline, rating = getsonginfo(threadnumber)
 			print(artist, songname, albumname)
 			if diagnosis == 1:
 				print("Checking if file exists before downloading. File: " + songfilewithoutformat + "."+fileformat)
@@ -488,7 +489,8 @@ def runsmld(threadnumber):
 			if diagnosis == 1:
 				print("Filtered song line: " + filteredsongline +" on thread " + str(threadnumber))
 			updatemetadata(artist, albumname, songname, threadnumber)
-			addtoplaylists(threadnumber)
+			if rivit:
+				addtoplaylists(threadnumber)
 			if os.path.isfile(songfilewithoutformat + "." + fileformat):
 				if filteredsongline:  # Ohitetaan tyhjät rivit
 					# Päivitetään tiedosto ilman ensimmäistä riviä

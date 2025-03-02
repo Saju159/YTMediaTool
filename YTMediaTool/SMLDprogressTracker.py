@@ -50,41 +50,53 @@ def trackprogress():
 			print("valmis")
 			check_status()
 
+def writecancel():
+	while True:
+		print("Päällä")
+		SMLDpage.cancel()
+
+		with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "r") as f:
+			cancel = f.read()
+			f.close()
+			if int(cancel) == 1:
+				print("cancel")
+				break
+
+
 
 def check_status():
 	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "r") as f:
 		cancel = f.read()
 		f.close()
 	if int(cancel) == 0:
+		print("Totta")
 
 		directory = os.path.join(getBaseConfigDir(),"SMLD", "Temp")
 		status = True
 
 		threadcount = int(Settings["SMLD-mutithreading"])
-		for i in range(threadcount):
-			file_path = os.path.join(directory, f"Done{i}.txt")
 
-			if not os.path.exists(file_path):
-				status = False
-				break
+		if not threadcount == 1:
+			for i in range(threadcount):
+				file_path = os.path.join(directory, f"Done{i}.txt")
 
+				if os.path.exists(file_path):
+					with open(file_path, "r") as file:
+						content = file.read().strip()
+						if content == "0":
+							status = False
+							break
+
+		else:
+			file_path = os.path.join(directory, "Done0.txt")
 			with open(file_path, "r") as file:
 				content = file.read().strip()
-				if content == "0":
+				if content == "1":
 					status = False
-					break
 
 		if status:
-			with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Done.txt"), 'w') as f:
-				f.write("1")
-				f.close()
-			with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "w") as f:
-				f.write("1")
-				f.close()
+			writecancel()
 
-			SMLDpage.cancel()
-
-			messagebox.showinfo("Done", "Downloading has been completed")
 
 def measurerate():
 	while True:

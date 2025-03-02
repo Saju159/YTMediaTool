@@ -8,6 +8,7 @@ from webbrowser import open_new_tab as openInBrowser
 from Common import getBaseConfigDir
 from Settings import Settings
 import threading
+import SMLDprogressTracker
 
 #Website: https://www.tunemymusic.com/transfer
 
@@ -47,9 +48,9 @@ def startthreads():
 
 		def smld_a():
 			SMLD.runsmld(threadnumber)
-		libraryfiledirectory = os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist" + str(threadnumber) + ".txt")
-		with open(libraryfiledirectory, 'r', encoding='utf-8') as tiedosto:
-			rivit = tiedosto.readlines()
+		#libraryfiledirectory = os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist" + str(threadnumber) + ".txt")
+		#with open(libraryfiledirectory, 'r', encoding='utf-8') as tiedosto:
+			#rivit = tiedosto.readlines()
 
 		print("Threadcount:" + str(threadnumber))
 		smld_b = threading.Thread(target=smld_a)
@@ -125,8 +126,6 @@ def createFrame(window):
 	info.grid(row=8, column=1, columnspan = 3)
 
 
-
-
 	def refresher():
 		global threadnumber
 		currentlibrarydirectory = os.path.expanduser("~/YTMediaTool/")
@@ -144,10 +143,10 @@ def createFrame(window):
 					done = f.read()
 					f.close()
 					if done == "1":
-						cancel()
+						SMLDprogressTracker.writecancel()
 						print("Done")
 				window.after(1000, refresher)
-			f.close()
+		f.close()
 
 		if os.path.isfile(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "songinfo.txt")):
 			with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "songinfo.txt"), "r") as f:
@@ -250,6 +249,8 @@ def createFrame(window):
 		with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "w") as f:
 			f.write("1")
 			f.close()
+
+		messagebox.showinfo("Done", "Downloading has been completed")
 
 		cancelb.grid_forget()
 		downloadb1.config(state="normal")
