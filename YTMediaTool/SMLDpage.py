@@ -38,9 +38,6 @@ def startthreads():
 	global threadnumber
 	threadnumber = 0
 
-
-
-
 	threadcount = int(Settings["SMLD-mutithreading"])
 	for threadnumber in range(threadcount):
 
@@ -88,6 +85,10 @@ def createFrame(window):
 			with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "downloaddirectory.txt"), "w") as f:
 				f.write(downloaddirectory1)
 				f.close()
+			if not os.path.isfile(os.path.join(downloaddirectory1,"Quick Download.txt")):
+				with open(os.path.join(downloaddirectory1,"Quick Download.txt"), "w") as f:
+					f.write("CUSTOM DOWNLOAD FORMAT FOR QUICK DOWNLOADS. FORMAT: (SONGNAME, ARTIST), DO NOT REMOVE THIS LINE.")
+					f.close()
 
 	def sellibrarydirectory():
 		global currentlibrarydirectory

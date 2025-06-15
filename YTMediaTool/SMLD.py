@@ -9,8 +9,11 @@ import ytmusicapi
 import SMLDprogressTracker
 import threading
 import SMLDpage
+import requests
 
 diagnosis = 1 #1 = on, 0 = off
+
+#filetypes: 1 = itunes, 2 = spotify or itunes lite, 3 = quick download format
 startrunloop_after_setup = True #default true, stop loop from running after setup when false
 enable_yt_output = False #enable YT-DLP output printing
 
@@ -75,10 +78,23 @@ def createsonglist():
 			ensimrivi = tiedosto.readlines(1)
 
 			global filetype
-			filetype = str(libraryfiledirectory).find(".txt")
+			#filetype = str(libraryfiledirectory).find(".txt")
+
+			if libraryfiledirectory.lower().endswith(".txt"):
+				if "Quick Download" in str(libraryfiledirectory):
+					filetype = 3
+				else:
+					filetype = 1
+			else:
+				filetype = 2
+
+			if diagnosis == 1:
+				print("Filetype is: " + str(filetype))
+
 			with open(libraryfiledirectory, 'r', encoding='utf-8') as tiedosto:
 				rivit2 = tiedosto.readlines()
-			if not filetype == -1:
+
+			if filetype == 1:
 				if diagnosis == 1:
 					print("Selected file is a iTunes media library. With .txt file format")
 
@@ -90,7 +106,7 @@ def createsonglist():
 							tiedosto.write(uusi_txtrivi)
 				if diagnosis == 1:
 					print("File saved successfully.")
-			else:
+			elif filetype == 2:
 				if diagnosis == 1:
 					print("Selected file is a iTunes or Spotify media library.")
 				with open((os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt")), 'w', encoding='utf-8') as tiedosto:
@@ -109,6 +125,29 @@ def createsonglist():
 
 					if diagnosis == 1:
 						print("Header line removed")
+			elif filetype == 3:
+				with open((os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt")), 'w', encoding='utf-8') as tiedosto:
+					tiedosto.write("")
+
+
+				if diagnosis == 1:
+					print("Selected file is a quick download format.")
+					print(rivit2)
+
+				with open(os.path.join(getBaseConfigDir(), "SMLD", "Temp", "Songlist.txt"), 'a', encoding='utf-8') as tiedosto:
+					for cusrivi in rivit2[1:]:
+						rivi_siistitty = cusrivi.strip()  # Poistaa \n lopusta
+						print("Kirjoitetaan:", rivi_siistitty)
+
+						# Poistetaan mahdolliset yksittäiset lainausmerkit (jos halutaan)
+						rivi_siistitty = rivi_siistitty.replace("'", "")
+
+						# Kirjoita siistitty rivi tiedostoon
+						tiedosto.write(rivi_siistitty + "\n")
+
+
+
+
 			if diagnosis == 1:
 				print("File saved successfully.")
 	except Exception as e:
@@ -142,7 +181,7 @@ def getsonginfo(threadnumber):
 		filteredsongline = filteredsongline.replace(char, "")
 
 	if not songlistlines == "":   #if songlist contains something, continue
-		if not filetype == -1:
+		if filetype == 1:
 			if diagnosis == 1:
 				print("Expanded iTunes format")
 			txtparts = filteredsongline.split('\t')
@@ -157,7 +196,7 @@ def getsonginfo(threadnumber):
 				with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "songinfo.txt"), "w") as f:
 					f.write(artist + "\n "+ songname + "\n" + albumname)
 					f.close()
-		else:
+		elif diagnosis == 2:
 			if diagnosis == 1:
 				print("Spotify or iTunes lite.")
 			csvparts = filteredsongline.split(',')
@@ -171,6 +210,24 @@ def getsonginfo(threadnumber):
 			for char in filter:
 				albumname = albumname.replace(char, "")
 			rating = ""  #set rating to none as csv does not contain rating data
+			with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "songinfo.txt"), "w") as f:
+				f.write(artist + "\n "+ songname + "\n" + albumname)
+				f.close()
+
+		elif filetype == 3:
+			if diagnosis == 1:
+				print("Quick download format detected. Taking metadata from YT Music")
+			cusparts = filteredsongline.split(',')
+			songname = f"{cusparts[0]}"
+			for char in filter:
+				songname = songname.replace(char, "")
+			artist = f"{cusparts[1]}"
+			for char in filter:
+				artist = artist.replace(char, "")
+			rating = ""  #set rating to none as csv does not contain rating data
+
+			videoid = getvideoid(songname, artist, threadnumber)
+			artist, albumname, songname = getytmetadata(videoid, threadnumber, songname, artist)
 			with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "songinfo.txt"), "w") as f:
 				f.write(artist + "\n "+ songname + "\n" + albumname)
 				f.close()
@@ -308,7 +365,18 @@ def getvideoid(songname, artist, threadnumber):
 	yt = ytmusicapi.YTMusic()
 	if diagnosis == 1:
 		print("YT Music Keyword: " + str(hakusana)+ " on thread " + str(threadnumber))
-	videoid = yt.search(hakusana, filter="videos")[0]["videoId"]
+	#videoid = yt.search(hakusana, filter="songs")[0]["videoId"]
+
+
+	tulokset = yt.search(hakusana, filter="songs")
+
+	videoid = None
+	for r in tulokset:
+		if r.get("resultType") == "song" and r.get("album") and r["album"].get("name"):
+			videoid = r["videoId"]
+			break
+
+
 	if diagnosis == 1:
 		print("Video ID: " + str(videoid) + " on thread " + str(threadnumber))
 	if diagnosis == 1 and videoid:
@@ -363,23 +431,36 @@ def downloadytmusic(threadnumber, songname, artist, albumname, videoid):
 			yterror(e, artist, albumname, songname, threadnumber)
 			downloadyt(songname, artist, albumname, threadnumber)
 
-def getytmetadata(videoid, threadnumber):
+def getytmetadata(videoid, threadnumber, songname, artist):
 	yt = ytmusicapi.YTMusic()
 	result = yt.get_song(videoId=videoid)
 
 	# if diagnosis == 1:
 	# 	print ("YT Music Metadata result: " + str(result))
-	albumname = str(result.get("videoDetails", {}).get("album"))
+
+
+
+	albumname = str(result.get("album", {}).get("name"))
+
+	albumname = str(albumname)
 	if albumname == "None":
-		if diagnosis == 1:
-			print("Album name is missing. Getting album name from library list.")
-		albumname, songname, artist, songfilewithoutformat, filteredsongline, rating = getsonginfo(threadnumber)
+		if filetype == 3:
+			albumname = "Missing Album"
+
+		else:
+			if diagnosis == 1:
+				print("Album name is missing. Getting album name from library list.")
+			albumname, songname, artist, songfilewithoutformat, filteredsongline, rating = getsonginfo(threadnumber)
 
 	songname = str(result.get("videoDetails", {}).get("title"))
+
+	#if not filetype == 3:
 	artist = str(result.get("videoDetails", {}).get("author"))
 
 	if diagnosis == 1:
 		print(f"YT Music Metadata artist: {artist}, albumname: {albumname}, songname: {songname}")
+
+	updatemetadata(artist, albumname, songname, threadnumber)
 
 	return artist, albumname, songname
 
@@ -537,7 +618,7 @@ def runsmld(threadnumber):
 						print("Using metadata from YT Music")
 					if videoid:
 						if not "ERROR" in str(videoid):
-							artist, albumname, songname = getytmetadata(videoid, threadnumber)
+							artist, albumname, songname = getytmetadata(videoid, threadnumber, songname, artist)
 							updatemetadata(artist, albumname, songname, threadnumber)
 
 			if rivit:
