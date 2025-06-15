@@ -19,7 +19,7 @@ Settings = {
 	"YDL-SkipIfExists": False,
 	"YDL-MaxNumberOfRetries": 10, # unimplemented
 	"SMLD-mutithreading": 4,
-	"SMLD-source": "Youtube Music"
+	"SMLD-source": "YouTube Music"
 }
 SettingsFilePath = os.path.join(getBaseConfigDir(), "settings.json")
 

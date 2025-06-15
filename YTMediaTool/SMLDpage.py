@@ -15,6 +15,7 @@ import SMLDprogressTracker
 global download
 global downloaddirectory
 global getprogress
+global downloaddirectory1
 process1 = None
 
 librarydirfortextbox, download = None, None
@@ -79,12 +80,14 @@ def createFrame(window):
 	print (librarydirfortextbox)
 
 	def seldownloaddir1():
-		global downloaddirectory1
 		picked_dir = openFilePicker(window, "openDir")
-		print(downloaddirectory1)
 		if picked_dir:
 			downloaddirectory1 = picked_dir
 			downloaddirectory2.set(downloaddirectory1)
+			print(downloaddirectory1)
+			with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "downloaddirectory.txt"), "w") as f:
+				f.write(downloaddirectory1)
+				f.close()
 
 	def sellibrarydirectory():
 		global currentlibrarydirectory
@@ -212,9 +215,7 @@ def createFrame(window):
 			cancelb.grid(row=1, column=3, sticky="W")
 			pg.grid(row=1, column=4)
 			np.grid(row=1, column=5)
-			with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "downloaddirectory.txt"), "w") as f:
-				f.write(downloaddirectory1)
-				f.close()
+
 
 			with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "libraryfiledirectory.txt"), "w") as f:
 				f.write(str(currentlibrarydirectory))

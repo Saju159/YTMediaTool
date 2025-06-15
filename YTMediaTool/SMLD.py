@@ -481,11 +481,19 @@ def runsmld(threadnumber):
 			if diagnosis == 1:
 				print("Checking if file exists before downloading. File: " + songfilewithoutformat + "."+fileformat)
 			if not os.path.isfile(songfilewithoutformat + "."+fileformat):
+				if diagnosis == 1:
+					print("File does not exist: " + songfilewithoutformat + "."+fileformat)
 				source = Settings["SMLD-source"]
 				if source == "YouTube":
 					downloadyt(songname, artist, albumname, threadnumber)
-				if source == "YouTube Music":
+				elif source == "YouTube Music":
 					downloadytmusic(threadnumber, songname, artist, albumname)
+				else:
+					if diagnosis == 1:
+						print("Donwload source setting is invalid. source: " + source)
+			else:
+				if diagnosis == 1:
+					print("File already exists, skipping download. " + songfilewithoutformat + "."+fileformat)
 			if diagnosis == 1:
 				print("Filtered song line: " + filteredsongline +" on thread " + str(threadnumber))
 			updatemetadata(artist, albumname, songname, threadnumber)
