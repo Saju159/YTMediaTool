@@ -301,6 +301,20 @@ def yterror(e, artist, albumname, songname, threadnumber):
 			log.write("\n")
 			log.close()
 
+def getvideoid(songname, artist, threadnumber):
+	if diagnosis == 1:
+		print("Trying to get video ID.")
+	hakusana = str(songname +" " + artist)
+	yt = ytmusicapi.YTMusic()
+	if diagnosis == 1:
+		print("YT Music Keyword: " + str(hakusana)+ " on thread " + str(threadnumber))
+	videoid = yt.search(hakusana, filter="videos")[0]["videoId"]
+	if diagnosis == 1:
+		print("Video ID: " + str(videoid) + " on thread " + str(threadnumber))
+	if diagnosis == 1 and videoid:
+		print("Video ID was successfully acquired.")
+	return videoid
+
 def downloadyt(songname, artist, albumname, threadnumber):
 	if diagnosis == 1:
 		print("Trying to download from Youtube")
@@ -308,8 +322,8 @@ def downloadyt(songname, artist, albumname, threadnumber):
 	albumname, songname, artist, songfilewithoutformat, filteredsongline, rating = getsonginfo(threadnumber)
 	ytoptions = setytoptions(threadnumber)
 	if diagnosis == 1:
-		print("Hakusana: " + str(hakusana))
-		print("Options: " + str(ytoptions))
+		print("YouTube keyword: " + str(hakusana))
+		print("YouTube options: " + str(ytoptions))
 	with YoutubeDL(ytoptions) as ydl:
 		try:
 			c = ydl.download(f"ytsearch:{hakusana}")
@@ -319,20 +333,13 @@ def downloadyt(songname, artist, albumname, threadnumber):
 		except Exception as e:
 			yterror(e, artist, albumname, songname, threadnumber)
 
-def downloadytmusic(threadnumber, songname, artist, albumname):
+def downloadytmusic(threadnumber, songname, artist, albumname, videoid):
 	albumname, songname, artist, songfilewithoutformat, filteredsongline, rating = getsonginfo(threadnumber)
 	ytoptions = setytoptions(threadnumber)
 	if diagnosis == 1:
 		print("Trying to download from YTMusic")
 		print("Options: " + str(ytoptions))
 	try:
-		hakusana = str(songname +" " + artist)
-		yt = ytmusicapi.YTMusic()
-		if diagnosis == 1:
-			print("Hakusana: " + str(hakusana)+ " on thread " + str(threadnumber))
-		videoid = yt.search(hakusana, filter="videos")[0]["videoId"]
-		if diagnosis == 1:
-			print("VideoID: " + str(videoid) + " on thread " + str(threadnumber))
 		if videoid:
 			if not "ERROR" in str(videoid):
 				with YoutubeDL(ytoptions) as ydl:
@@ -344,17 +351,20 @@ def downloadytmusic(threadnumber, songname, artist, albumname):
 						yterror(e, artist, albumname, songname, threadnumber)
 			else:
 				if diagnosis == 1:
-					print("ERROR. Failed to download from YTMusic. Downloading from youtube. ERROR in videoID.")
+					print("ERROR. Failed to download from YTMusic. Downloading from youtube. ERROR in videoID. On thread "+ str(threadnumber))
 				downloadyt(songname, artist, albumname, threadnumber)
 		else:
 			if diagnosis == 1:
-				print("ERROR. Failed to download from YTMusic. Downloading from youtube. No videoID was recieved.")
+				print("ERROR. Failed to download from YTMusic. Downloading from youtube. No videoID was recieved. On thread "+ str(threadnumber))
 			downloadyt(songname, artist, albumname, threadnumber)
 	except Exception as e:
 		if diagnosis == 1:
 			print("ERROR. Failed to download from YTMusic. Downloading from youtube. Exception: " + e)
 			yterror(e, artist, albumname, songname, threadnumber)
 			downloadyt(songname, artist, albumname, threadnumber)
+
+#def getytmetadata(videoid)
+
 
 def updatemetadata(artist, albumname, songname, threadnumber):
 	if diagnosis == 1:
@@ -487,7 +497,8 @@ def runsmld(threadnumber):
 				if source == "YouTube":
 					downloadyt(songname, artist, albumname, threadnumber)
 				elif source == "YouTube Music":
-					downloadytmusic(threadnumber, songname, artist, albumname)
+					videoid = getvideoid(songname, artist, threadnumber)
+					downloadytmusic(threadnumber, songname, artist, albumname, videoid)
 				else:
 					if diagnosis == 1:
 						print("Donwload source setting is invalid. source: " + source)
@@ -496,6 +507,8 @@ def runsmld(threadnumber):
 					print("File already exists, skipping download. " + songfilewithoutformat + "."+fileformat)
 			if diagnosis == 1:
 				print("Filtered song line: " + filteredsongline +" on thread " + str(threadnumber))
+			#videoID =
+			#getytmetadata(videoID)
 			updatemetadata(artist, albumname, songname, threadnumber)
 			if rivit:
 				addtoplaylists(threadnumber)
