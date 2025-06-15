@@ -208,6 +208,7 @@ def createFrame(window):
 	addButton("Open SMLD logs", lambda: openInBrowser(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt")))
 	addDropdownOption("SMLD-mutithreading", "Number of concurrent downloads (EXPERIMENTAL)", [1,2,4,8,16])
 	addDropdownOption("SMLD-source", "Select the media download source", ["YouTube Music", "YouTube"])
+	addBooleanOption("SMLD-useytmetadata", "Get metadata from YouTube Music.")
 
 	buttonsFrame = tk.Frame(frame, padx=4, pady=4)
 	buttonsFrame.columnconfigure(2, pad=4)

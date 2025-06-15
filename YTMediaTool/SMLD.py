@@ -363,8 +363,25 @@ def downloadytmusic(threadnumber, songname, artist, albumname, videoid):
 			yterror(e, artist, albumname, songname, threadnumber)
 			downloadyt(songname, artist, albumname, threadnumber)
 
-#def getytmetadata(videoid)
+def getytmetadata(videoid, threadnumber):
+	yt = ytmusicapi.YTMusic()
+	result = yt.get_song(videoId=videoid)
 
+	# if diagnosis == 1:
+	# 	print ("YT Music Metadata result: " + str(result))
+	albumname = str(result.get("videoDetails", {}).get("album"))
+	if albumname == "None":
+		if diagnosis == 1:
+			print("Album name is missing. Getting album name from library list.")
+		albumname, songname, artist, songfilewithoutformat, filteredsongline, rating = getsonginfo(threadnumber)
+
+	songname = str(result.get("videoDetails", {}).get("title"))
+	artist = str(result.get("videoDetails", {}).get("author"))
+
+	if diagnosis == 1:
+		print(f"YT Music Metadata artist: {artist}, albumname: {albumname}, songname: {songname}")
+
+	return artist, albumname, songname
 
 def updatemetadata(artist, albumname, songname, threadnumber):
 	if diagnosis == 1:
@@ -507,9 +524,22 @@ def runsmld(threadnumber):
 					print("File already exists, skipping download. " + songfilewithoutformat + "."+fileformat)
 			if diagnosis == 1:
 				print("Filtered song line: " + filteredsongline +" on thread " + str(threadnumber))
-			#videoID =
-			#getytmetadata(videoID)
-			updatemetadata(artist, albumname, songname, threadnumber)
+
+			source = Settings["SMLD-source"]
+			if source == "YouTube":
+				downloadyt(songname, artist, albumname, threadnumber)
+				updatemetadata(artist, albumname, songname, threadnumber)
+			elif source == "YouTube Music":
+				videoid = getvideoid(songname, artist, threadnumber)
+				metadatayt = Settings["SMLD-useytmetadata"]
+				if metadatayt == True:
+					if diagnosis:
+						print("Using metadata from YT Music")
+					if videoid:
+						if not "ERROR" in str(videoid):
+							artist, albumname, songname = getytmetadata(videoid, threadnumber)
+							updatemetadata(artist, albumname, songname, threadnumber)
+
 			if rivit:
 				addtoplaylists(threadnumber)
 			if os.path.isfile(songfilewithoutformat + "." + fileformat):
