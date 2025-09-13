@@ -55,8 +55,8 @@ if __name__ == "__main__": # Only run if this is the main process.
 
 	i = 0
 	for pageName in pageNames.keys():
-		page = __import__(pageName)
-		page.createFrame(window)
+		pageModule = __import__(pageName)
+		page = pageModule.Page(window)
 
 		pages.insert(i, page)
 
