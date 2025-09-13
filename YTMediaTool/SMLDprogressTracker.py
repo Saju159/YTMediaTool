@@ -95,6 +95,9 @@ def check_status():
 					status = False
 
 		if status:
+			with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Done.txt"), "w") as f:
+				f.write("1")
+				f.close()
 			writecancel()
 
 

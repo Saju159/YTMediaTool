@@ -137,6 +137,12 @@ def createFrame(window):
 		if not os.path.exists(currentlibrarydirectory + "Downloads/"):
 			os.makedirs(currentlibrarydirectory + "Downloads/")
 
+		with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Done.txt"), "r") as f:
+			done = f.read()
+			f.close()
+			if done == "1":
+				messagebox.showinfo("Done", "Downloading has been completed")
+
 		global cancel
 		with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "r") as f:
 			cancel1 = f.read()
@@ -149,6 +155,7 @@ def createFrame(window):
 					if done == "1":
 						SMLDprogressTracker.writecancel()
 						print("Done")
+
 				window.after(1000, refresher)
 		f.close()
 
@@ -255,8 +262,6 @@ def createFrame(window):
 		with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "w") as f:
 			f.write("1")
 			f.close()
-
-		messagebox.showinfo("Done", "Downloading has been completed")
 
 		cancelb.grid_forget()
 		downloadb1.config(state="normal")

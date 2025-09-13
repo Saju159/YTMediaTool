@@ -582,6 +582,7 @@ def runsmld(threadnumber):
 				print("File is empty. No more files to add.")
 				with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Done" + str(threadnumber) + ".txt"), 'w') as f:
 					f.write("1")
+
 			getinfo()
 			if rivit:
 				getsonginfo(threadnumber)
