@@ -135,7 +135,7 @@ def ydlProcessTarget(returnPipe, queue, url, path, fileformat, dlvideo, dlaudio,
 
 	opts = {
 		'verbose': False,
-		'outtmpl': {'default': "%(title).165B [%(id)s].%(ext)s"},
+		'outtmpl': {'default': Settings["YDL-DLFilenameTemplate"]},
 		'paths': {'home': str(path), 'temp': str(tmpPath)},
 		'overwrites': not Settings["YDL-SkipIfExists"], # FIXME: workaround for ffmpeg failure if already downloaded
 		'continuedl': False,

@@ -18,6 +18,7 @@ Settings = {
 	"YDL-EnablePlaylistDL": False,
 	"YDL-SkipIfExists": False,
 	"YDL-MaxNumberOfRetries": 10, # unimplemented
+	"YDL-DLFilenameTemplate": "%(title).165B.%(ext)s", # "%(title).165B [%(id)s].%(ext)s"
 	"SMLD-mutithreading": 4,
 	"SMLD-source": "YouTube Music",
 	"SMLD-useytmetadata": True

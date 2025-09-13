@@ -95,7 +95,13 @@ def createFrame(window):
 		return optFrame
 
 	def baseHelpBtn(text: str, optFrame: tk.Frame, column: int):
-		btn = ttk.Button(optFrame, text="?", width=2, padding=0, command=lambda: tk.messagebox.showinfo("Help", text))
+		def openHelpDialog():
+			if text[:8] == "https://": # if helptext is just an url, open it in a browser since you can't copy from the tk dialog.
+				openInBrowser(text)
+			else:
+				tk.messagebox.showinfo("Help", text)
+
+		btn = ttk.Button(optFrame, text="?", width=2, padding=0, command=openHelpDialog)
 		btn.grid(row=1, column=column+1, sticky="W")
 		optFrame.columnconfigure(column, minsize=4)
 
@@ -111,6 +117,33 @@ def createFrame(window):
 		button = ttk.Button(frame2, text=text, command=lambda: func())
 		button.grid(row=nextRow, column=1, sticky="W")
 		nextRow += 1
+
+	def addTextInputOption(optId: str, text: str, default: str|None, helptext: None=str|None):
+		optFrame = baseOptFrame()
+		optFrame.columnconfigure(2, weight=1)
+		ttk.Label(optFrame, text=f"{text}: ").grid(row=1, column=1, sticky="E")
+
+		pathSV = tk.StringVar()
+		tkVars[optId] = pathSV
+
+		inputBox = ttk.Entry(optFrame, textvariable=pathSV)
+
+		def checkDiff():
+			if pathSV.get() != Settings.Settings[optId]:
+				showButtonsFrame()
+
+		inputBox.bind("<Control-KeyRelease-a>", lambda _: inputBox.select_range(0, tk.END), inputBox.icursor(tk.END))
+		inputBox.bind("<Control-KeyRelease-A>", lambda _: inputBox.select_range(0, tk.END), inputBox.icursor(tk.END))
+		inputBox.bind('<KeyRelease>', lambda _: checkDiff())
+		inputBox.grid(row=1, column=2, sticky="WE")
+
+		if type(default) != None:
+			defaultBtn = ttk.Button(optFrame, text="D", width=2, padding=0, command=lambda: pathSV.set(default))
+			defaultBtn.grid(row=1, column=3, sticky="W")
+			optFrame.columnconfigure(3, minsize=4)
+
+		if type(helptext) == str:
+			baseHelpBtn(helptext, optFrame, 4)
 
 	def addFilePathOption(optId: str, text: str, helptext: None=str|None):
 		optFrame = baseOptFrame()
@@ -198,6 +231,7 @@ def createFrame(window):
 	addBooleanOption("YDL-SkipIfExists", "Skip download if already downloaded", "Will still show \"Download completed\" even if the file was already downloaded.")
 	addBooleanOption("BasicPage-ShowDialogAfterDLSuccess", "Show dialog after successful download")
 	addDropdownOption("BasicPage-ForceQuality", "When video quality is not available", ["Resize to selected quality", "Download closest to selected quality"], "If \"Resize to selected quality\" is selected:\nCalls FFmpeg to resize the video after download if resolution doesn't match. This can be quite slow depending on the video's length and quality selected.")
+	addTextInputOption("YDL-DLFilenameTemplate", "Filename Template", "%(title).165B.%(ext)s", "https://github.com/yt-dlp/yt-dlp?tab=readme-ov-file#output-template")
 	addShortSpacer()
 	addFilePathOption("YDL-CookiesFilePath", "Path to cookies.txt", "Path to a Netscape formatted cookies file.\nLeave blank to not use a cookie file.\n\nCookies should only be used if you keep getting blocked by YouTube or are downloading private videos.\n\nDisables \"Grab browser cookies\".")
 	addBooleanOption("BasicPage-Cookies", "Grab browser cookies", "Allows yt-dlp to grab your browser's cookies for authentication.\n\nIgnored if path to cookies.txt is not blank.")
