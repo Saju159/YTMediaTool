@@ -10,6 +10,7 @@ import SMLDprogressTracker
 import threading
 import SMLDpage
 import requests
+import time
 
 diagnosis = 1 #1 = on, 0 = off
 
@@ -206,7 +207,8 @@ def getsonginfo(threadnumber):
 			artist = f"{csvparts[2]}"
 			for char in filter:
 				artist = artist.replace(char, "")
-			albumname = "ALBUM NAME IS MISSING"
+			#albumname = getmoremetadata(threadnumber, songname, artist)
+			albumname = "UNSUPPORTED FILE TYPE"
 			for char in filter:
 				albumname = albumname.replace(char, "")
 			rating = ""  #set rating to none as csv does not contain rating data
@@ -227,7 +229,8 @@ def getsonginfo(threadnumber):
 			rating = ""  #set rating to none as csv does not contain rating data
 
 			videoid = getvideoid(songname, artist, threadnumber)
-			artist, albumname, songname = getytmetadata(videoid, threadnumber, songname, artist)
+			albumname = getmoremetadata(threadnumber, songname, artist)
+			updatemetadata(artist, albumname, songname, threadnumber)
 			with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "songinfo.txt"), "w") as f:
 				f.write(artist + "\n "+ songname + "\n" + albumname)
 				f.close()
@@ -433,38 +436,45 @@ def downloadytmusic(threadnumber, songname, artist, albumname, videoid):
 			yterror(e, artist, albumname, songname, threadnumber)
 			downloadyt(songname, artist, albumname, threadnumber)
 
-def getytmetadata(videoid, threadnumber, songname, artist):
-	yt = ytmusicapi.YTMusic()
-	result = yt.get_song(videoId=videoid)
+def getmoremetadata(threadnumber, songname, artist):
+	while True:
+		print (f"Trying to get albumname. Artist {artist}, Song {songname}")
+		# Search for the artist
+		search_url = f"https://musicbrainz.org/ws/2/recording?query=artist:{artist} AND recording:{songname}&fmt=json"
+		response = requests.get(search_url)
 
-	# if diagnosis == 1:
-	# 	print ("YT Music Metadata result: " + str(result))
+		if response.status_code == 200:
+			data = response.json()
+			if data['recordings']:
+				# Get the first recording found
+				recording = data['recordings'][0]
+				# Get the release information
+				release_id = recording['releases'][0]['id']
+				release_url = f"https://musicbrainz.org/ws/2/release/{release_id}?fmt=json"
+				release_response = requests.get(release_url)
 
+				if release_response.status_code == 200:
+					release_data = release_response.json()
+					albumname = release_data['title']
+					albumname = str(albumname)
+					break
 
-
-	albumname = str(result.get("album", {}).get("name"))
-
-	albumname = str(albumname)
-	if albumname == "None":
-		if filetype == 3:
-			albumname = "Missing Album"
-
+				else:
+					print( "Error fetching release data.")
+					time.sleep(5)
+					#albumname = ("ALBUMNAME IS MISSING")
+			else:
+				print( "No recordings found.")
+				time.sleep(5)
+				#albumname = ("ALBUMNAME IS MISSING")
 		else:
-			if diagnosis == 1:
-				print("Album name is missing. Getting album name from library list.")
-			albumname, songname, artist, songfilewithoutformat, filteredsongline, rating = getsonginfo(threadnumber)
-
-	songname = str(result.get("videoDetails", {}).get("title"))
-
-	#if not filetype == 3:
-	artist = str(result.get("videoDetails", {}).get("author"))
+			print("Error fetching data from MusicBrainz.")
+			time.sleep(5)
+			#albumname = ("ALBUMNAME IS MISSING")
 
 	if diagnosis == 1:
-		print(f"YT Music Metadata artist: {artist}, albumname: {albumname}, songname: {songname}")
-
-	updatemetadata(artist, albumname, songname, threadnumber)
-
-	return artist, albumname, songname
+		print(f"The album for '{songname}' by '{artist}' is: {albumname}")
+	return albumname
 
 def updatemetadata(artist, albumname, songname, threadnumber):
 	if diagnosis == 1:
@@ -621,7 +631,7 @@ def runsmld(threadnumber):
 						print("Using metadata from YT Music")
 					if videoid:
 						if not "ERROR" in str(videoid):
-							artist, albumname, songname = getytmetadata(videoid, threadnumber, songname, artist)
+							albumname = getmoremetadata(threadnumber, songname, artist)
 							updatemetadata(artist, albumname, songname, threadnumber)
 
 			if rivit:
