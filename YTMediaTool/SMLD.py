@@ -196,17 +196,17 @@ def getsonginfo(threadnumber):
 				with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "songinfo.txt"), "w") as f:
 					f.write(artist + "\n "+ songname + "\n" + albumname)
 					f.close()
-		elif diagnosis == 2:
+		elif filetype == 2:
 			if diagnosis == 1:
 				print("Spotify or iTunes lite.")
 			csvparts = filteredsongline.split(',')
-			songname = f"{csvparts[0]}"
+			songname = f"{csvparts[1]}"
 			for char in filter:
 				songname = songname.replace(char, "")
-			artist = f"{csvparts[1]}"
+			artist = f"{csvparts[2]}"
 			for char in filter:
 				artist = artist.replace(char, "")
-			albumname = f"{csvparts[2]}"
+			albumname = "ALBUM NAME IS MISSING"
 			for char in filter:
 				albumname = albumname.replace(char, "")
 			rating = ""  #set rating to none as csv does not contain rating data
@@ -232,6 +232,8 @@ def getsonginfo(threadnumber):
 				f.write(artist + "\n "+ songname + "\n" + albumname)
 				f.close()
 
+	if diagnosis == 1:
+		print ("Artist: " + artist)
 	songfilewithoutformat = os.path.join(downloaddirectory, artist ,albumname, songname)
 	for char in filter:
 		songfilewithoutformat = songfilewithoutformat.replace(char, "")

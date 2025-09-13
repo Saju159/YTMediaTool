@@ -230,6 +230,10 @@ def createFrame(window):
 				f.write(fileformat.get())
 				f.close()
 
+			with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Done.txt"), "w") as f:
+				f.write("0")
+				f.close()
+
 			window.after(1, refresher)
 			threadcount = int(Settings["SMLD-mutithreading"])
 			SMLD.setupSMLD(threadcount, str(currentlibrarydirectory))

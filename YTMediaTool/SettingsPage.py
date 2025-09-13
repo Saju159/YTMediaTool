@@ -206,7 +206,7 @@ def createFrame(window):
 	addSpacer()
 	addLabel("Settings for 'SMLD' tab:")
 	addButton("Open SMLD logs", lambda: openInBrowser(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt")))
-	addDropdownOption("SMLD-mutithreading", "Number of concurrent downloads (EXPERIMENTAL)", [1,2,4,8,16])
+	addDropdownOption("SMLD-mutithreading", "Number of concurrent downloads (EXPERIMENTAL)", [2,4,8,16])
 	addDropdownOption("SMLD-source", "Select the media download source", ["YouTube Music", "YouTube"])
 	addBooleanOption("SMLD-useytmetadata", "Get metadata from YouTube Music.")
 

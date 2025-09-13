@@ -69,7 +69,7 @@ def check_status():
 		cancel = f.read()
 		f.close()
 	if int(cancel) == 0:
-		print("Totta")
+		#print("Totta")
 
 		directory = os.path.join(getBaseConfigDir(),"SMLD", "Temp")
 		status = True
