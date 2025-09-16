@@ -1,150 +1,182 @@
 import math
-import tkinter as tk
-import tkinter.font
-import tkinter.ttk as ttk
+import PySide6.QtWidgets as qtw
+import PySide6.QtGui as qtg
+import PySide6.QtCore as qtc
 from queue import Empty as QueueEmpty
 from Common import openDirInFileBrowser, openFilePicker, createYDLProcess, cleanupYDLTemp
 import Info
 from Settings import Settings
 
-class Page(tk.Frame):
-	def showPage(self):
-		self.Frame.bind("<Configure>", lambda event: self.ParentWindow.config(height=event.height+34))
-		self.Frame.place(y=34, relwidth=1.0)
-		self.ParentWindow.after(1, lambda: self.ParentWindow.config(height=self.Frame.winfo_height()+34))
+class DownloadProgressDialog(qtw.QDialog):
+	def __init__(self, window: qtw.QWidget):
+		super().__init__(window)
 
-	def hidePage(self):
-		self.Frame.unbind("<Configure>")
-		self.Frame.place_forget()
+		self.hasBeenCanceled = False
 
-	def __init__(self, window: tk.Tk):
-		self.ParentWindow = window
+		self.setWindowTitle(" ")
 
-		self.Frame = tk.Frame(window, width=600, height=380, padx=4, pady=4)
-		self.Frame.columnconfigure(2, weight=1)
+		self.layout = qtw.QVBoxLayout(self)
+		self.layout.setSizeConstraint(qtw.QLayout.SizeConstraint.SetFixedSize)
+
+		self.pLabel = qtw.QLabel(self, text="Preparing download...")
+		self.layout.addWidget(self.pLabel)
+
+		self.pDownloadedLabel = qtw.QLabel(self)
+		self.layout.addWidget(self.pDownloadedLabel)
+
+		self.pProgressBar = qtw.QProgressBar(self, minimum=0, maximum=0)
+		self.pProgressBar.setMinimumWidth(360)
+		self.layout.addWidget(self.pProgressBar)
+
+		self.pButtonBox = qtw.QDialogButtonBox(self, standardButtons=qtw.QDialogButtonBox.StandardButton.Cancel)
+		self.pButtonBox.rejected.connect(self.reject)
+		self.layout.addWidget(self.pButtonBox)
+
+	def reject(self):
+		if not self.hasBeenCanceled:
+			self.hasBeenCanceled = True
+			self.pLabel.setText("Cancelling...")
+			self.rejected.emit()
+
+class Page(qtw.QWidget):
+	def __init__(self, window: qtw.QWidget):
+		super().__init__()
+
+		layout = qtw.QFormLayout(self)
+
+		# Mode
+		modes = [
+			"Download from URL",
+			"Search & Download from YouTube",
+		]
+		self.mode = modes[0]
+		self.modenum = 0
+
+		def selection(val):
+			self.mode = val
+			self.modenum = modes.index(self.mode)
+			if self.modenum == 0:
+				urlLabel.setText("URL: ")
+			elif self.modenum == 1:
+				urlLabel.setText("Search term: ")
+
+		modeLabel = qtw.QLabel(self, text="Mode: ")
+		modeDropdown = qtw.QComboBox(self)
+		modeDropdown.addItems(modes)
+		modeDropdown.currentTextChanged.connect(selection)
+		layout.addRow(modeLabel, modeDropdown)
 
 		# URL box
-		urlLabel = ttk.Label(self.Frame, text="URL: ")
-		urlLabel.grid(row=2, column=1, sticky="E")
-
-		urlInputBoxFrame = tk.Frame(self.Frame)
-		urlInputBoxFrame.grid(row=2, column=2, columnspan=2, sticky="WE")
-		urlInputBoxFrame.columnconfigure(1, weight=1)
-
-		urlInputBox = ttk.Entry(urlInputBoxFrame)
-		urlInputBox.grid(row=1, column=1, sticky="WE")
-		urlInputBox.bind("<Control-KeyRelease-a>", lambda _: urlInputBox.select_range(0, tk.END), urlInputBox.icursor(tk.END))
-		urlInputBox.bind("<Control-KeyRelease-A>", lambda _: urlInputBox.select_range(0, tk.END), urlInputBox.icursor(tk.END))
-
-		urlInputClearBtn = ttk.Button(urlInputBoxFrame, width=2, padding=0, text="C", command=lambda: urlInputBox.delete(0, 999999))
-		urlInputClearBtn.grid(row=1, column=2)
+		urlLabel = qtw.QLabel(self, text="URL: ")
+		urlInputBox = qtw.QLineEdit(self)
+		layout.addRow(urlLabel, urlInputBox)
 
 		# File format
-		ttk.Label(self.Frame, text="Format: ").grid(row=5, column=1, sticky="E")
-		ffFrame = tk.Frame(self.Frame)
-		ffFrame.grid(row=5, column=2, columnspan=2, sticky="W")
+		ffLabel = qtw.QLabel(self, text="Format: ")
+		ffFrame = qtw.QFrame(self)
+		ffFrameLayout = qtw.QHBoxLayout(ffFrame)
+		ffFrameLayout.setContentsMargins(0,0,0,0)
+		layout.addRow(ffLabel, ffFrame)
 
-		dlvideo = tk.BooleanVar(value=Settings["BasicPage-DLVideo"])
-		dlaudio = tk.BooleanVar(value=Settings["BasicPage-DLAudio"])
-		fileformat = tk.StringVar(value=Settings["BasicPage-Format"])
-		vq = tk.StringVar(value=Settings["BasicPage-VideoQuality"])
-		dirSV = tk.StringVar(value=Settings["BasicPage-DownloadDir"])
-
+		self.dlvideo = bool(Settings["BasicPage-DLVideo"])
+		self.dlaudio = bool(Settings["BasicPage-DLAudio"])
+		self.fileformat = str(Settings["BasicPage-Format"])
+		self.vq = str(Settings["BasicPage-VideoQuality"])
+		self.dirSV = str(Settings["BasicPage-DownloadDir"])
+  #
 		def onSaveableSettingUpdate():
-			Settings["BasicPage-DLVideo"] = bool(dlvideo.get())
-			Settings["BasicPage-DLAudio"] = bool(dlaudio.get())
-			Settings["BasicPage-Format"] = str(fileformat.get())
-			Settings["BasicPage-VideoQuality"] = str(vq.get())
-			Settings["BasicPage-DownloadDir"] = str(dirSV.get())
+			self.dlvideo = dlvideoCheckbox.isChecked()
+			Settings["BasicPage-DLVideo"] = bool(self.dlvideo)
 
-		dlvideo.trace('w',lambda _, _2, _3: onSaveableSettingUpdate())
-		dlaudio.trace('w',lambda _, _2, _3: onSaveableSettingUpdate())
-		fileformat.trace('w',lambda _, _2, _3: onSaveableSettingUpdate())
-		vq.trace('w',lambda _, _2, _3: onSaveableSettingUpdate())
-		dirSV.trace('w',lambda _, _2, _3: onSaveableSettingUpdate())
+			self.dlaudio = dlaudioCheckbox.isChecked()
+			Settings["BasicPage-DLAudio"] = bool(self.dlaudio)
 
-		def dlvideoselection():
-			if dlvideo.get() == True: vqDropdown.grid(row=6, column=2, columnspan=2, sticky="W"); vqLabel.grid(row=6, column=1, sticky="E")
-			else: vqDropdown.grid_forget(); vqLabel.grid_forget()
+			self.fileformat = fileformatDropdown.currentText()
+			Settings["BasicPage-Format"] = str(self.fileformat)
 
-		dlvideoCheckbox = ttk.Checkbutton(ffFrame, padding=3, text="Video", variable=dlvideo, onvalue=True, offvalue=False, command=dlvideoselection)
-		dlvideoCheckbox.grid(row=1, column=2, sticky="W", padx=3)
+			self.vq = vqDropdown.currentText()
+			Settings["BasicPage-VideoQuality"] = str(self.vq)
 
-		dlaudioCheckbox = ttk.Checkbutton(ffFrame, padding=3, text="Audio", variable=dlaudio, onvalue=True, offvalue=False)
-		dlaudioCheckbox.grid(row=1, column=3, sticky="W", padx=3)
+			self.dirSV = dirInputBox.text()
+			Settings["BasicPage-DownloadDir"] = str(self.dirSV)
 
-		def ffselection():
-			ff = Info.fileformats[fileformat.get()]
+		def ffselection(val):
+			ff = Info.fileformats[val]
 			if "video" in ff and ff["video"] == True:
-				dlvideoCheckbox.config(state="normal")
-				if dlvideo.get() == True: vqDropdown.grid(row=6, column=2, columnspan=2, sticky="W"); vqLabel.grid(row=6, column=1, sticky="E")
+				dlvideoCheckbox.setEnabled(True)
+				dlvideoselection(self.dlvideo)
 			else:
-				dlvideoCheckbox.config(state="disabled")
-				vqDropdown.grid_forget(); vqLabel.grid_forget()
-			if "warn" in ff:
-				tk.messagebox.showwarning("Warning", ff["warn"]) # FIXME make this into a button next to the format dropdown instead of a popup
+				dlvideoCheckbox.setEnabled(False)
+				dlvideoselection(False)
 
-		fileformatDropdown = ttk.OptionMenu(ffFrame, fileformat, next(iter(Info.fileformats)), *Info.fileformats, command=lambda _: ffselection())
-		fileformatDropdown.grid(row=1, column=1, sticky="W")
+			if "warn" in ff and window.isVisible(): # isVisible check so this warning is not shown during startup
+				msgbox = qtw.QMessageBox(self, windowTitle="Warning", text=ff["warn"]) # FIXME make this into a button next to the format dropdown instead of a popup
+				msgbox.show()
+
+			onSaveableSettingUpdate()
+
+		fileformatDropdown = qtw.QComboBox(ffFrame) #fileformat, next(iter(Info.fileformats)), *Info.fileformats, command=lambda _: ffselection())
+		fileformatDropdown.addItems(Info.fileformats.keys())
+		fileformatDropdown.setCurrentText(self.fileformat)
+		fileformatDropdown.currentTextChanged.connect(ffselection)
+
+		def dlvideoselection(state):
+			vqLabel.setHidden(not state)
+			vqDropdown.setHidden(not state)
+			onSaveableSettingUpdate()
+
+		dlvideoCheckbox = qtw.QCheckBox(ffFrame, text="&Video", checked=self.dlvideo, toolTip="Should the video be downloaded?")
+		dlvideoCheckbox.stateChanged.connect(dlvideoselection)
+
+		dlaudioCheckbox = qtw.QCheckBox(ffFrame, text="&Audio", checked=self.dlaudio, toolTip="Should the audio be downloaded?")
+		dlaudioCheckbox.stateChanged.connect(onSaveableSettingUpdate)
+
+		ffFrameLayout.addWidget(fileformatDropdown)
+		ffFrameLayout.addWidget(dlvideoCheckbox)
+		ffFrameLayout.addWidget(dlaudioCheckbox)
 
 		# Video quality
-		vqLabel = ttk.Label(self.Frame, text="Video quality: ")
-		vqLabel.grid(row=6, column=1, sticky="E")
-
-		vqDropdown = ttk.OptionMenu(self.Frame, vq, next(iter(Info.videoqualities)), *Info.videoqualities)
-		vqDropdown.grid(row=6, column=2, columnspan=2, sticky="W")
-
-		dlvideoselection()
-		ffselection()
+		vqLabel = qtw.QLabel(self, text="Video quality: ")
+		vqDropdown = qtw.QComboBox(self)
+		vqDropdown.addItems(Info.videoqualities.keys())
+		vqDropdown.setCurrentText(self.vq)
+		vqDropdown.currentTextChanged.connect(onSaveableSettingUpdate)
+		layout.addRow(vqLabel, vqDropdown)
 
 		# Destination Directory
-		ttk.Label(self.Frame, text="Destination directory: ").grid(row=18, column=1, sticky="E")
+		dirLabel = qtw.QLabel(self, text="Destination directory: ")
+		dirFrame = qtw.QFrame(self)
+		dirFrameLayout = qtw.QHBoxLayout(dirFrame)
+		dirFrameLayout.setContentsMargins(0,0,0,0)
+		layout.addRow(dirLabel, dirFrame)
 
-		dirInputBox = ttk.Entry(self.Frame, textvariable=dirSV)
-		dirInputBox.grid(row=18, column=2, sticky="WE")
-		dirInputBox.bind("<Control-KeyRelease-a>", lambda _: dirInputBox.select_range(0, tk.END), dirInputBox.icursor(tk.END))
-		dirInputBox.bind("<Control-KeyRelease-A>", lambda _: dirInputBox.select_range(0, tk.END), dirInputBox.icursor(tk.END))
+		dirInputBox = qtw.QLineEdit(dirFrame)
+		dirInputBox.setText(self.dirSV)
+		dirInputBox.textChanged.connect(onSaveableSettingUpdate)
 
 		def seldir():
 			picked_dir = openFilePicker(window, "openDir", title="Select directory to save downloaded files to...")
 			if picked_dir:
-				dirSV.set(picked_dir)
+				dirInputBox.setText(picked_dir)
 
-		selectDirButton = ttk.Button(self.Frame, text="Browse...", command=seldir)
-		selectDirButton.grid(row=18, column=3)
+		selectDirButton = qtw.QToolButton(self, text="Browse...", icon=qtg.QIcon.fromTheme(qtg.QIcon.ThemeIcon.FolderOpen), toolTip="Browse...")
+		selectDirButton.clicked.connect(seldir)
 
-		statusBarSeparator = ttk.Separator(self.Frame, orient="horizontal")
-		statusBarSeparator.grid(row=19, column=1, columnspan=3, sticky="WE", pady=4)
+		dirFrameLayout.addWidget(dirInputBox)
+		dirFrameLayout.addWidget(selectDirButton)
 
-		downloadButton = None
+		bottomVSpacer = qtw.QSpacerItem(0, 0, qtw.QSizePolicy.Policy.Expanding, qtw.QSizePolicy.Policy.Expanding)
+		layout.addItem(bottomVSpacer)
 
-		self.modenum = 0
+		statusBarSeparator = qtw.QFrame(self, frameShape=qtw.QFrame.Shape.HLine)
+		layout.addRow(statusBarSeparator)
+
 		def downloadf():
-			downloadButton.config(state="disabled")
+			downloadButton.setEnabled(False)
 
-			input2 = urlInputBox.get().strip()
+			input2 = urlInputBox.text().strip()
 
-			progressWindow = tk.Toplevel(window)
-			progressWindow.resizable(False,False)
-			progressWindow.minsize(340, 20)
-			progressWindow.columnconfigure(0, minsize=4)
-			progressWindow.columnconfigure(2, minsize=4)
-			progressWindow.rowconfigure(0, minsize=2)
-			progressWindow.rowconfigure(6, minsize=4)
-			progressWindow.columnconfigure(1, weight=1)
-
-			pLabel = ttk.Label(progressWindow, text="Preparing download...", font=tk.font.Font(weight="bold"))
-			pLabel.grid(row=1, column=1, sticky="W")
-
-			pDownloadedLabel = ttk.Label(progressWindow)
-			pDownloadedLabel.grid(row=2, column=1, sticky="W")
-
-			pProgressLabel = ttk.Label(progressWindow)
-			pProgressLabel.grid(row=3, column=1, sticky="W")
-
-			pProgressVar = tk.IntVar()
-			pProgressBar = ttk.Progressbar(progressWindow, variable=pProgressVar, maximum=100)
-			pProgressBar.grid(row=4, column=1, sticky="WE")
+			progressWindow = DownloadProgressDialog(window)
 
 			def endFunc(returnStr, r2):
 				progressWindow.destroy()
@@ -170,20 +202,18 @@ class Page(tk.Frame):
 						dText = "Unknown exception caught during download!\n\n"+str(r2)
 
 				if dText:
-					window.update()
-					tk.messagebox.showerror("Download error", dText)
+					qtw.QMessageBox.warning(self, "Download error", dText)
 				elif success:
-					window.update()
 					print("Download success!")
 					if Settings["BasicPage-ShowDialogAfterDLSuccess"] == True:
-						answer = tk.messagebox.askyesno("Download finished", "Download finished.\nOpen destination directory?")
-						if answer == True:
-							openDirInFileBrowser(dirSV.get())
+						answer = qtw.QMessageBox.question(self, "Download finished", "Download finished.\nOpen destination directory?")
+						if answer == qtw.QMessageBox.StandardButton.Yes:
+							openDirInFileBrowser(self.dirSV)
 
 			def checkStatus():
 				if canceled:
 					endFunc("canceled", None)
-					downloadButton.config(state="normal")
+					downloadButton.setEnabled(True)
 				dataAvailable = returnPipe.poll(0)
 				if dataAvailable:
 					try:
@@ -193,92 +223,78 @@ class Page(tk.Frame):
 						elif type(rTuple) == tuple:
 							returnStr, errorStr = rTuple[0], rTuple[1]
 						endFunc(returnStr, errorStr)
-						downloadButton.config(state="normal")
+						downloadButton.setEnabled(True)
 					except EOFError:
 						# return pipe broken prematurely (most likely just canceled)
-						downloadButton.config(state="normal")
+						downloadButton.setEnabled(True)
 				else:
 					try:
 						dlStatus = statusQueue.get(False)
-						pLabel.config(text=dlStatus["progressWindowLabel"])
+						progressWindow.pLabel.setText(dlStatus["progressWindowLabel"])
 						if dlStatus["phase"] == "download":
 							downloaded_bytes = float(dlStatus["downloaded_bytes"])
-							pDownloadedLabel.config(text="Downloaded:")
+							progressWindow.pDownloadedLabel.setText("Downloaded:")
 
 							if "total_bytes" in dlStatus:
 								total_bytes = float(dlStatus["total_bytes"])
 								downloadPercent = downloaded_bytes/total_bytes
 
-								pDownloadedLabel.config(text=f"{round(downloaded_bytes/1000000, 2)}MB/{round(total_bytes/1000000, 2)}MB {("total_bytes_is_estimate" in dlStatus and "(estimate) " or "")}downloaded {("speed" in dlStatus and f"at {round(dlStatus["speed"]/1000000, 2)}MB/s" or "")}")
-								pProgressLabel.config(text=str(math.floor(downloadPercent*100))+"%")
-								pProgressVar.set(math.floor(downloadPercent*100))
+								progressWindow.pDownloadedLabel.setText(f"{round(downloaded_bytes/1000000, 2)}MB/{round(total_bytes/1000000, 2)}MB {("total_bytes_is_estimate" in dlStatus and "(estimate) " or "")}downloaded {("speed" in dlStatus and f"at {round(dlStatus["speed"]/1000000, 2)}MB/s" or "")}")
+								progressWindow.pProgressBar.setMaximum(100)
+								progressWindow.pProgressBar.setValue(math.floor(downloadPercent*100))
 							else:
-								pDownloadedLabel.config(text=f"{round(downloaded_bytes/1000000, 2)}MB downloaded")
-								pProgressLabel.config(text="")
-								pProgressVar.set(0)
+								progressWindow.pDownloadedLabel.setText(f"{round(downloaded_bytes/1000000, 2)}MB downloaded")
+								progressWindow.pProgressBar.setMaximum(0)
 
 						else:
-							pDownloadedLabel.config(text="")
-							pProgressLabel.config(text="")
-							pProgressVar.set(0)
+							progressWindow.pDownloadedLabel.setText("")
+							progressWindow.pProgressBar.setMaximum(0)
 
 					except QueueEmpty:
 						pass
-					self.Frame.after(100, checkStatus)
+					timer.start(100)
 
 			process, returnPipe, statusQueue = createYDLProcess(
 				url=(self.modenum == 1 and "ytsearch:"+input2 or input2),
-				path=dirSV.get(),
-				fileformat=fileformat.get(),
-				dlvideo=dlvideo.get(),
-				dlaudio=dlaudio.get(),
-				videoquality=vq.get()
+				path=self.dirSV,
+				fileformat=self.fileformat,
+				dlvideo=self.dlvideo,
+				dlaudio=self.dlaudio,
+				videoquality=self.vq
 			)
 			process.start()
 
-			self.Frame.after(100, checkStatus)
+			timer = qtc.QTimer(progressWindow, singleShot=True)
+			timer.timeout.connect(checkStatus)
+			timer.start(100)
 
 			canceled = False
 			def cancelf():
-				pCancelBtn.config(state="disabled")
+				progressWindow.pButtonBox.setEnabled(False)
 				nonlocal canceled
 				canceled = True
 				process.terminate()
-				self.Frame.after(200, cleanupYDLTemp)
+				delay = qtc.QTimer(self, singleShot=True)
+				delay.timeout.connect(cleanupYDLTemp)
+				delay.start(200)
 
-			pCancelBtn = ttk.Button(progressWindow, text="Cancel", command=cancelf)
-			pCancelBtn.grid(row=5, column=1, sticky="E")
+			progressWindow.rejected.connect(cancelf)
 
 			def skip(): pass
-			progressWindow.protocol("WM_DELETE_WINDOW", skip)
+			progressWindow.setModal(True)
 
-			progressWindow.grab_set()
-			progressWindow.transient(window)
-			progressWindow.mainloop()
+			progressWindow.show()
+			progressWindow.exec()
 
-		downloadButton = ttk.Button(self.Frame, text="Download", command=downloadf)
-		downloadButton.grid(row=20, column=1, columnspan=3, sticky="E")
+		downloadButton = qtw.QPushButton(self, text="&Download")
+		downloadButton.clicked.connect(downloadf)
+		layout.addWidget(downloadButton)
 
-		# Mode
-		modeLabel = ttk.Label(self.Frame, text="Mode: ")
-		modeLabel.grid(row=1,column=1,sticky="E")
+		dlvideoselection(self.dlvideo)
+		ffselection(self.fileformat)
+		selection(modes[0])
 
-		modes = [
-			"Download from URL",
-			"Search & Download from YouTube",
-		]
 
-		mode = tk.StringVar(value=modes[0])
 
-		urlLabel
-		def selection():
-			self.modenum = modes.index(mode.get())
-			if self.modenum == 0:
-				urlLabel.config(text="URL: ")
-			elif self.modenum == 1:
-				urlLabel.config(text="Search term: ")
-		selection()
 
-		modeDropdown = ttk.OptionMenu(self.Frame, mode, modes[0], *modes, command=lambda _: selection())
-		modeDropdown.grid(row=1, column=2, columnspan=2, sticky="W")
 
