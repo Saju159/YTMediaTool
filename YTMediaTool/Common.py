@@ -1,7 +1,6 @@
 import multiprocessing, os, pathlib, subprocess
 from sys import platform
-import tkinter as tk
-from tkinter import filedialog
+import PySide6.QtWidgets as qtw
 
 def getUserDownloadDir():
 	if platform == "linux":
@@ -39,37 +38,13 @@ def openDirInFileBrowser(directory: str):
 	elif platform == "win32":
 		subprocess.run(["explorer", os.path.normpath(directory)], stdout=subprocess.PIPE)
 
-def openFilePicker(window: tk.Tk, dtype: str, **kwargs):
-	window.update() # Prevent program from freezing if root window is killed while file picker is open
+def openFilePicker(window: qtw.QWidget, dtype: str, **kwargs):
 	title = "title" in kwargs and kwargs["title"] or None
 
-	if platform == "linux":
-		# Use kdialog if installed on linux for a better file picker.
-		# Will check if kdialog is installed and if not, fallback to tkinter file picker for compatibility
-		kdialog_installed = subprocess.run(["which", "kdialog"], stdout=subprocess.PIPE)
-		if kdialog_installed.returncode == 0:
-			pickerargs = ["kdialog"]
-			if title:
-				pickerargs.append("--title")
-				pickerargs.append(title)
-
-			if dtype == "openDir": pickerargs.append("--getexistingdirectory")
-			elif dtype == "openFile": pickerargs.append("--getopenfilename")
-			elif dtype == "saveFile": pickerargs.append("--getsavefilename")
-			else: raise Exception("Invalid dtype! Must be 'openDir', 'openFile' or 'saveFile'")
-
-			c = subprocess.run(pickerargs, stdout=subprocess.PIPE, encoding="utf-8")
-			if c.returncode == 0:
-				pathStr = str(c.stdout)[:-1]
-				return pathStr
-			else:
-				return None
-
-	# Fallback to tkinter picker (native on windows)
 	picked = None
-	if dtype == "openDir": picked = filedialog.askdirectory(parent=window, title=title, mustexist=True)
-	elif dtype == "openFile": picked = filedialog.askopenfilename(parent=window, title=title)
-	elif dtype == "saveFile": picked = filedialog.asksaveasfilename(parent=window, title=title)
+	if dtype == "openDir": picked = qtw.QFileDialog.getExistingDirectory(window, title)
+	elif dtype == "openFile": picked = qtw.QFileDialog.getOpenFileName(window, title)
+	elif dtype == "saveFile": picked = qtw.QFileDialog.getSaveFileName(window, title)
 	else: raise Exception("Invalid dtype! Must be 'openDir', 'openFile' or 'saveFile'")
 	window.update()
 
