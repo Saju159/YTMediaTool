@@ -32,10 +32,10 @@ if __name__ == "__main__": # Only run if this is the main process.
 			self.setCentralWidget(tabFrame)
 
 			pageNames = {
-				"BasicPage": "Basic"
+				"BasicPage": "Basic",
 				# "SMLDpage": "SMLD",
 				# "SettingsPage": "Settings",
-				# "AboutPage": "About"
+				"AboutPage": "About"
 			}
 			pages = []
 

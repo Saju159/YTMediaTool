@@ -1,38 +1,29 @@
-import tkinter as tk
-import tkinter.font as font
-from webbrowser import open_new_tab as openInBrowser
+import PySide6.QtWidgets as qtw
+import PySide6.QtCore as qtc
+import PySide6.QtGui as qtg
 import Version
 
-class Page(tk.Frame):
-	def hidePage(self):
-		self.Frame.place_forget()
+class Page(qtw.QScrollArea):
+	def __init__(self, window: qtw.QWidget):
+		super().__init__(window)
 
-	def showPage(self):
-		self.Frame.place(y=34, relwidth=1.0)
-		self.ParentWindow.after(1, lambda: self.ParentWindow.config(height=self.Frame.winfo_height()+34))
+		widget = qtw.QWidget(self)
+		self.setWidget(widget)
+		self.setWidgetResizable(True)
 
-	def __init__(self, window: tk.Tk):
-		self.ParentWindow = window
+		self.layout = qtw.QVBoxLayout(widget)
+		self.layout.setSizeConstraint(qtw.QLayout.SizeConstraint.SetMinimumSize)
 
-		self.Frame = tk.Frame(window, width=600, height=600)
-		self.Frame.columnconfigure(0, weight=1)
+		self.label = qtw.QLabel(widget, text=
+			f"""# {Version.Name} {Version.Version}
+			\n{Version.ShortDesc}
+			\n{Version.GPLNotice}""",
+			textFormat=qtc.Qt.TextFormat.MarkdownText,
+			wordWrap=True,
+			textInteractionFlags= qtc.Qt.TextInteractionFlag.TextSelectableByMouse | qtc.Qt.TextInteractionFlag.TextBrowserInteraction,
+			openExternalLinks=True)
+		self.layout.addWidget(self.label)
 
-		labels = {}
-
-		labels["Title"] = tk.Label(self.Frame, text=f"{Version.Name} {Version.Version}", font=font.Font(size=24, weight="bold"))
-		labels["Title"].grid(row=1, pady=10)
-		labels["ShortDesc"] = tk.Label(self.Frame, text=Version.ShortDesc)
-		labels["ShortDesc"].grid(row=2)
-		labels["License"] = tk.Label(self.Frame, text=Version.GPLNotice)
-		labels["License"].grid(row=3)
-		labels["SourceCodeBtn"] = tk.Button(self.Frame, text="Source code:\nhttps://github.com/Saju159/YTMediaTool", command=lambda: openInBrowser("https://github.com/Saju159/YTMediaTool"))
-		labels["SourceCodeBtn"].grid(row=4)
-		labels["LicenseBtn"] = tk.Button(self.Frame, text="https://www.gnu.org/licenses/", command=lambda: openInBrowser("https://www.gnu.org/licenses/"))
-		labels["LicenseBtn"].grid(row=5)
-
-		def onResize(event):
-			width = event.width - 20
-			for label in labels:
-				labels[label].config(wraplength=width)
-
-		self.Frame.bind("<Configure>", onResize)
+		self.sourceCodeBtn = qtw.QPushButton(widget, text="&Source code:\nhttps://github.com/Saju159/YTMediaTool")
+		self.sourceCodeBtn.clicked.connect(lambda: qtg.QDesktopServices.openUrl("https://github.com/Saju159/YTMediaTool"))
+		self.layout.addWidget(self.sourceCodeBtn)
