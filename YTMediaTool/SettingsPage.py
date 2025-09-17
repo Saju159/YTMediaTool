@@ -43,7 +43,7 @@ class TextInputOption(BaseOptFrame):
 		if self.val != Settings.Settings[self.optId]:
 			self.page.showButtonsFrame()
 
-	def __init__(self, parent: qtw.QWidget, page, optId: str, text: str, helptext: None=str|None, isfilepath: False=bool|None):
+	def __init__(self, parent: qtw.QWidget, page, optId: str, text: str, helptext: str|None=None, isfilepath: bool|None=False):
 		super().__init__(parent)
 
 		self.page = page
@@ -57,13 +57,14 @@ class TextInputOption(BaseOptFrame):
 		self.reset()
 		self.layout.addWidget(self.inputBox)
 
+		print("isfilepath: "+str(isfilepath))
 		if isfilepath:
 			def seldir():
 				picked_dir = openFilePicker(parent, "openFile")
 				if picked_dir:
 					self.inputBox.setText(picked_dir)
 
-			selectDirButton = qtw.QToolButton(self, text="Browse...", icon=qtg.QIcon.fromTheme(qtg.QIcon.ThemeIcon.FolderOpen), toolTip="Browse...")
+			selectDirButton = qtw.QToolButton(self, text="Browse...", icon=qtg.QIcon.fromTheme(qtg.QIcon.ThemeIcon.DocumentOpen), toolTip="Browse...")
 			selectDirButton.clicked.connect(seldir)
 			self.layout.addWidget(selectDirButton)
 
