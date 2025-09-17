@@ -34,7 +34,7 @@ class BaseOptFrame(qtw.QFrame):
 
 class TextInputOption(BaseOptFrame):
 	def reset(self):
-		self.inputBox.setText(Settings.Settings[self.optId])
+		self.inputBox.setText(str(Settings.Settings[self.optId]))
 
 	def modified(self, newVal):
 		if newVal == None:
@@ -57,7 +57,6 @@ class TextInputOption(BaseOptFrame):
 		self.reset()
 		self.layout.addWidget(self.inputBox)
 
-		print("isfilepath: "+str(isfilepath))
 		if isfilepath:
 			def seldir():
 				picked_dir = openFilePicker(parent, "openFile")
