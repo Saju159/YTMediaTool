@@ -1,10 +1,10 @@
-import tkinter as tk
+import PySide6.QtWidgets as qtw
+import PySide6.QtGui as qtg
+import PySide6.QtCore as qtc
 from Common import openFilePicker
-from tkinter import messagebox
 import os
 import os.path
 import SMLD
-from webbrowser import open_new_tab as openInBrowser
 from Common import getBaseConfigDir
 from Settings import Settings
 import threading
@@ -59,33 +59,26 @@ with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "w") as
 	f.write("0")
 	f.close()
 
-class Page(tk.Frame):
-	def hidePage(self):
-		self.Frame.unbind("<Configure>")
-		self.Frame.place_forget()
+class Page(qtw.QWidget):
+	def __init__(self, window: qtw.QWidget):
+		super().__init__()
 
-	def showPage(self):
-		self.Frame.bind("<Configure>", lambda event: self.ParentWindow.config(height=event.height+34))
-		self.Frame.place(y=34, relwidth=1.0)
-		self.ParentWindow.after(1, lambda: self.ParentWindow.config(height=self.Frame.winfo_height()+34))
+		self.layout = qtw.QGridLayout(self)
+		self.layout.setColumnStretch(2, 1)
 
-	def __init__(self, window: tk.Tk):
-		self.ParentWindow = window
+		self.fileformat = next(iter(fileformats))
 
-		fileformat = tk.StringVar(value=next(iter(fileformats)))
-
-		self.Frame = tk.Frame(window, width=600, height=380)
-		self.Frame.columnconfigure(2, weight=1)
 		global cancel
 
-		librarydirfortextbox = os.path.expanduser("~/YTMediaTool/")
-		print (librarydirfortextbox)
+		self.librarydirfortextbox = os.path.expanduser("~/YTMediaTool/")
+		print (self.librarydirfortextbox)
 
 		def seldownloaddir1():
 			picked_dir = openFilePicker(window, "openDir")
 			if picked_dir:
 				downloaddirectory1 = picked_dir
-				downloaddirectory2.set(downloaddirectory1)
+				self.downloaddirectory2 = downloaddirectory1
+				dirInputBox.setText(downloaddirectory1)
 				print(downloaddirectory1)
 				with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "downloaddirectory.txt"), "w") as f:
 					f.write(downloaddirectory1)
@@ -100,40 +93,43 @@ class Page(tk.Frame):
 			currentlibrarydirectory = openFilePicker(window, "openFile")
 			if currentlibrarydirectory:
 				print(currentlibrarydirectory)
-				librarydirfortextbox.set(currentlibrarydirectory)
+				libraryDirInputBox.setText(currentlibrarydirectory)
 
 			# Destination Directory
-		tk.Label(self.Frame, text="Destination directory: ").grid(row=1, column=1, sticky="W")
+		self.layout.addWidget(qtw.QLabel(self, text="Destination directory: "), 1, 1, 1, 1, qtc.Qt.AlignmentFlag.AlignRight)
 
-		downloaddirectory2 = tk.StringVar()
-		downloaddirectory2.set(os.path.expanduser("~/YTMediaTool/Downloads/"))
+		self.downloaddirectory2 = os.path.expanduser("~/YTMediaTool/Downloads/")
 
-		dirInputBox = tk.Entry(self.Frame, textvariable=downloaddirectory2)
-		dirInputBox.grid(row=1, column=2, sticky="WE")
-		dirInputBox.bind("<Control-KeyRelease-a>", lambda _: dirInputBox.select_range(0, tk.END), dirInputBox.icursor(tk.END))
-		dirInputBox.bind("<Control-KeyRelease-A>", lambda _: dirInputBox.select_range(0, tk.END), dirInputBox.icursor(tk.END))
+		dirInputBox = qtw.QLineEdit(self, text=self.downloaddirectory2, enabled=False)
+		def dirInputBoxEdited(val):
+			self.downloaddirectory2 = val
+		dirInputBox.textChanged.connect(dirInputBoxEdited)
+		self.layout.addWidget(dirInputBox, 1, 2)
 
-		selectDirButton = tk.Button(self.Frame, text="Browse...", command=seldownloaddir1)
-		selectDirButton.grid(row=1, column=3)
+		selectDirButton = qtw.QToolButton(self, text="Browse...", icon=qtg.QIcon.fromTheme(qtg.QIcon.ThemeIcon.FolderOpen), toolTip="Browse...")
+		selectDirButton.clicked.connect(seldownloaddir1)
+		self.layout.addWidget(selectDirButton, 1, 3)
 
-		tk.Label(self.Frame, text="Library list directory: ").grid(row=2, column=1, sticky="W")
-		librarydirfortextbox = tk.StringVar()
+		self.layout.addWidget(qtw.QLabel(self, text="Library list file: "), 2, 1, 1, 1, qtc.Qt.AlignmentFlag.AlignRight)
+		self.librarydirfortextbox = ""
 
-		librarydirfortextbox.set("Enter library file directory here.")
-		libraryDirInputBox = tk.Entry(self.Frame, textvariable=librarydirfortextbox)
-		libraryDirInputBox.grid(row=2, column=2, sticky="WE")
-		libraryDirInputBox.bind("<Control-KeyRelease-a>", lambda _: libraryDirInputBox.select_range(0, tk.END), libraryDirInputBox.icursor(tk.END))
-		libraryDirInputBox.bind("<Control-KeyRelease-A>", lambda _: libraryDirInputBox.select_range(0, tk.END), libraryDirInputBox.icursor(tk.END))
+		def librarydirfortextboxchanged(val):
+			self.librarydirfortextbox = str(val)
 
-		selectDirButton = tk.Button(self.Frame, text="Browse...", command=sellibrarydirectory)
-		selectDirButton.grid(row=2, column=3)
+		libraryDirInputBox = qtw.QLineEdit(self, placeholderText="Enter library file path here.")
+		libraryDirInputBox.textChanged.connect(librarydirfortextboxchanged)
+		self.layout.addWidget(libraryDirInputBox, 2, 2)
 
-		openlink = tk.Button(self.Frame, text="Open .csv tool", command=lambda: openInBrowser("https://www.tunemymusic.com/transfer"))
-		openlink.grid(row=3, column=2, sticky="W")
+		selectDirButton = qtw.QToolButton(self, text="Browse...", icon=qtg.QIcon.fromTheme(qtg.QIcon.ThemeIcon.DocumentOpen), toolTip="Browse...")
+		selectDirButton.clicked.connect(sellibrarydirectory)
+		self.layout.addWidget(selectDirButton, 2, 3)
 
-		info = tk.Label(self.Frame, text="\n SMLD is a tool designed to download large amounts of audio files from YouTube. Currently it works with iTunes and Spotify playlists. Select .csv files with the library list directory picker and use the .csv tool to make them. Metadata is only added to .m4a files.", wraplength = 500 )
-		info.grid(row=8, column=1, columnspan = 3)
+		openlink = qtw.QPushButton(self, text="Open .csv tool")
+		openlink.clicked.connect(lambda: qtg.QDesktopServices.openUrl("https://www.tunemymusic.com/transfer"))
+		self.layout.addWidget(openlink, 3, 2, 1, 1, qtc.Qt.AlignmentFlag.AlignRight)
 
+		info = qtw.QLabel(self, text="\n SMLD is a tool designed to download large amounts of audio files from YouTube. Currently it works with iTunes and Spotify playlists. Select .csv files with the library list directory picker and use the .csv tool to make them. Metadata is only added to .m4a files.", wordWrap=True)
+		self.layout.addWidget(info, 8, 1, 1, 3)
 
 		def refresher():
 			global threadnumber
@@ -146,7 +142,7 @@ class Page(tk.Frame):
 				done = f.read()
 				f.close()
 				if done == "1":
-					messagebox.showinfo("Done", "Downloading has been completed")
+					qtw.QMessageBox.information(window, "Done", "Downloading has been completed")
 
 			global cancel
 			with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "r") as f:
@@ -161,7 +157,7 @@ class Page(tk.Frame):
 							SMLDprogressTracker.writecancel()
 							print("Done")
 
-					window.after(1000, refresher)
+					self.refresherTimer.start(1000)
 			f.close()
 
 			if os.path.isfile(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "songinfo.txt")):
@@ -171,16 +167,16 @@ class Page(tk.Frame):
 					for char in filter:
 						artist = str(artist).replace(char, "")
 						artist = artist.replace("\\n", "")
-					songinfo1.config(text="Artist: "+ str(artist))
+					songinfo1.setText("Artist: "+ str(artist))
 					song = f.readlines(2)
 					for char in filter:
 						song = str(song).replace(char, "")
 						song = song.replace("\\n", "")
-					songinfo2.config(text="Song: "+ str(song))
+					songinfo2.setText("Song: "+ str(song))
 					album = f.readlines(3)
 					for char in filter:
 						album = str(album).replace(char, "")
-					songinfo3.config(text="Album: "+ str(album))
+					songinfo3.setText("Album: "+ str(album))
 				f.close()
 
 			if os.path.isfile(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "progress.txt")):
@@ -191,7 +187,7 @@ class Page(tk.Frame):
 					for char in filter2:
 						progress = str(progress).replace(char, "")
 					progress = progress.replace("\\n", "")
-					pg.config(text = "Progress: "+ str(progress) + "%")
+					pg.setText("Progress: "+ str(progress) + "%")
 
 					rlines = str(f.readlines(2))
 					for char in filter2:
@@ -203,7 +199,7 @@ class Page(tk.Frame):
 						tlines = str(tlines).replace(char, "")
 					tlines = tlines.replace("\\n", "")
 
-					np.config(text =f"  Songs downloaded: {str(rlines)} / {str(tlines)} ")
+					np.setText(f"  Songs downloaded: {str(rlines)} / {str(tlines)} ")
 					f.close()
 
 		def setupSMLD():
@@ -220,14 +216,14 @@ class Page(tk.Frame):
 				number = number + 1
 
 			if os.path.isfile(currentlibrarydirectory):
-				downloadb1.config(state="disabled")
-				fileformatDropdown.config(state="disabled")
+				downloadb1.setEnabled(False)
+				fileformatDropdown.setEnabled(False)
 				global process1
 				global smld_a
 
-				cancelb.grid(row=1, column=3, sticky="W")
-				pg.grid(row=1, column=4)
-				np.grid(row=1, column=5)
+				cancelb.setVisible(True)
+				pg.setVisible(True)
+				np.setVisible(False)
 
 
 				with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "libraryfiledirectory.txt"), "w") as f:
@@ -239,51 +235,69 @@ class Page(tk.Frame):
 					f.close()
 
 				with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "fileformat.txt"), "w") as f:
-					f.write(fileformat.get())
+					f.write(self.fileformat)
 					f.close()
 
 				with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Done.txt"), "w") as f:
 					f.write("0")
 					f.close()
 
-				window.after(1, refresher)
+				self.refresherTimer.start(1)
 				threadcount = int(Settings["SMLD-mutithreading"])
 				SMLD.setupSMLD(threadcount, str(currentlibrarydirectory))
-				songinfo2.grid(row=6, column=1, columnspan = 3, sticky="W")
-				songinfo1.grid(row=5, column=1, columnspan = 3, sticky="W")
-				songinfo3.grid(row=7, column=1, columnspan = 3, sticky="W")
+				songinfo2.setVisible(True)
+				songinfo1.setVisible(True)
+				songinfo3.setVisible(True)
 
 
 			else:
-				messagebox.showinfo("File not found", "File cannot be found or it doesn't exist. Please enter a valid file path.")
+				qtw.QMessageBox.warning(self, "File not found", "File cannot be found or it doesn't exist. Please enter a valid file path.")
 
-		frame1 = tk.Frame(self.Frame)
-		frame1.grid(row=4, column=1, sticky="WE", columnspan=4)	#sticky="W" = tasaus west (ilmansuunnat)  columnspan=2 = monta saraketta grid vie
+		self.refresherTimer = qtc.QTimer(self, singleShot=True)
+		self.refresherTimer.timeout.connect(refresher)
 
-		fileformatDropdown = tk.OptionMenu(frame1, fileformat, *fileformats)
-		fileformatDropdown.grid(row=1, column=2, sticky="W")
+		frame1 = qtw.QFrame(self)
+		self.layout.addWidget(frame1, 4, 1, 1, 4)	#kuudes parametry jätettynä tyhjäksi venyttää widgetin viemään koko solun tilan     viides parametri = monta saraketta grid vie
+		frame1layout = qtw.QHBoxLayout(frame1)
+		frame1layout.setContentsMargins(0,0,0,0)
+
+		fileformatDropdown = qtw.QComboBox(frame1)
+		fileformatDropdown.addItems(fileformats.keys())
+		frame1layout.addWidget(fileformatDropdown)
 
 		def cancel():
 			with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "w") as f:
 				f.write("1")
 				f.close()
 
-			cancelb.grid_forget()
-			downloadb1.config(state="normal")
-			fileformatDropdown.config(state="normal")
-			pg.grid_forget()
-			np.grid_forget()
-			songinfo1.grid_forget()
-			songinfo2.grid_forget()
-			songinfo3.grid_forget()
-		cancelb=tk.Button(frame1, text="Cancel", command=cancel)#.grid(row=30, column=0, sticky="E")
-		downloadb1 = tk.Button(frame1, text="Download", command=setupSMLD)
-		downloadb1.grid(row=1, column=1, sticky="W")
+			cancelb.setVisible(False)
+			downloadb1.setEnabled(True)
+			fileformatDropdown.setEnabled(True)
+			pg.setVisible(False)
+			np.setVisible(False)
+			songinfo1.setVisible(False)
+			songinfo2.setVisible(False)
+			songinfo3.setVisible(False)
+		cancelb=qtw.QPushButton(frame1, text="&Cancel", visible=False)#.grid(row=30, column=0, sticky="E")
+		cancelb.clicked.connect(cancel)
+		downloadb1 = qtw.QPushButton(frame1, text="&Download")
+		downloadb1.clicked.connect(setupSMLD)
+		frame1layout.addWidget(downloadb1)
+		frame1layout.addWidget(cancelb)
 
-		pg = tk.Label(frame1, text="Progress: "+ str(progress) + "%")
-		np = tk.Label(frame1, text=f"Remaining/Total Songs {str(rlines)}/{str(tlines)} ")
+		pg = qtw.QLabel(frame1, text="Progress: "+ str(progress) + "%", visible=False)
+		frame1layout.addWidget(pg)
+		np = qtw.QLabel(frame1, text=f"Remaining/Total Songs {str(rlines)}/{str(tlines)} ", visible=False)
+		frame1layout.addWidget(np)
+
+		frame1layout.addStretch(1)
 
 		global songinfo1
-		songinfo1 = tk.Label(self.Frame, )
-		songinfo2 = tk.Label(self.Frame)
-		songinfo3 = tk.Label(self.Frame)
+		songinfo1 = qtw.QLabel(self, visible=False)
+		self.layout.addWidget(songinfo1, 5, 1, 1, 3)
+		songinfo2 = qtw.QLabel(self, visible=False)
+		self.layout.addWidget(songinfo2, 6, 1, 1, 3)
+		songinfo3 = qtw.QLabel(self, visible=False)
+		self.layout.addWidget(songinfo3, 7, 1, 1, 3)
+
+		self.layout.setRowStretch(9, 1)

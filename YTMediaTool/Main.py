@@ -33,7 +33,7 @@ if __name__ == "__main__": # Only run if this is the main process.
 
 			pageNames = {
 				"BasicPage": "Basic",
-				# "SMLDpage": "SMLD",
+				"SMLDpage": "SMLD",
 				"SettingsPage": "Settings",
 				"AboutPage": "About"
 			}
