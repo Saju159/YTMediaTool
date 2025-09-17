@@ -43,8 +43,8 @@ def openFilePicker(window: qtw.QWidget, dtype: str, **kwargs):
 
 	picked = None
 	if dtype == "openDir": picked = qtw.QFileDialog.getExistingDirectory(window, title)
-	elif dtype == "openFile": picked = qtw.QFileDialog.getOpenFileName(window, title)
-	elif dtype == "saveFile": picked = qtw.QFileDialog.getSaveFileName(window, title)
+	elif dtype == "openFile": picked = qtw.QFileDialog.getOpenFileName(window, title)[0]
+	elif dtype == "saveFile": picked = qtw.QFileDialog.getSaveFileName(window, title)[0]
 	else: raise Exception("Invalid dtype! Must be 'openDir', 'openFile' or 'saveFile'")
 	window.update()
 
