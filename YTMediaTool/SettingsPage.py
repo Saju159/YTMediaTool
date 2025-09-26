@@ -223,7 +223,6 @@ class Page(qtw.QWidget):
 		self.layout.addWidget(BooleanOption(widget, self, "YDL-SkipIfExists", "Skip download if already downloaded", "Will still show \"Download completed\" even if the file was already downloaded."))
 		self.layout.addWidget(BooleanOption(widget, self, "BasicPage-ShowDialogAfterDLSuccess", "Show dialog after successful download"))
 		self.layout.addWidget(DropdownOption(widget, self, "BasicPage-ForceQuality", "When video quality is not available", ["Resize to selected quality", "Download closest to selected quality"], "If \"Resize to selected quality\" is selected:\nCalls FFmpeg to resize the video after download if resolution doesn't match. This can be quite slow depending on the video's length and quality selected."))
-		self.layout.addWidget(TextInputOption(widget, self, "YDL-DLFilenameTemplate", "Filename Template", "https://github.com/yt-dlp/yt-dlp?tab=readme-ov-file#output-template"))
 		self.layout.addWidget(Spacer(widget))
 		self.layout.addWidget(TextInputOption(widget, self, "YDL-CookiesFilePath", "Path to cookies.txt", "Path to a Netscape formatted cookies file.\nLeave blank to not use a cookie file.\n\nCookies should only be used if you keep getting blocked by YouTube or are downloading private videos.\n\nDisables \"Grab browser cookies\".", True))
 		self.layout.addWidget(BooleanOption(widget, self, "BasicPage-Cookies", "Grab browser cookies", "Allows yt-dlp to grab your browser's cookies for authentication.\n\nIgnored if path to cookies.txt is not blank."))

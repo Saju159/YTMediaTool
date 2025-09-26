@@ -1,4 +1,4 @@
-import math
+import math, re
 import PySide6.QtWidgets as qtw
 import PySide6.QtGui as qtg
 import PySide6.QtCore as qtc
@@ -6,14 +6,13 @@ from queue import Empty as QueueEmpty
 from Common import openDirInFileBrowser, openFilePicker, createYDLProcess, cleanupYDLTemp
 import Info
 from Settings import Settings
+from SettingsPage import HelpBtn
 
 class DownloadProgressDialog(qtw.QDialog):
 	def __init__(self, window: qtw.QWidget):
 		super().__init__(window)
 
 		self.hasBeenCanceled = False
-
-		self.setWindowTitle(" ")
 
 		self.layout = qtw.QVBoxLayout(self)
 		self.layout.setSizeConstraint(qtw.QLayout.SizeConstraint.SetFixedSize)
@@ -42,134 +41,167 @@ class Page(qtw.QWidget):
 	def __init__(self, window: qtw.QWidget):
 		super().__init__()
 
-		layout = qtw.QFormLayout(self)
+		self.rootlayout = qtw.QVBoxLayout(self)
 
-		# Mode
-		modes = [
-			"Download from URL",
-			"Search & Download from YouTube",
-		]
-		self.mode = modes[0]
-		self.modenum = 0
+		urlregex = re.compile(Info.urlregex)
+		print("urlregex: "+Info.urlregex)
 
-		def selection(val):
-			self.mode = val
-			self.modenum = modes.index(self.mode)
-			if self.modenum == 0:
-				urlLabel.setText("URL: ")
-			elif self.modenum == 1:
-				urlLabel.setText("Search term: ")
+		def validate():
+			ff = Info.fileformats[containerOptCombobox.currentText()]
+			urlregexmatch = urlregex.fullmatch(urlInputBox.text().strip())
+			# print(urlregexmatch and urlregexmatch.group(1,2,3,4) or None)
 
-		modeLabel = qtw.QLabel(self, text="Mode: ")
-		modeDropdown = qtw.QComboBox(self)
-		modeDropdown.addItems(modes)
-		modeDropdown.currentTextChanged.connect(selection)
-		layout.addRow(modeLabel, modeDropdown)
+			if ("video" in ff and ff["video"] == True) and not dlVideoOptCheckbox.isChecked() and not dlAudioOptCheckbox.isChecked():
+				self.statusLabel.setText("Neither video nor audio downloading is enabled!")
+			elif urlInputBox.text().strip() == "":
+				self.statusLabel.setText("")
+			elif not (urlregexmatch != None and len(urlregexmatch.group(2)) > 0):
+				self.statusLabel.setText("Invalid URL!")
+			else:
+				self.statusLabel.setVisible(False)
+				downloadButton.setEnabled(True)
+				return
+
+			self.statusLabel.setVisible(True)
+			downloadButton.setEnabled(False)
 
 		# URL box
-		urlLabel = qtw.QLabel(self, text="URL: ")
-		urlInputBox = qtw.QLineEdit(self)
-		layout.addRow(urlLabel, urlInputBox)
+		urlInputBox = qtw.QLineEdit(self, placeholderText="URL to download from", clearButtonEnabled=True)
+		urlInputBox.textChanged.connect(validate)
+		self.rootlayout.addWidget(urlInputBox)
 
-		# File format
-		ffLabel = qtw.QLabel(self, text="Format: ")
-		ffFrame = qtw.QFrame(self)
-		ffFrameLayout = qtw.QHBoxLayout(ffFrame)
-		ffFrameLayout.setContentsMargins(0,0,0,0)
-		layout.addRow(ffLabel, ffFrame)
+		self.optslayout = qtw.QFormLayout()
+		self.rootlayout.addLayout(self.optslayout)
 
-		self.dlvideo = bool(Settings["BasicPage-DLVideo"])
-		self.dlaudio = bool(Settings["BasicPage-DLAudio"])
-		self.fileformat = str(Settings["BasicPage-Format"])
-		self.vq = str(Settings["BasicPage-VideoQuality"])
-		self.dirSV = str(Settings["BasicPage-DownloadDir"])
-  #
-		def onSaveableSettingUpdate():
-			self.dlvideo = dlvideoCheckbox.isChecked()
-			Settings["BasicPage-DLVideo"] = bool(self.dlvideo)
+		def updateOpts():
+			Settings["BasicPage-Format"] = str(containerOptCombobox.currentText())
+			Settings["BasicPage-DLVideo"] = bool(dlVideoOptCheckbox.isChecked())
+			Settings["BasicPage-DLAudio"] = bool(dlAudioOptCheckbox.isChecked())
+			Settings["BasicPage-VideoQuality"] = str(videoQualityOptCombobox.currentText())
+			Settings["YDL-DLFilenameTemplate"] = str(fnameTmplOptCustomInputBox.text())
+			Settings["BasicPage-DownloadDir"] = str(downloadDirInputBox.text())
+			validate()
 
-			self.dlaudio = dlaudioCheckbox.isChecked()
-			Settings["BasicPage-DLAudio"] = bool(self.dlaudio)
+		# Container format option
+		containerOptFrame = qtw.QFrame(self)
+		containerOptFrameLayout = qtw.QHBoxLayout(containerOptFrame)
+		containerOptFrameLayout.setContentsMargins(0,0,0,0)
+		self.optslayout.addRow("Container:", containerOptFrame)
 
-			self.fileformat = fileformatDropdown.currentText()
-			Settings["BasicPage-Format"] = str(self.fileformat)
-
-			self.vq = vqDropdown.currentText()
-			Settings["BasicPage-VideoQuality"] = str(self.vq)
-
-			self.dirSV = dirInputBox.text()
-			Settings["BasicPage-DownloadDir"] = str(self.dirSV)
-
-		def ffselection(val):
+		def containerOptChanged(val):
 			ff = Info.fileformats[val]
 			if "video" in ff and ff["video"] == True:
-				dlvideoCheckbox.setEnabled(True)
-				dlvideoselection(self.dlvideo)
+				dlVideoOptCheckbox.setVisible(True)
+				dlAudioOptCheckbox.setVisible(True)
+				audioOnlyLabel.setVisible(False)
+				dlVideoOptChanged(Settings["BasicPage-DLVideo"])
 			else:
-				dlvideoCheckbox.setEnabled(False)
-				dlvideoselection(False)
+				dlVideoOptCheckbox.setVisible(False)
+				dlAudioOptCheckbox.setVisible(False)
+				audioOnlyLabel.setVisible(True)
+				dlVideoOptChanged(False)
 
 			if "warn" in ff and window.isVisible(): # isVisible check so this warning is not shown during startup
-				msgbox = qtw.QMessageBox(self, windowTitle="Warning", text=ff["warn"]) # FIXME make this into a button next to the format dropdown instead of a popup
-				msgbox.show()
+				qtw.QMessageBox.warning(self, f"Warning on use of container format '{val}'", ff["warn"]) # FIXME make this into a button next to the format dropdown instead of a popup
 
-			onSaveableSettingUpdate()
+			updateOpts()
 
-		fileformatDropdown = qtw.QComboBox(ffFrame) #fileformat, next(iter(Info.fileformats)), *Info.fileformats, command=lambda _: ffselection())
-		fileformatDropdown.addItems(Info.fileformats.keys())
-		fileformatDropdown.setCurrentText(self.fileformat)
-		fileformatDropdown.currentTextChanged.connect(ffselection)
+		containerOptCombobox = qtw.QComboBox(containerOptFrame)
+		containerOptCombobox.addItems(Info.fileformats.keys())
+		containerOptCombobox.setCurrentText(Settings["BasicPage-Format"])
+		containerOptCombobox.currentTextChanged.connect(containerOptChanged)
 
-		def dlvideoselection(state):
-			vqLabel.setHidden(not state)
-			vqDropdown.setHidden(not state)
-			onSaveableSettingUpdate()
+		# Include video option
+		def dlVideoOptChanged(state):
+			videoQualityOptLabel.setVisible(state)
+			videoQualityOptCombobox.setVisible(state)
 
-		dlvideoCheckbox = qtw.QCheckBox(ffFrame, text="&Video", checked=self.dlvideo, toolTip="Should the video be downloaded?")
-		dlvideoCheckbox.stateChanged.connect(dlvideoselection)
+		dlVideoOptCheckbox = qtw.QCheckBox(containerOptFrame, text="Include &video", toolTip="If disabled, video download will be skipped.")
+		dlVideoOptCheckbox.setChecked(Settings["BasicPage-DLVideo"])
+		dlVideoOptCheckbox.stateChanged.connect(dlVideoOptChanged)
+		dlVideoOptCheckbox.stateChanged.connect(updateOpts)
 
-		dlaudioCheckbox = qtw.QCheckBox(ffFrame, text="&Audio", checked=self.dlaudio, toolTip="Should the audio be downloaded?")
-		dlaudioCheckbox.stateChanged.connect(onSaveableSettingUpdate)
+		# Include audio option
+		dlAudioOptCheckbox = qtw.QCheckBox(containerOptFrame, text="Include &audio", toolTip="If disabled, audio download will be skipped.")
+		dlAudioOptCheckbox.setChecked(Settings["BasicPage-DLAudio"])
+		dlAudioOptCheckbox.stateChanged.connect(updateOpts)
 
-		ffFrameLayout.addWidget(fileformatDropdown)
-		ffFrameLayout.addWidget(dlvideoCheckbox)
-		ffFrameLayout.addWidget(dlaudioCheckbox)
+		audioOnlyLabel = qtw.QLabel(containerOptFrame, text="This container only supports audio.", visible=False)
 
-		# Video quality
-		vqLabel = qtw.QLabel(self, text="Video quality: ")
-		vqDropdown = qtw.QComboBox(self)
-		vqDropdown.addItems(Info.videoqualities.keys())
-		vqDropdown.setCurrentText(self.vq)
-		vqDropdown.currentTextChanged.connect(onSaveableSettingUpdate)
-		layout.addRow(vqLabel, vqDropdown)
+		containerOptFrameLayout.addWidget(containerOptCombobox)
+		containerOptFrameLayout.addWidget(dlVideoOptCheckbox)
+		containerOptFrameLayout.addWidget(dlAudioOptCheckbox)
+		containerOptFrameLayout.addWidget(audioOnlyLabel)
+		containerOptFrameLayout.addStretch(1)
 
-		# Destination Directory
-		dirLabel = qtw.QLabel(self, text="Destination directory: ")
-		dirFrame = qtw.QFrame(self)
-		dirFrameLayout = qtw.QHBoxLayout(dirFrame)
-		dirFrameLayout.setContentsMargins(0,0,0,0)
-		layout.addRow(dirLabel, dirFrame)
+		# Video quality option
+		videoQualityOptLabel = qtw.QLabel(self, text="Video quality:")
+		videoQualityOptCombobox = qtw.QComboBox(self)
+		videoQualityOptCombobox.addItems(Info.videoqualities.keys())
+		videoQualityOptCombobox.setCurrentText(Settings["BasicPage-VideoQuality"])
+		videoQualityOptCombobox.currentTextChanged.connect(updateOpts)
+		self.optslayout.addRow(videoQualityOptLabel, videoQualityOptCombobox)
 
-		dirInputBox = qtw.QLineEdit(dirFrame)
-		dirInputBox.setText(self.dirSV)
-		dirInputBox.textChanged.connect(onSaveableSettingUpdate)
+		# Filename template option
+		def fnameTmplOptComboboxChanged(val):
+			if val == "Custom":
+				fnameTmplOptCustomInputBox.setEnabled(True)
+				fnameTmplOptCustomInputBox.setToolTip("Custom filename template")
+			else:
+				fnameTmplOptCustomInputBox.setText(Info.filenametemplates[val])
+				fnameTmplOptCustomInputBox.setEnabled(False)
+				fnameTmplOptCustomInputBox.setToolTip("Preview of the currently selected filename template")
+
+		fnameTmplOptCombobox = qtw.QComboBox(self, toolTip="Filename template for downloaded files")
+		fnameTmplOptCombobox.addItems(Info.filenametemplates.keys())
+		fnameTmplOptCombobox.addItem(qtg.QIcon.fromTheme("edit-entry"), "Custom")
+		fnameTmplOptCombobox.setCurrentText("Custom")
+		fnameTmplOptCombobox.currentTextChanged.connect(fnameTmplOptComboboxChanged)
+		self.optslayout.addRow("Filename:", fnameTmplOptCombobox)
+
+		fnameTmplOptCustomFrame = qtw.QFrame(self)
+		fnameTmplOptCustomFrameLayout = qtw.QHBoxLayout(fnameTmplOptCustomFrame)
+		fnameTmplOptCustomFrameLayout.setContentsMargins(0,0,0,0)
+		self.optslayout.addWidget(fnameTmplOptCustomFrame)
+
+		fnameTmplOptCustomInputBox = qtw.QLineEdit(fnameTmplOptCustomFrame)
+		fnameTmplOptCustomInputBox.setText(Settings["YDL-DLFilenameTemplate"])
+		for key, val in Info.filenametemplates.items():
+			if val == Settings["YDL-DLFilenameTemplate"]:
+				fnameTmplOptCombobox.setCurrentText(key)
+				break
+		fnameTmplOptCustomInputBox.textChanged.connect(updateOpts)
+		fnameTmplOptCustomFrameLayout.addWidget(fnameTmplOptCustomInputBox, 1)
+		fnameTmplOptCustomFrameLayout.addWidget(HelpBtn(self, "https://github.com/yt-dlp/yt-dlp?tab=readme-ov-file#output-template"), 0, qtc.Qt.AlignmentFlag.AlignRight)
+
+		# Download directory option
+		downloadDirFrame = qtw.QFrame(self)
+		downloadDirFrameLayout = qtw.QHBoxLayout(downloadDirFrame)
+		downloadDirFrameLayout.setContentsMargins(0,0,0,0)
+		self.optslayout.addRow("Save files to:", downloadDirFrame)
+
+		downloadDirInputBox = qtw.QLineEdit(downloadDirFrame, toolTip="Directory to save downloaded files to")
+		downloadDirInputBox.setText(Settings["BasicPage-DownloadDir"])
+		downloadDirInputBox.textChanged.connect(updateOpts)
 
 		def seldir():
-			picked_dir = openFilePicker(window, "openDir", title="Select directory to save downloaded files to...")
+			picked_dir = openFilePicker(window, "openDir", title="Select directory to save downloaded files to")
 			if picked_dir:
-				dirInputBox.setText(picked_dir)
+				downloadDirInputBox.setText(picked_dir)
 
 		selectDirButton = qtw.QToolButton(self, text="Browse...", icon=qtg.QIcon.fromTheme(qtg.QIcon.ThemeIcon.FolderOpen), toolTip="Browse...")
 		selectDirButton.clicked.connect(seldir)
 
-		dirFrameLayout.addWidget(dirInputBox)
-		dirFrameLayout.addWidget(selectDirButton)
+		downloadDirFrameLayout.addWidget(downloadDirInputBox, 1)
+		downloadDirFrameLayout.addWidget(selectDirButton)
 
-		bottomVSpacer = qtw.QSpacerItem(0, 0, qtw.QSizePolicy.Policy.Expanding, qtw.QSizePolicy.Policy.Expanding)
-		layout.addItem(bottomVSpacer)
+		# Bottom separator
+		self.rootlayout.addWidget(qtw.QFrame(self, frameShape=qtw.QFrame.Shape.HLine))
 
-		statusBarSeparator = qtw.QFrame(self, frameShape=qtw.QFrame.Shape.HLine)
-		layout.addRow(statusBarSeparator)
+		self.bottomlayout = qtw.QHBoxLayout()
+		self.rootlayout.addLayout(self.bottomlayout)
+
+		self.statusLabel = qtw.QLabel(self, text="", textInteractionFlags=qtc.Qt.TextInteractionFlag.TextSelectableByMouse)
 
 		def downloadf():
 			downloadButton.setEnabled(False)
@@ -177,12 +209,13 @@ class Page(qtw.QWidget):
 			input2 = urlInputBox.text().strip()
 
 			progressWindow = DownloadProgressDialog(window)
+			progressWindow.setWindowTitle(input2)
 
 			def endFunc(returnStr, r2):
 				progressWindow.destroy()
 
 				dText, success = None, False
-				if returnStr == "invalidDownloadInput": dText = (self.modenum == 1 and "Blank search term!" or "Invalid URL!")
+				if returnStr == "invalidDownloadInput": dText = "Invalid URL!"
 				elif returnStr == "invalidDirectory": dText = "Invalid destination directory!\nMake sure the path is entered correctly."
 				elif returnStr == "pathIsNotDir": dText = "Destination path must be a directory!\nMake sure the path is entered correctly."
 				elif returnStr == "noVideoOrAudio": dText = "Neither video nor audio is selected."
@@ -208,7 +241,7 @@ class Page(qtw.QWidget):
 					if Settings["BasicPage-ShowDialogAfterDLSuccess"] == True:
 						answer = qtw.QMessageBox.question(self, "Download finished", "Download finished.\nOpen destination directory?")
 						if answer == qtw.QMessageBox.StandardButton.Yes:
-							openDirInFileBrowser(self.dirSV)
+							openDirInFileBrowser(Settings["BasicPage-DownloadDir"])
 
 			def checkStatus():
 				if canceled:
@@ -254,13 +287,15 @@ class Page(qtw.QWidget):
 						pass
 					timer.start(100)
 
+			ff = Info.fileformats[Settings["BasicPage-Format"]]
+
 			process, returnPipe, statusQueue = createYDLProcess(
-				url=(self.modenum == 1 and "ytsearch:"+input2 or input2),
-				path=self.dirSV,
-				fileformat=self.fileformat,
-				dlvideo=self.dlvideo,
-				dlaudio=self.dlaudio,
-				videoquality=self.vq
+				url=input2,
+				path=Settings["BasicPage-DownloadDir"],
+				fileformat=Settings["BasicPage-Format"],
+				dlvideo=("video" in ff and ff["video"] == True) and Settings["BasicPage-DLVideo"] or False,
+				dlaudio=("video" in ff and ff["video"] == True) and Settings["BasicPage-DLAudio"] or True,
+				videoquality=Settings["BasicPage-VideoQuality"]
 			)
 			process.start()
 
@@ -286,14 +321,15 @@ class Page(qtw.QWidget):
 			progressWindow.show()
 			progressWindow.exec()
 
-		downloadButton = qtw.QPushButton(self, text="&Download")
+		downloadButton = qtw.QPushButton(self, text="&Download", icon=qtg.QIcon.fromTheme("download"))
 		downloadButton.clicked.connect(downloadf)
-		layout.addWidget(downloadButton)
 
-		dlvideoselection(self.dlvideo)
-		ffselection(self.fileformat)
-		selection(modes[0])
+		self.bottomlayout.addWidget(self.statusLabel, 1)
+		self.bottomlayout.addWidget(downloadButton, 0, qtc.Qt.AlignmentFlag.AlignRight)
 
+		# Update initial state
+		dlVideoOptChanged(dlVideoOptCheckbox.isChecked())
+		containerOptChanged(containerOptCombobox.currentText())
 
 
 
