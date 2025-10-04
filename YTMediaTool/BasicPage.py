@@ -5,7 +5,7 @@ import PySide6.QtCore as qtc
 from queue import Empty as QueueEmpty
 from Common import openDirInFileBrowser, openFilePicker, createYDLProcess, cleanupYDLTemp
 import Info
-from Settings import Settings
+from Settings import Settings, setSetting
 from SettingsPage import HelpBtn
 
 class DownloadProgressDialog(qtw.QDialog):
@@ -74,12 +74,12 @@ class Page(qtw.QWidget):
 		self.rootlayout.addLayout(self.optslayout)
 
 		def updateOpts():
-			Settings["BasicPage-Format"] = str(containerOptCombobox.currentText())
-			Settings["BasicPage-DLVideo"] = bool(dlVideoOptCheckbox.isChecked())
-			Settings["BasicPage-DLAudio"] = bool(dlAudioOptCheckbox.isChecked())
-			Settings["BasicPage-VideoQuality"] = str(videoQualityOptCombobox.currentText())
-			Settings["YDL-DLFilenameTemplate"] = str(fnameTmplOptCustomInputBox.text())
-			Settings["BasicPage-DownloadDir"] = str(downloadDirInputBox.text())
+			setSetting("BasicPage-Format", str(containerOptCombobox.currentText()))
+			setSetting("BasicPage-DLVideo", bool(dlVideoOptCheckbox.isChecked()))
+			setSetting("BasicPage-DLAudio", bool(dlAudioOptCheckbox.isChecked()))
+			setSetting("BasicPage-VideoQuality", str(videoQualityOptCombobox.currentText()))
+			setSetting("YDL-DLFilenameTemplate", str(fnameTmplOptCustomInputBox.text()))
+			setSetting("BasicPage-DownloadDir", str(downloadDirInputBox.text()))
 			validate()
 
 		# Container format option

@@ -206,7 +206,7 @@ class Page(qtw.QWidget):
 		def applySettings():
 			for key in self.opts:
 				if key in Settings.Settings:
-					Settings.Settings[key] = self.opts[key].val
+					Settings.setSetting(key, self.opts[key].val)
 			Settings.saveSettingsToFile()
 			self.applyBtn.setEnabled(False)
 			self.undoBtn.setEnabled(False)
