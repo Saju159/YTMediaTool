@@ -437,7 +437,7 @@ def downloadytmusic(threadnumber, songname, artist, albumname, videoid):
 			downloadyt(songname, artist, albumname, threadnumber)
 
 def getmoremetadata(threadnumber, songname, artist):
-	while True:
+	try:
 		print (f"Trying to get albumname. Artist {artist}, Song {songname}")
 		# Search for the artist
 		search_url = f"https://musicbrainz.org/ws/2/recording?query=artist:{artist} AND recording:{songname}&fmt=json"
@@ -457,20 +457,22 @@ def getmoremetadata(threadnumber, songname, artist):
 					release_data = release_response.json()
 					albumname = release_data['title']
 					albumname = str(albumname)
-					break
 
 				else:
 					print( "Error fetching release data.")
 					time.sleep(5)
-					#albumname = ("ALBUMNAME IS MISSING")
+					albumname = ("ALBUMNAME IS MISSING")
 			else:
 				print( "No recordings found.")
 				time.sleep(5)
-				#albumname = ("ALBUMNAME IS MISSING")
+				albumname = ("ALBUMNAME IS MISSING")
 		else:
 			print("Error fetching data from MusicBrainz.")
 			time.sleep(5)
-			#albumname = ("ALBUMNAME IS MISSING")
+			albumname = ("ALBUMNAME IS MISSING")
+
+	except Exception:
+		albumname = ("ALBUMNAME IS MISSING")
 
 	if diagnosis == 1:
 		print(f"The album for '{songname}' by '{artist}' is: {albumname}")
