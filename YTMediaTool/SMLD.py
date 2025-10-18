@@ -148,8 +148,6 @@ def createsonglist():
 						tiedosto.write(rivi_siistitty + "\n")
 
 
-
-
 			if diagnosis == 1:
 				print("File saved successfully.")
 	except Exception as e:
@@ -559,10 +557,10 @@ def setupSMLD(threadcount, libraryfilelocation):
 		#tiedostonimi = os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist0.txt")
 		if startrunloop_after_setup:
 			SMLDpage.startthreads()
-		# def measurerate_a():
-		# 	SMLDprogressTracker.measurerate()
-		# measurerate_b = threading.Thread(target=measurerate_a)
-		# measurerate_b.start()
+		def measurerate_a():
+			SMLDprogressTracker.measurerate()
+		measurerate_b = threading.Thread(target=measurerate_a)
+		measurerate_b.start()
 	else:
 		print("ERROR. Given path is not a file. Path: " + libraryfilelocation)
 

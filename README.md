@@ -30,8 +30,9 @@ This tool works with many websites not listed here. These websites just have bee
  - Downloading playlists does work, but currently you can not cancel the downloading process.
 
 ### SMLD
-SMLD saves a download history to the home directory of your system (~/YTMediaTool/SMLD_History.txt).
-SMLD adds metadata to the downloaded songs either from the input file or the Music Brainz API.
+ - SMLD saves a download history to the home directory of your system (~/YTMediaTool/SMLD_History.txt).
+ - SMLD adds metadata to the downloaded songs either from the input file or the Music Brainz API.
+ - SMLD gives download rate as SPM (Songs Per Minute).
 #### SMLD Page (Primary)
 SMLD works with Spotify, iTunes and Youtube Music.
  - SMLD destination folder is the base folder where SMLD starts building the folder structure by artist and album.

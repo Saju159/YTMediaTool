@@ -1,7 +1,6 @@
 import os
 from Common import getBaseConfigDir
 from Settings import Settings
-from tkinter import messagebox
 import SMLDpage
 import time
 
@@ -102,34 +101,28 @@ def check_status():
 
 
 def measurerate():
+	start_time = time.time()
+	time.sleep(30)
 	while True:
-		with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "r") as f:
-			cancel = f.read()
-			f.close()
-			if int(cancel) == 1:
-				print("cancel")
-				break
+		try:
+			with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "r") as f:
+				cancel = f.read()
+				f.close()
+				if int(cancel) == 1:
+					print("cancel")
+					break
 
-		#print(str(track1))
-		measurement1 = int(track1)
-		#print(str(measurement1))
-		time.sleep(30)
+			elapsed_time = int(time.time() - start_time)
+			time.sleep(5)
+			rate = track1/(elapsed_time/60)
+			rate = round(rate, 0)
 
-		measurement2 = int(track1)
-		#print(str(measurement2))
+			with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "rate.txt"), "w") as f:
+				f.write(str(rate))
+				f.close()
 
-		time.sleep(30)
-
-		measurement3 = int(track1)
-		#print(str(measurement3))
-
-		rate = ((measurement2 - measurement1) + (measurement3 - measurement2))
-
-		with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "rate.txt"), "w") as f:
-			f.write(str(rate))
-			f.close()
-			print("RATE CHANGED ________________________________________________________________________________________________________________________________________________________________")
-
+		except Exception:
+			print ("Rate calculation failed")
 
 
 

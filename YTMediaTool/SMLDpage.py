@@ -16,6 +16,7 @@ global download
 global downloaddirectory
 global getprogress
 global downloaddirectory1
+global rate
 process1 = None
 
 librarydirfortextbox, download = None, None
@@ -24,6 +25,7 @@ downloaddirectory1 = os.path.expanduser("~/YTMediaTool/Downloads/")
 progress = 0
 rlines = 0
 tlines = 0
+rate = 0
 
 currentlibrarydirectory = " "
 refresher = True
@@ -202,6 +204,15 @@ class Page(qtw.QWidget):
 					np.setText(f"  Songs downloaded: {str(rlines)} / {str(tlines)} ")
 					f.close()
 
+			if os.path.isfile(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "rate.txt")):
+				with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "rate.txt"), "r") as f:
+					rate = str(f.readlines(1))
+				filter2 = "[]'"
+				for char in filter2:
+					rate = str(rate).replace(char, "")
+				rate = rate.replace("\\n", "")
+				rd.setText("Rate is: "+ str(rate) + " SPM")
+
 		def setupSMLD():
 			with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'w', encoding='utf-8') as log:
 				log.write("")
@@ -223,7 +234,8 @@ class Page(qtw.QWidget):
 
 				cancelb.setVisible(True)
 				pg.setVisible(True)
-				np.setVisible(False)
+				np.setVisible(True)
+				rd.setVisible(True)
 
 
 				with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "libraryfiledirectory.txt"), "w") as f:
@@ -275,6 +287,7 @@ class Page(qtw.QWidget):
 			fileformatDropdown.setEnabled(True)
 			pg.setVisible(False)
 			np.setVisible(False)
+			rd.setVisible(False)
 			songinfo1.setVisible(False)
 			songinfo2.setVisible(False)
 			songinfo3.setVisible(False)
@@ -287,8 +300,12 @@ class Page(qtw.QWidget):
 
 		pg = qtw.QLabel(frame1, text="Progress: "+ str(progress) + "%", visible=False)
 		frame1layout.addWidget(pg)
+
 		np = qtw.QLabel(frame1, text=f"Remaining/Total Songs {str(rlines)}/{str(tlines)} ", visible=False)
 		frame1layout.addWidget(np)
+
+		rd = qtw.QLabel(frame1, text="Rate: "+ str(rate) + " SPM", visible=False)
+		frame1layout.addWidget(rd)
 
 		frame1layout.addStretch(1)
 
