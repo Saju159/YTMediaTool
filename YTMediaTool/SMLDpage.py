@@ -134,7 +134,6 @@ class Page(qtw.QWidget):
 		self.layout.addWidget(info, 8, 1, 1, 3)
 
 		def refresher():
-			global threadnumber
 			currentlibrarydirectory = os.path.expanduser("~/YTMediaTool/")
 
 			if not os.path.exists(currentlibrarydirectory + "Downloads/"):
@@ -146,7 +145,6 @@ class Page(qtw.QWidget):
 				if done == "1":
 					qtw.QMessageBox.information(window, "Done", "Downloading has been completed")
 
-			global cancel
 			with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "r") as f:
 				cancel1 = f.read()
 				if int(cancel1) == 1:
@@ -185,7 +183,7 @@ class Page(qtw.QWidget):
 				with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "progress.txt"), "r") as f:
 					progress = str(f.readlines(1))
 
-					filter2 = "[]'"
+					filter2 = "[]/',"
 					for char in filter2:
 						progress = str(progress).replace(char, "")
 					progress = progress.replace("\\n", "")
@@ -229,8 +227,6 @@ class Page(qtw.QWidget):
 			if os.path.isfile(currentlibrarydirectory):
 				downloadb1.setEnabled(False)
 				fileformatDropdown.setEnabled(False)
-				global process1
-				global smld_a
 
 				cancelb.setVisible(True)
 				pg.setVisible(True)

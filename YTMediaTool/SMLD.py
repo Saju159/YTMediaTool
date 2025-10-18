@@ -1,4 +1,3 @@
-from tkinter import messagebox
 import os
 from mutagen.mp4 import MP4
 import os.path
@@ -12,6 +11,7 @@ import SMLDpage
 import requests
 import time
 from datetime import datetime
+import PySide6.QtWidgets as qtw
 
 diagnosis = 1 #1 = on, 0 = off
 
@@ -20,6 +20,7 @@ startrunloop_after_setup = True #default true, stop loop from running after setu
 enable_yt_output = False #enable YT-DLP output printing
 
 filter = '?ü"[];:,.()®*\'é' #global filter for song album and artist names
+filter3 = '?ü"[];:,()®*\'é'
 
 def clearlog():
 	with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'w') as log:
@@ -46,6 +47,30 @@ def getinfo():
 		print(f"Download Directory: {downloaddirectory}")
 		print(f"Library location: {libraryfiledirectory}")
 		print("info acquired")
+
+def getstructure(artist, albumname, songname, fileformat):
+	structure = Settings["SMLD-structure"]
+	if structure == "/SONG":
+		return f"{songname}.{fileformat}"
+
+	elif structure == "/ALBUM/SONG":
+		return os.path.join(albumname, f"{songname}.{fileformat}")
+
+	elif structure == "/ARTIST/SONG":
+		return os.path.join(artist,f"{songname}.{fileformat}")
+
+	elif structure == "/ARTIST ALBUM/SONG":
+		return os.path.join(f"{artist} {albumname}", f"{songname}.{fileformat}")
+
+	elif structure == "/ARTIST/ALBUM/SONG":
+		return os.path.join(artist,albumname,f"{songname}.{fileformat}")
+
+	else:
+		if diagnosis == 1:
+			print("File structure is invalid.")
+		raise Exception("File structure is invalid.")
+
+#artist + "/" +  albumname + "/" + songname + "." + fileformat
 
 def dividesonglist():
 	threadcount = int(Settings["SMLD-mutithreading"])
@@ -152,7 +177,7 @@ def createsonglist():
 				print("File saved successfully.")
 	except Exception as e:
 		print(f"An error occured231: {e}")
-		messagebox.showinfo("An error occured", e)
+		qtw.QMessageBox.critical(None, "ERROR", "An error occured", e)
 		with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
 			log.write("Error: " + str(e))
 			log.write("\n")
@@ -227,7 +252,6 @@ def getsonginfo(threadnumber):
 				artist = artist.replace(char, "")
 			rating = ""  #set rating to none as csv does not contain rating data
 
-			videoid = getvideoid(songname, artist, threadnumber)
 			albumname = getmoremetadata(threadnumber, songname, artist)
 			updatemetadata(artist, albumname, songname, threadnumber)
 			with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "songinfo.txt"), "w") as f:
@@ -236,8 +260,8 @@ def getsonginfo(threadnumber):
 
 	if diagnosis == 1:
 		print ("Artist: " + artist)
-	songfilewithoutformat = os.path.join(downloaddirectory, artist ,albumname, songname)
-	for char in filter:
+	songfilewithoutformat = os.path.join(downloaddirectory, getstructure(artist, albumname, songname, fileformat))
+	for char in filter3:
 		songfilewithoutformat = songfilewithoutformat.replace(char, "")
 	if diagnosis == 1:
 		print("Lopullinen tiedosto on: " + songfilewithoutformat)
@@ -249,7 +273,7 @@ def addtoplaylists(threadnumber):
 	currentdownloadplaylist = (os.path.join(downloaddirectory, "CurrentDownload.m3u" ))
 	favoritesplaylist = (os.path.join(downloaddirectory, "Favorites.m3u" ))
 	with open(currentdownloadplaylist, 'a', encoding='utf-8') as playlist:
-		playlist.write(artist +"/" +  albumname + "/" + songname + "." + fileformat)
+		playlist.write(getstructure(artist, albumname, songname, fileformat))
 		playlist.write("\n")
 		playlist.close()
 		if diagnosis == 1:
@@ -257,11 +281,11 @@ def addtoplaylists(threadnumber):
 
 	if rating == "2":
 		with open(favoritesplaylist, 'a', encoding='utf-8') as playlist:
-			playlist.write(artist +"/" +  albumname + "/" + songname + "." + fileformat)
+			playlist.write(getstructure(artist, albumname, songname, fileformat))
 			playlist.write("\n")
 			playlist.close()
 
-def setupplaylists(songfilewithoutformat):
+def setupplaylists():
 	global currentdownloadplaylist, favoritesplaylist
 	currentdownloadplaylist = (os.path.join(downloaddirectory, "CurrentDownload.m3u" ))
 	with open(currentdownloadplaylist, 'w', encoding='utf-8') as f2:
@@ -280,12 +304,11 @@ def setupplaylists(songfilewithoutformat):
 def setytoptions(threadnumber):
 	albumname, songname, artist, songfilewithoutformat, filteredsongline, rating = getsonginfo(threadnumber)
 	if diagnosis == 1:
-		print("Download location: " + songfilewithoutformat + "." + fileformat)
+		print("Download location: " + songfilewithoutformat)
 	ytoptions = {
 	'format': 'bestaudio',
 	'max_downloads': 1,
-	#'outtmpl': {'default': songfilewithoutformat + ".%(ext)s"},
-	'outtmpl': {'default': songfilewithoutformat + "." + fileformat},
+	'outtmpl': {'default': os.path.join(downloaddirectory, getstructure(artist, albumname, songname, fileformat))},
 	'final_ext' : fileformat,
 	'postprocessors' : [{'key': 'FFmpegVideoConvertor', 'preferedformat': fileformat}],
 	}
@@ -314,7 +337,13 @@ def yterror(e, artist, albumname, songname, threadnumber):
 	albumname, songname, artist, songfilewithoutformat, filteredsongline, rating = getsonginfo(threadnumber)
 	if "Sign in to confirm your age." in str(e):
 		with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
-			log.write(f"Failed to download: {songfilewithoutformat}.{fileformat} Video is age-restricted. Enabling browser cookies in the settings might help.")
+			log.write(f"Failed to download: {getstructure(artist, albumname, songname, fileformat)} Video is age-restricted. Enabling browser cookies in the settings might help.")
+			log.write("\n")
+			log.close()
+	if "Sign in to confirm you’re not a bot." in str(e):
+		qtw.QMessageBox.critical(None, "Rate limited!", "You have been rate limited! Try to enable cookies!")
+		with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
+			log.write(f"Failed to download: {getstructure(artist, albumname, songname, fileformat)} You are probably rate limited. Enabling browser cookies in the settings might help.")
 			log.write("\n")
 			log.close()
 
@@ -349,7 +378,7 @@ def yterror(e, artist, albumname, songname, threadnumber):
 				print("Tried to delete file: " + poistettava2)
 
 		with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
-			log.write(f"Post processing error: {songfilewithoutformat}.{fileformat}")
+			log.write(f"Post processing error: {getstructure(artist, albumname, songname, fileformat)}")
 			log.write("\n")
 			log.close()
 
@@ -358,7 +387,7 @@ def yterror(e, artist, albumname, songname, threadnumber):
 				print("Max downloads reached")
 	else:
 		with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
-			log.write(f"Failed to download: {songfilewithoutformat}.{fileformat} Error occured: {e}, keyword: {filteredsongline}")
+			log.write(f"Failed to download: {getstructure(artist, albumname, songname, fileformat)} Error occured: {e}, keyword: {filteredsongline}")
 			log.write("\n")
 			log.close()
 
@@ -482,15 +511,15 @@ def updatemetadata(artist, albumname, songname, threadnumber):
 		print("m4a detected")
 	try:
 		# Lataa M4A-tiedosto
-		tiedosto = os.path.join(downloaddirectory, artist ,albumname, songname)
-		for char in filter:
-			tiedosto = str(tiedosto.replace(char, ""))
-		tiedosto = str(tiedosto + "." + fileformat)
+		tiedosto = os.path.join(downloaddirectory, getstructure(artist, albumname, songname, fileformat))
+		# for char in filter:
+		# 	tiedosto = str(tiedosto.replace(char, ""))
+		# tiedosto = str(tiedosto + "." + fileformat)
 		if diagnosis == 1:
 			print("Tiedosto on: " + tiedosto +" on thread" + str(threadnumber))
 
 		if not os.path.isfile(tiedosto):
-			print(f"ERROR. File {tiedosto} . {fileformat} was not found when adding metadata.")
+			print(f"ERROR. File {tiedosto} was not found when adding metadata.")
 		if albumname == "":
 			print("ERROR albumname is empty on thread " + str(threadnumber))
 		if artist == "":
@@ -553,7 +582,7 @@ def setupSMLD(threadcount, libraryfilelocation):
 		createsonglist()
 		dividesonglist()
 		albumname, songname, artist, songfilewithoutformat, filteredsongline, rating  = getsonginfo(threadnumber)
-		setupplaylists(songfilewithoutformat)
+		setupplaylists()
 		#tiedostonimi = os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist0.txt")
 		if startrunloop_after_setup:
 			SMLDpage.startthreads()
@@ -601,43 +630,37 @@ def runsmld(threadnumber):
 
 			print(artist, songname, albumname)
 			if diagnosis == 1:
-				print("Checking if file exists before downloading. File: " + songfilewithoutformat + "."+fileformat)
-			if not os.path.isfile(songfilewithoutformat + "."+fileformat):
+				print("Checking if file exists before downloading. File: " + getstructure(artist, albumname, songname, fileformat))
+			if not os.path.isfile(os.path.join(downloaddirectory, getstructure(artist, albumname, songname, fileformat))):
 				if diagnosis == 1:
-					print("File does not exist: " + songfilewithoutformat + "."+fileformat)
+					print("File does not exist: " + getstructure(artist, albumname, songname, fileformat))
+
 				source = Settings["SMLD-source"]
 				if source == "YouTube":
 					downloadyt(songname, artist, albumname, threadnumber)
+					#updatemetadata(artist, albumname, songname, threadnumber)
 				elif source == "YouTube Music":
 					videoid = getvideoid(songname, artist, threadnumber)
+					metadatayt = Settings["SMLD-useytmetadata"]
 					downloadytmusic(threadnumber, songname, artist, albumname, videoid)
-				else:
-					if diagnosis == 1:
-						print("Donwload source setting is invalid. source: " + source)
+					if metadatayt == True:
+						if diagnosis:
+							print("Using metadata from YT Music")
+						if videoid:
+							if not "ERROR" in str(videoid):
+								albumname = getmoremetadata(threadnumber, songname, artist)
+								#updatemetadata(artist, albumname, songname, threadnumber)
 			else:
 				if diagnosis == 1:
-					print("File already exists, skipping download. " + songfilewithoutformat + "."+fileformat)
+					print("File already exists, skipping download. " + os.path.join(downloaddirectory, getstructure(artist, albumname, songname, fileformat)))
+
+			updatemetadata(artist, albumname, songname, threadnumber)
 			if diagnosis == 1:
 				print("Filtered song line: " + filteredsongline +" on thread " + str(threadnumber))
 
-			source = Settings["SMLD-source"]
-			if source == "YouTube":
-				downloadyt(songname, artist, albumname, threadnumber)
-				updatemetadata(artist, albumname, songname, threadnumber)
-			elif source == "YouTube Music":
-				videoid = getvideoid(songname, artist, threadnumber)
-				metadatayt = Settings["SMLD-useytmetadata"]
-				if metadatayt == True:
-					if diagnosis:
-						print("Using metadata from YT Music")
-					if videoid:
-						if not "ERROR" in str(videoid):
-							albumname = getmoremetadata(threadnumber, songname, artist)
-							updatemetadata(artist, albumname, songname, threadnumber)
-
 			if rivit:
 				addtoplaylists(threadnumber)
-			if os.path.isfile(songfilewithoutformat + "." + fileformat):
+			if os.path.isfile(os.path.join(downloaddirectory, getstructure(artist, albumname, songname, fileformat))):
 				if filteredsongline:  # Ohitetaan tyhjät rivit
 					# Päivitetään tiedosto ilman ensimmäistä riviä
 					with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist" + str(threadnumber) + ".txt"), 'r') as tiedosto:
@@ -651,12 +674,12 @@ def runsmld(threadnumber):
 				if diagnosis == 1:
 					print("Ensimmäinen rivi poistettu.")
 				if diagnosis == 1:
-					print(f"File {songfilewithoutformat}.{fileformat} was saved")
+					print(f"File {getstructure(artist, albumname, songname, fileformat)} was saved")
 				try:
 					if diagnosis == 1:
 						print("Adding entry to download log.")
 					with open(os.path.expanduser("~/YTMediaTool/SMLD_History.txt"), 'a', encoding='utf-8') as history:
-						history.write(f"File {songfilewithoutformat}.{fileformat} was saved at {datetime.now()}.")
+						history.write(f"File {getstructure(artist, albumname, songname, fileformat)} was saved at {datetime.now()}.")
 						history.write("\n")
 
 				except Exception:
@@ -665,14 +688,14 @@ def runsmld(threadnumber):
 			else:
 				print("The file was not saved due to an unknown error.")
 				with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
-					log.write(f"File save error while trying to download: {songfilewithoutformat}.{fileformat} on thread {threadnumber}")
+					log.write(f"File save error while trying to download: {getstructure(artist, albumname, songname, fileformat)} on thread {threadnumber}")
 					log.write("\n")
 					log.close()
 			SMLDprogressTracker.check_status()
 			SMLDprogressTracker.trackprogress()
 
 	except FileNotFoundError:
-		messagebox.showinfo("File not found", f"File: '{tiedostonimi}' cannot be found.")
+		qtw.QMessageBox.critical(None, "File not found", f"File: '{tiedostonimi}' cannot be found.")
 		print(f"Tiedostoa '{tiedostonimi}' ei löydy.")
 	except Exception as e:
 		print(f"An unexpected error occured e12: {e}")
