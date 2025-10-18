@@ -24,7 +24,8 @@ DefaultSettings = {
 	"YDL-DLFilenameTemplate": ("%(title).165B.%(ext)s", str), # "%(title).165B [%(id)s].%(ext)s"
 	"SMLD-mutithreading": (4, int),
 	"SMLD-source": ("YouTube Music", str),
-	"SMLD-useytmetadata": (True, bool)
+	"SMLD-useytmetadata": (True, bool),
+	"SMLD-structure":  ("/ARTIST/ALBUM/SONG", str)
 }
 SettingsFilePath = os.path.join(getBaseConfigDir(), "settings.json")
 
