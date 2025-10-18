@@ -20,6 +20,7 @@ startrunloop_after_setup = True #default true, stop loop from running after setu
 enable_yt_output = False #enable YT-DLP output printing
 
 filter = '?ü"[];:,.()®*\'é' #global filter for song album and artist names
+filter3 = '?ü"[];:,()®*\'é'
 
 def clearlog():
 	with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'w') as log:
@@ -260,7 +261,7 @@ def getsonginfo(threadnumber):
 	if diagnosis == 1:
 		print ("Artist: " + artist)
 	songfilewithoutformat = os.path.join(downloaddirectory, getstructure(artist, albumname, songname, fileformat))
-	for char in filter:
+	for char in filter3:
 		songfilewithoutformat = songfilewithoutformat.replace(char, "")
 	if diagnosis == 1:
 		print("Lopullinen tiedosto on: " + songfilewithoutformat)
@@ -307,7 +308,7 @@ def setytoptions(threadnumber):
 	ytoptions = {
 	'format': 'bestaudio',
 	'max_downloads': 1,
-	'outtmpl': {'default': getstructure(artist, albumname, songname, fileformat)},
+	'outtmpl': {'default': os.path.join(downloaddirectory, getstructure(artist, albumname, songname, fileformat))},
 	'final_ext' : fileformat,
 	'postprocessors' : [{'key': 'FFmpegVideoConvertor', 'preferedformat': fileformat}],
 	}
@@ -510,15 +511,15 @@ def updatemetadata(artist, albumname, songname, threadnumber):
 		print("m4a detected")
 	try:
 		# Lataa M4A-tiedosto
-		tiedosto = os.path.join(downloaddirectory, artist ,albumname, songname)
-		for char in filter:
-			tiedosto = str(tiedosto.replace(char, ""))
-		tiedosto = str(tiedosto + "." + fileformat)
+		tiedosto = os.path.join(downloaddirectory, getstructure(artist, albumname, songname, fileformat))
+		# for char in filter:
+		# 	tiedosto = str(tiedosto.replace(char, ""))
+		# tiedosto = str(tiedosto + "." + fileformat)
 		if diagnosis == 1:
 			print("Tiedosto on: " + tiedosto +" on thread" + str(threadnumber))
 
 		if not os.path.isfile(tiedosto):
-			print(f"ERROR. File {tiedosto} . {fileformat} was not found when adding metadata.")
+			print(f"ERROR. File {tiedosto} was not found when adding metadata.")
 		if albumname == "":
 			print("ERROR albumname is empty on thread " + str(threadnumber))
 		if artist == "":
@@ -633,35 +634,29 @@ def runsmld(threadnumber):
 			if not os.path.isfile(os.path.join(downloaddirectory, getstructure(artist, albumname, songname, fileformat))):
 				if diagnosis == 1:
 					print("File does not exist: " + getstructure(artist, albumname, songname, fileformat))
+
 				source = Settings["SMLD-source"]
 				if source == "YouTube":
 					downloadyt(songname, artist, albumname, threadnumber)
+					#updatemetadata(artist, albumname, songname, threadnumber)
 				elif source == "YouTube Music":
 					videoid = getvideoid(songname, artist, threadnumber)
+					metadatayt = Settings["SMLD-useytmetadata"]
 					downloadytmusic(threadnumber, songname, artist, albumname, videoid)
-				else:
-					if diagnosis == 1:
-						print("Donwload source setting is invalid. source: " + source)
+					if metadatayt == True:
+						if diagnosis:
+							print("Using metadata from YT Music")
+						if videoid:
+							if not "ERROR" in str(videoid):
+								albumname = getmoremetadata(threadnumber, songname, artist)
+								#updatemetadata(artist, albumname, songname, threadnumber)
 			else:
 				if diagnosis == 1:
-					print("File already exists, skipping download. " + getstructure(artist, albumname, songname, fileformat))
+					print("File already exists, skipping download. " + os.path.join(downloaddirectory, getstructure(artist, albumname, songname, fileformat)))
+
+			updatemetadata(artist, albumname, songname, threadnumber)
 			if diagnosis == 1:
 				print("Filtered song line: " + filteredsongline +" on thread " + str(threadnumber))
-
-			source = Settings["SMLD-source"]
-			if source == "YouTube":
-				downloadyt(songname, artist, albumname, threadnumber)
-				updatemetadata(artist, albumname, songname, threadnumber)
-			elif source == "YouTube Music":
-				videoid = getvideoid(songname, artist, threadnumber)
-				metadatayt = Settings["SMLD-useytmetadata"]
-				if metadatayt == True:
-					if diagnosis:
-						print("Using metadata from YT Music")
-					if videoid:
-						if not "ERROR" in str(videoid):
-							albumname = getmoremetadata(threadnumber, songname, artist)
-							updatemetadata(artist, albumname, songname, threadnumber)
 
 			if rivit:
 				addtoplaylists(threadnumber)
