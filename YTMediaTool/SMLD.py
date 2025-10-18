@@ -11,6 +11,7 @@ import threading
 import SMLDpage
 import requests
 import time
+from datetime import datetime
 
 diagnosis = 1 #1 = on, 0 = off
 
@@ -653,6 +654,16 @@ def runsmld(threadnumber):
 					print("Ensimmäinen rivi poistettu.")
 				if diagnosis == 1:
 					print(f"File {songfilewithoutformat}.{fileformat} was saved")
+				try:
+					if diagnosis == 1:
+						print("Adding entry to download log.")
+					with open(os.path.expanduser("~/YTMediaTool/SMLD_History.txt"), 'a', encoding='utf-8') as history:
+						history.write(f"File {songfilewithoutformat}.{fileformat} was saved at {datetime.now()}.")
+						history.write("\n")
+
+				except Exception:
+					if diagnosis == 1:
+						print("Log entry failed.-------------------------------")
 			else:
 				print("The file was not saved due to an unknown error.")
 				with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:

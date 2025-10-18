@@ -29,16 +29,24 @@ This tool works with many websites not listed here. These websites just have bee
  - To reduce downloading times, original format and source video quality is recommemded as the program does not need to convert the files to another format.
  - Downloading playlists does work, but currently you can not cancel the downloading process.
 
-### SMLD Page (Primary)
+### SMLD
+SMLD saves a download history to the home directory of your system (~/YTMediaTool/SMLD_History.txt).
+SMLD adds metadata to the downloaded songs either from the input file or the Music Brainz API.
+#### SMLD Page (Primary)
 SMLD works with Spotify, iTunes and Youtube Music.
  - SMLD destination folder is the base folder where SMLD starts building the folder structure by artist and album.
  - You need to select a library list file using the Library list directory picker. Most common iTunes, Spotify and YouTube Music library lists are .CSV files and you can generate them using the tool linked under the input bar "Open .csv tool". In the tool select the service you want to download your library from (iTunes, Spotify or YouTube Music). Then input the link of a playlist to the URL box on the website. After that select "Choose Destination" and then "Export to file". Select the CSV format.
  - After downloading the file select it with the Library list file picker, select the format you want and start the download.
  NOTE: Metada can currently only be saved when using the m4a format.
 
-### SMLD Page extended library format
+#### SMLD Page extended library format
  - This library format only works with iTunes. This format can save favorite songs to a separate playlist and save the genre of the song.
  - This extended format is saved to a text file by first going to the iTunes application and select one song. Then CTRL + A and CTRL + C. Then open your prefered text editor and paste the contents there with CTRL + V. The file is done and you can select it with the Library list directory picker. This has been tested on the current iTunes windows version.
+ 
+#### SMLD Quick Download Format
+ - This format allows the user to download smaller quantities of songs at a time. 
+ - This format has one major benefit to Basic Page. It adds metadata to songs. The program tries to get a name for the album from the Music Brainz API.
+ - Simply select your download directory and SMLD will automatically create a file with instructions on how to use the format. Write the name of the artist and the song separated by a comma (ARTIST,SONG).
 
 ### Installation
 Installation of this program is very simple. 
