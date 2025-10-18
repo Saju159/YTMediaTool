@@ -87,7 +87,7 @@ class Page(qtw.QWidget):
 					f.close()
 				if not os.path.isfile(os.path.join(downloaddirectory1,"Quick Download.txt")):
 					with open(os.path.join(downloaddirectory1,"Quick Download.txt"), "w") as f:
-						f.write("CUSTOM DOWNLOAD FORMAT FOR QUICK DOWNLOADS. FORMAT: (SONGNAME, ARTIST), DO NOT REMOVE THIS LINE.")
+						f.write("CUSTOM DOWNLOAD FORMAT FOR QUICK DOWNLOADS. FORMAT: (ARTIST,SONG1,SONG2,SONG3...), DO NOT REMOVE THIS LINE.")
 						f.close()
 
 		def sellibrarydirectory():

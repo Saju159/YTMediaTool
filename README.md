@@ -47,7 +47,7 @@ SMLD works with Spotify, iTunes and Youtube Music.
 #### SMLD Quick Download Format
  - This format allows the user to download smaller quantities of songs at a time. 
  - This format has one major benefit to Basic Page. It adds metadata to songs. The program tries to get a name for the album from the Music Brainz API.
- - Simply select your download directory and SMLD will automatically create a file with instructions on how to use the format. Write the name of the artist and the song separated by a comma (ARTIST,SONG).
+ - Simply select your download directory and SMLD will automatically create a file with instructions on how to use the format. Write the name of the artist and the song separated by a comma (ARTIST,SONG1,SONG2,SONG3...).
 
 ### Installation
 Installation of this program is very simple. 

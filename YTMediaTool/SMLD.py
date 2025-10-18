@@ -156,22 +156,25 @@ def createsonglist():
 				with open((os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt")), 'w', encoding='utf-8') as tiedosto:
 					tiedosto.write("")
 
-
 				if diagnosis == 1:
 					print("Selected file is a quick download format.")
 					print(rivit2)
 
+				rivit3 = []
+
+				for entry in rivit2[1:]:
+					parts = entry.split(',')
+					artist = parts[0]
+					songs = parts[1:]
+
+				for song in songs:
+					rivit3.append(f"{artist},{song}")
+
 				with open(os.path.join(getBaseConfigDir(), "SMLD", "Temp", "Songlist.txt"), 'a', encoding='utf-8') as tiedosto:
-					for cusrivi in rivit2[1:]:
-						rivi_siistitty = cusrivi.strip()  # Poistaa \n lopusta
-						print("Kirjoitetaan:", rivi_siistitty)
-
-						# Poistetaan mahdolliset yksittäiset lainausmerkit (jos halutaan)
-						rivi_siistitty = rivi_siistitty.replace("'", "")
-
-						# Kirjoita siistitty rivi tiedostoon
-						tiedosto.write(rivi_siistitty + "\n")
-
+					for line in rivit3:
+						line_cleaned = line.strip().replace("'", "")
+						print("Kirjoitetaan:", line_cleaned)
+						tiedosto.write(line_cleaned + "\n")
 
 			if diagnosis == 1:
 				print("File saved successfully.")
@@ -244,12 +247,14 @@ def getsonginfo(threadnumber):
 			if diagnosis == 1:
 				print("Quick download format detected. Taking metadata from YT Music")
 			cusparts = filteredsongline.split(',')
-			songname = f"{cusparts[0]}"
+			songname = f"{cusparts[1]}"
 			for char in filter:
 				songname = songname.replace(char, "")
-			artist = f"{cusparts[1]}"
+				songname = songname.strip()
+			artist = f"{cusparts[0]}"
 			for char in filter:
 				artist = artist.replace(char, "")
+				artist = artist.strip()
 			rating = ""  #set rating to none as csv does not contain rating data
 
 			albumname = getmoremetadata(threadnumber, songname, artist)
