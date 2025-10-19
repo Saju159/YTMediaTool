@@ -36,6 +36,21 @@ fileformats = {
 	'flac':	{'video': False, 'audio': True, 'ext': "flac"},
 }
 
+def setupfolders():
+	if not os.path.exists(os.path.join(getBaseConfigDir(),"SMLD")):
+		os.makedirs(os.path.join(getBaseConfigDir(),"SMLD"))
+
+	if not os.path.exists(os.path.join(getBaseConfigDir(),"SMLD", "Temp")):
+		os.makedirs(os.path.join(getBaseConfigDir(),"SMLD", "Temp"))
+
+def resetfiles():
+	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "progress.txt"), "w") as f:
+		f.close()
+
+	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "w") as f:
+		f.write("0")
+		f.close()
+
 def startthreads():
 	global threadnumber
 	threadnumber = 0
@@ -57,9 +72,7 @@ def startthreads():
 		smld_b.start()
 		print("Thread " + str(threadnumber) + " has been started------------------------------------------------------------------------------------------------------------------")
 
-with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "w") as f:
-	f.write("0")
-	f.close()
+
 
 class Page(qtw.QWidget):
 	def __init__(self, window: qtw.QWidget):
@@ -76,6 +89,7 @@ class Page(qtw.QWidget):
 		print (self.librarydirfortextbox)
 
 		def seldownloaddir1():
+			setupfolders()
 			picked_dir = openFilePicker(window, "openDir")
 			if picked_dir:
 				downloaddirectory1 = picked_dir
@@ -91,6 +105,7 @@ class Page(qtw.QWidget):
 						f.close()
 
 		def sellibrarydirectory():
+			setupfolders()
 			global currentlibrarydirectory
 			currentlibrarydirectory = openFilePicker(window, "openFile")
 			if currentlibrarydirectory:
@@ -212,6 +227,7 @@ class Page(qtw.QWidget):
 				rd.setText("Rate is: "+ str(rate) + " SPM")
 
 		def setupSMLD():
+			resetfiles()
 			with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'w', encoding='utf-8') as log:
 				log.write("")
 				log.close()

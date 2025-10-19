@@ -11,19 +11,6 @@ if __name__ == "__main__": # Only run if this is the main process.
 	from Common import getBaseConfigDir
 	import Settings
 
-	if not os.path.exists(os.path.join(getBaseConfigDir(),"SMLD")):
-		os.makedirs(os.path.join(getBaseConfigDir(),"SMLD"))
-
-	if not os.path.exists(os.path.join(getBaseConfigDir(),"SMLD", "Temp")):
-		os.makedirs(os.path.join(getBaseConfigDir(),"SMLD", "Temp"))
-
-	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "progress.txt"), "w") as f:
-		f.close()
-
-	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "w") as f:
-		f.write("0")
-		f.close()
-
 	class MainWindow(qtw.QMainWindow):
 		def __init__(self):
 			super().__init__()
