@@ -74,7 +74,14 @@ def getstructure(artist, albumname, songname, fileformat):
 			print("File structure is invalid.")
 		raise Exception("File structure is invalid.")
 
-#artist + "/" +  albumname + "/" + songname + "." + fileformat
+def addlogentry(logentry):
+	with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
+		try:
+			log.write(f"{logentry} at  {datetime.now()} with list {libraryfiledirectory}")
+			log.write("\n")
+		except:
+			print("Error while trying to write error log.")
+		log.close()
 
 def removeline(filteredsongline, threadnumber):
 	if filteredsongline:  # Ohitetaan tyhjät rivit
@@ -200,12 +207,9 @@ def createsonglist():
 				print("File saved successfully.")
 	except Exception as e:
 		print(f"An error occured231: {e}")
+		global smlderror
 		smlderror = True
-		with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
-			log.write("Error: " + str(e))
-			log.write("\n")
-			#log.write(f"While trying to download: {downloaddirectory} {artist} {albumname} {songname}")
-			log.close()
+		addlogentry("Error: " + str(e))
 	#Delete empty lines:
 	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt"), 'r', encoding='utf-8') as file:
 		lineswithempty = file.readlines()
@@ -361,20 +365,15 @@ def setytoptions(threadnumber):
 def yterror(e, artist, albumname, songname, threadnumber):
 	albumname, songname, artist, songfilewithoutformat, filteredsongline, rating = getsonginfo(threadnumber)
 	if "Sign in to confirm your age." in str(e):
-		with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
-			log.write(f"Failed to download: {getstructure(artist, albumname, songname, fileformat)} Video is age-restricted. Enabling browser cookies in the settings might help. Skipping this song.")
-			log.write("\n")
-			log.close()
+		addlogentry(f"Failed to download: {getstructure(artist, albumname, songname, fileformat)} Video is age-restricted. Enabling browser cookies in the settings might help. Skipping this song.")
 		if diagnosis == 1:
 			print("Song is age restricted. Skipping...")
 		removeline(filteredsongline, threadnumber)
 
 	if "Sign in to confirm you’re not a bot." in str(e):
+		global ratelimited
 		ratelimited = True
-		with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
-			log.write(f"Failed to download: {getstructure(artist, albumname, songname, fileformat)} You are probably rate limited. Enabling browser cookies in the settings might help.")
-			log.write("\n")
-			log.close()
+		addlogentry(f"Failed to download: {getstructure(artist, albumname, songname, fileformat)} You are probably rate limited. Enabling browser cookies in the settings might help.")
 
 	elif "Postprocessing: Error opening input files" in str(e):
 		print("ERROR. Postprocessing failed. Deleting file.")
@@ -405,20 +404,13 @@ def yterror(e, artist, albumname, songname, threadnumber):
 			else:
 				print("File deleting backup method did not work.")
 				print("Tried to delete file: " + poistettava2)
-
-		with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
-			log.write(f"Post processing error: {getstructure(artist, albumname, songname, fileformat)}")
-			log.write("\n")
-			log.close()
+		addlogentry(f"Post processing error: {getstructure(artist, albumname, songname, fileformat)}")
 
 	elif "--max-downloads" in str(e):
 			if diagnosis == 1:
 				print("Max downloads reached")
 	else:
-		with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
-			log.write(f"Failed to download: {getstructure(artist, albumname, songname, fileformat)} Error occured: {e}, keyword: {filteredsongline}")
-			log.write("\n")
-			log.close()
+		addlogentry(f"Failed to download: {getstructure(artist, albumname, songname, fileformat)} Error occured: {e}, keyword: {filteredsongline}")
 
 def getvideoid(songname, artist, threadnumber):
 	if diagnosis == 1:
@@ -571,10 +563,7 @@ def updatemetadata(artist, albumname, songname, threadnumber):
 	except Exception as e:
 		print(f"Error in updating metadata e2: {e}")
 		if "only a top-level atom can have zero length" in str(e):
-			with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
-				log.write("File " + tiedosto + " might be currpted for an unknown reason.")
-				log.write("\n")
-				log.close()
+			addlogentry("File " + tiedosto + " might be currpted for an unknown reason.")
 			print("File corrupted")
 			os.remove(tiedosto)
 			print("Corrupted file deleted.")
@@ -582,26 +571,18 @@ def updatemetadata(artist, albumname, songname, threadnumber):
 
 		elif "not a MP4 file" in str(e):
 			print("File download not finished")
-			with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
-				log.write("File " + tiedosto + " download was not finished for an unknown reason.")
-				log.write("\n")
-				log.close()
+			addlogentry("File " + tiedosto + " download was not finished for an unknown reason.")
 			os.remove(tiedosto)
 			print("Corrupted file deleted.")
 			downloadyt(songname, artist, albumname, threadnumber)
 
 		else:
-			with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
-				log.write("Mutagen error: " + str(e) + " In thread " + str(threadnumber))
-				log.write("\n")
-				log.write("With file: " + tiedosto+ " Artist " + artist + " Albumn " + albumname)
-				log.write("\n")
-				log.close()
+			addlogentry("Mutagen error: " + str(e) + " In thread " + str(threadnumber))
+			addlogentry("With file: " + tiedosto+ " Artist " + artist + " Albumn " + albumname)
 
 def setupSMLD(threadcount, libraryfilelocation):
 	if diagnosis == 1:
 		print("------------------------------------------------------------------SMLD STARTS-----------------------------------------------------------------")
-	clearlog()
 	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "rate.txt"), "w") as f:
 		f.write("0")
 		f.close()
@@ -623,6 +604,7 @@ def setupSMLD(threadcount, libraryfilelocation):
 		print("ERROR. Given path is not a file. Path: " + libraryfilelocation)
 
 def runsmld(threadnumber):
+	global filenotfound
 	try:
 		while True:
 			if diagnosis == 1:
@@ -705,23 +687,16 @@ def runsmld(threadnumber):
 						print("Log entry failed.-------------------------------")
 			else:
 				print("The file was not saved due to an unknown error.")
-				with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
-					log.write(f"File save error while trying to download: {getstructure(artist, albumname, songname, fileformat)} on thread {threadnumber}")
-					log.write("\n")
-					log.close()
+				addlogentry(f"File save error while trying to download: {getstructure(artist, albumname, songname, fileformat)} on thread {threadnumber}")
 			SMLDprogressTracker.check_status()
 			SMLDprogressTracker.trackprogress()
 
 	except FileNotFoundError:
+
 		filenotfound = True
 		print(f"Tiedostoa '{tiedostonimi}' ei löydy.")
 	except Exception as e:
 		print(f"An unexpected error occured e12: {e}")
-		with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
-			log.write("Main loop error: " + str(e) + " on thread" + str(threadnumber))
-			log.write("\n")
-			try:
-				log.write(f"While trying to download: {downloaddirectory} {artist} {albumname} {songname} Thread: {threadnumber}")
-			except:
-				print("Error while trying to write error log.")
-			log.close()
+		addlogentry("Main loop error: " + str(e) + " on thread" + str(threadnumber), threadnumber)
+		addlogentry(f"While trying to download: {downloaddirectory} {artist} {albumname} {songname} Thread: {threadnumber}", threadnumber)
+

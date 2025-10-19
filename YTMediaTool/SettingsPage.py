@@ -6,6 +6,7 @@ from Common import openFilePicker, getBaseConfigDir
 from sys import platform
 
 import Settings
+import SMLD
 
 class HelpBtn(qtw.QToolButton):
 	def __init__(self, parent: qtw.QWidget, helptext: str):
@@ -231,6 +232,7 @@ class Page(qtw.QWidget):
 		self.layout.addWidget(Spacer(widget))
 		self.layout.addWidget(qtw.QLabel(widget, text="Settings for 'SMLD' tab:"))
 		self.layout.addWidget(Button(widget, self, "Open SMLD logs", lambda: qtg.QDesktopServices.openUrl(qtc.QUrl.fromLocalFile(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt")))))
+		self.layout.addWidget(Button(widget, self, "Clear SMLD Logs", lambda: SMLD.clearlog()))
 		self.layout.addWidget(SpinBoxOption(widget, self, "SMLD-mutithreading", "Number of concurrent downloads (EXPERIMENTAL)", 2, 16))
 		self.layout.addWidget(DropdownOption(widget, self, "SMLD-source", "Select the media download source", ["YouTube Music", "YouTube"]))
 		self.layout.addWidget(BooleanOption(widget, self, "SMLD-useytmetadata", "Get metadata from YouTube Music."))
