@@ -149,6 +149,18 @@ class Page(qtw.QWidget):
 		self.layout.addWidget(info, 8, 1, 1, 3)
 
 		def refresher():
+			if SMLD.filenotfound:
+				qtw.QMessageBox.critical(window, "File not found", "File cannot be found. See the log for more information.")
+				SMLD.filenotfound = False
+
+			if SMLD.smlderror:
+				qtw.QMessageBox.critical(window, "ERROR", "An error occured. See the log for more information.")
+				SMLD.smlderror = False
+
+			if SMLD.ratelimited:
+				qtw.QMessageBox.critical(window, "Rate limited!", "You have been rate limited! Try to enable cookies!")
+				SMLD.ratelimited = False
+
 			currentlibrarydirectory = os.path.expanduser("~/YTMediaTool/")
 
 			if not os.path.exists(currentlibrarydirectory + "Downloads/"):

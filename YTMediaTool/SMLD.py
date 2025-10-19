@@ -11,7 +11,6 @@ import SMLDpage
 import requests
 import time
 from datetime import datetime
-import PySide6.QtWidgets as qtw
 
 diagnosis = 1 #1 = on, 0 = off
 
@@ -21,6 +20,11 @@ enable_yt_output = False #enable YT-DLP output printing
 
 filter = '?ü"[];:,.()®*\'é' #global filter for song album and artist names
 filter3 = '?ü"[];:,()®*\'é'
+
+global ratelimited, smlderror, filenotfound
+ratelimited = False
+smlderror = False
+filenotfound = False
 
 def clearlog():
 	with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'w') as log:
@@ -196,7 +200,7 @@ def createsonglist():
 				print("File saved successfully.")
 	except Exception as e:
 		print(f"An error occured231: {e}")
-		qtw.QMessageBox.critical(None, "ERROR", "An error occured", e)
+		smlderror = True
 		with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
 			log.write("Error: " + str(e))
 			log.write("\n")
@@ -366,7 +370,7 @@ def yterror(e, artist, albumname, songname, threadnumber):
 		removeline(filteredsongline, threadnumber)
 
 	if "Sign in to confirm you’re not a bot." in str(e):
-		qtw.QMessageBox.critical(None, "Rate limited!", "You have been rate limited! Try to enable cookies!")
+		ratelimited = True
 		with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
 			log.write(f"Failed to download: {getstructure(artist, albumname, songname, fileformat)} You are probably rate limited. Enabling browser cookies in the settings might help.")
 			log.write("\n")
@@ -709,7 +713,7 @@ def runsmld(threadnumber):
 			SMLDprogressTracker.trackprogress()
 
 	except FileNotFoundError:
-		qtw.QMessageBox.critical(None, "File not found", f"File: '{tiedostonimi}' cannot be found.")
+		filenotfound = True
 		print(f"Tiedostoa '{tiedostonimi}' ei löydy.")
 	except Exception as e:
 		print(f"An unexpected error occured e12: {e}")
