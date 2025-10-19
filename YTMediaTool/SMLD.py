@@ -160,21 +160,21 @@ def createsonglist():
 					print("Selected file is a quick download format.")
 					print(rivit2)
 
-				rivit3 = []
+			rivit3 = []
 
-				for entry in rivit2[1:]:
-					parts = entry.split(',')
-					artist = parts[0]
-					songs = parts[1:]
+			for entry in rivit2[1:]:
+				parts = entry.split(',')
+				artist = parts[0]
+				songs = parts[1:]
 
 				for song in songs:
 					rivit3.append(f"{artist},{song}")
 
-				with open(os.path.join(getBaseConfigDir(), "SMLD", "Temp", "Songlist.txt"), 'a', encoding='utf-8') as tiedosto:
-					for line in rivit3:
-						line_cleaned = line.strip().replace("'", "")
-						print("Kirjoitetaan:", line_cleaned)
-						tiedosto.write(line_cleaned + "\n")
+			with open(os.path.join(getBaseConfigDir(), "SMLD", "Temp", "Songlist.txt"), 'a', encoding='utf-8') as tiedosto:
+				for line in rivit3:
+					line_cleaned = line.strip().replace("'", "")
+					print("Kirjoitetaan:", line_cleaned)
+					tiedosto.write(line_cleaned + "\n")
 
 			if diagnosis == 1:
 				print("File saved successfully.")
