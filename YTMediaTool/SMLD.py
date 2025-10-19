@@ -72,6 +72,22 @@ def getstructure(artist, albumname, songname, fileformat):
 
 #artist + "/" +  albumname + "/" + songname + "." + fileformat
 
+def removeline(filteredsongline, threadnumber):
+	if filteredsongline:  # Ohitetaan tyhjät rivit
+		# Päivitetään tiedosto ilman ensimmäistä riviä
+		with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist" + str(threadnumber) + ".txt"), 'r') as tiedosto:
+			songlistlines = tiedosto.readlines()
+			tiedosto.close()
+		jäljellä_olevat_rivit = songlistlines[1:]  # Jäljellä olevat rivit
+
+		tiedostonimi = os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist" + str(threadnumber) + ".txt")
+		with open(tiedostonimi, 'w', encoding='utf-8') as tiedosto:
+			tiedosto.writelines(jäljellä_olevat_rivit)
+		if diagnosis == 1:
+			print("Ensimmäinen rivi poistettu.")
+		return tiedostonimi
+
+
 def dividesonglist():
 	threadcount = int(Settings["SMLD-mutithreading"])
 
@@ -342,9 +358,13 @@ def yterror(e, artist, albumname, songname, threadnumber):
 	albumname, songname, artist, songfilewithoutformat, filteredsongline, rating = getsonginfo(threadnumber)
 	if "Sign in to confirm your age." in str(e):
 		with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
-			log.write(f"Failed to download: {getstructure(artist, albumname, songname, fileformat)} Video is age-restricted. Enabling browser cookies in the settings might help.")
+			log.write(f"Failed to download: {getstructure(artist, albumname, songname, fileformat)} Video is age-restricted. Enabling browser cookies in the settings might help. Skipping this song.")
 			log.write("\n")
 			log.close()
+		if diagnosis == 1:
+			print("Song is age restricted. Skipping...")
+		removeline(filteredsongline, threadnumber)
+
 	if "Sign in to confirm you’re not a bot." in str(e):
 		qtw.QMessageBox.critical(None, "Rate limited!", "You have been rate limited! Try to enable cookies!")
 		with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'a', encoding='utf-8') as log:
@@ -666,18 +686,7 @@ def runsmld(threadnumber):
 			if rivit:
 				addtoplaylists(threadnumber)
 			if os.path.isfile(os.path.join(downloaddirectory, getstructure(artist, albumname, songname, fileformat))):
-				if filteredsongline:  # Ohitetaan tyhjät rivit
-					# Päivitetään tiedosto ilman ensimmäistä riviä
-					with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist" + str(threadnumber) + ".txt"), 'r') as tiedosto:
-						songlistlines = tiedosto.readlines()
-						tiedosto.close()
-					jäljellä_olevat_rivit = songlistlines[1:]  # Jäljellä olevat rivit
-
-					tiedostonimi = os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist" + str(threadnumber) + ".txt")
-					with open(tiedostonimi, 'w', encoding='utf-8') as tiedosto:
-						tiedosto.writelines(jäljellä_olevat_rivit)
-				if diagnosis == 1:
-					print("Ensimmäinen rivi poistettu.")
+				tiedostonimi = removeline(filteredsongline, threadnumber)
 				if diagnosis == 1:
 					print(f"File {getstructure(artist, albumname, songname, fileformat)} was saved")
 				try:
