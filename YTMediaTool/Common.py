@@ -218,6 +218,94 @@ def createYDLProcess(
 
 	return process, returnPipeReceiver, statusQueue
 
+def _FileDownloadProcessTarget(
+	returnPipe: multiprocessing.Pipe,
+	queue: multiprocessing.Queue,
+	url: str,
+	path: pathlib.Path,
+	sha256: str = None
+):
+	import hashlib
+	import shutil
+	import urllib.error
+	import urllib.request
+
+	print(f"Downloading \"{url}\" to \"{path}\"...")
+
+	final_filename = path.name
+	dl_tmpPath = pathlib.Path(tmpPath, final_filename)
+
+	def pushStatus(d):
+		import queue as queue2
+		try:
+			queue.get_nowait()
+			queue.put(d, False)
+		except queue2.Empty:
+			queue.put(d, False)
+		except queue2.Full:
+			pass
+
+	try:
+		with urllib.request.urlopen(url, None, 30) as r:
+			dinfo = r.info()
+			dl_len = (int(dinfo["Content-Length"]) if "Content-Length" in dinfo else 0) or 0
+			chunk_size = 65536 # read in 64kb chunks
+
+			with dl_tmpPath.open("wb") as f:
+				times = 0
+				while True:
+					data = r.read(chunk_size)
+					if not data:
+						break
+					times += 1
+					pushStatus({
+						"task": "downloading",
+						"current": times*chunk_size,
+						"target": dl_len
+					})
+					f.write(data)
+
+		if sha256 != None:
+			pushStatus({
+				"task": "verifying"
+			})
+
+			h = hashlib.sha256()
+			h.update(open(dl_tmpPath, "rb").read())
+			digest = h.hexdigest()
+			if digest != sha256:
+				# sha256 didn't match so delete file and return error
+				dl_tmpPath.unlink()
+				returnPipe.send(("wrongDigest", f"Downloaded file has wrong sha256 hash:\n\ngot: {digest}\nexpected: {sha256}"))
+				return
+
+		# sha256 matched or no sha256 passed, so move file to correct path and return success
+		pushStatus({
+			"task": "finishing"
+		})
+
+		pathlib.Path(path).parent.mkdir(parents=True, exist_ok=True)
+		shutil.move(dl_tmpPath, path)
+		returnPipe.send(("success")); return
+
+	except urllib.error.URLError as e:
+		returnPipe.send(("urlError", f"Download failed:\n{e.reason}\n\nIf this issue is not due to network issues, report it at https://github.com/Saju159/YTMediaTool/issues"))
+
+def createFileDownloadProcess(
+	url: str,
+	path: str|pathlib.Path,
+	sha256: str = None
+):
+	print(f"Creating file download process for url: \"{url}\"...")
+	path = pathlib.PurePath(path)
+	pathlib.Path(tmpPath).mkdir(parents=True, exist_ok=True)
+
+	returnPipeReceiver, returnPipeSender = multiprocessing.Pipe(False)
+	statusQueue = multiprocessing.Queue(1)
+	process = multiprocessing.Process(target=_FileDownloadProcessTarget, args=(returnPipeSender, statusQueue, url, path, sha256))
+
+	return process, returnPipeReceiver, statusQueue
+
 def cleanupYDLTemp():
 	for f in os.listdir(tmpPath):
 		if os.path.isfile(os.path.join(tmpPath, f)):
