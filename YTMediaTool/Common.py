@@ -307,5 +307,25 @@ def cleanupYDLTemp():
 			os.remove(os.path.join(tmpPath, f))
 	print("Cleaned up YDL temp directory!")
 
+def isVersionNewer(a: str, b: str):
+	"""
+	Returns True if version str a is higher than b
+	"""
+	apart = a.split(".")
+	bpart = b.split(".")
+
+	for i in range(len(apart)):
+		if len(bpart) > i:
+			inta, intb = int(apart[i]), int(bpart[i])
+			if inta and intb:
+				if inta > intb:
+					return True
+				if inta < intb:
+					return False
+			else:
+				return True
+
+	return False
+
 if __name__ == "__main__" and platform == "linux":
 	multiprocessing.set_start_method("fork")
