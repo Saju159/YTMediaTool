@@ -7,6 +7,7 @@ from Common import getUserDownloadDir, getBaseConfigDir
 #   [0]: default value
 #   [1]: type of value
 DefaultSettings = {
+	"YDLManager-LastChecked": (0, int),
 	"FFmpeg_path": ("ffmpeg", str),
 	"BasicPage-ShowDialogAfterDLSuccess": (True, bool),
 	"BasicPage-DownloadDir": (getUserDownloadDir(), str),

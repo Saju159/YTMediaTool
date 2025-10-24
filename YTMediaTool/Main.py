@@ -7,9 +7,13 @@ if len(argv) > 1 and argv[1] == "--version":
 
 if __name__ == "__main__": # Only run if this is the main process.
 	import os
+	import sys
 	import PySide6.QtWidgets as qtw
 	from Common import getBaseConfigDir
+	import YtdlpManager
 	import Settings
+
+	sys.path.insert(0, str(YtdlpManager.YtdlpPath))
 
 	class MainWindow(qtw.QMainWindow):
 		def __init__(self):
@@ -39,21 +43,40 @@ if __name__ == "__main__": # Only run if this is the main process.
 
 
 	application = qtw.QApplication(argv)
-	window = MainWindow()
-	window.setWindowTitle("YTMediaTool")
-	# window.geometry('600x480')
-	# window.minsize(600, 34)
-	# window.resizable(width=False, height=False)
-	window.show()
 
-	if not os.path.isfile(Settings.Settings["FFmpeg_path"]):
-		print(f'FFmpeg cannot be found in: "{Settings.Settings["FFmpeg_path"]}". Please enter a valid FFmpeg path in the settings.')
+	try:
+		ytdlpModule = __import__("yt_dlp")
+		YtdlpManager.UpdateYtdlpPackageInfo(ytdlpModule.version.__version__, os.path.dirname(ytdlpModule.__file__))
 
-	def quit(code):
+		window = MainWindow()
+		window.setWindowTitle("YTMediaTool")
+		window.show()
+
+		if not os.path.isfile(Settings.Settings["FFmpeg_path"]):
+			print(f'FFmpeg cannot be found in: "{Settings.Settings["FFmpeg_path"]}". Please enter a valid FFmpeg path in the settings.')
+		code = application.exec()
 		with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "w") as f:
 			f.write("1")
 			f.close()
 		Settings.saveSettingsToFile()
 		exit(code)
 
-	quit(application.exec())
+	except ModuleNotFoundError:
+		answer = qtw.QMessageBox.question(None, "YTMediaTool", "YTMediaTool requires yt-dlp for downloading media, but it isn't installed on your system.\n\nWould you like for YTMediaTool to locally manage it and download it now?\n(clicking no quits the application)")
+		if answer == qtw.QMessageBox.StandardButton.Yes:
+			def updateFinish(r):
+				if r == True:
+					qtw.QMessageBox.information(None, "YTMediaTool", "yt-dlp was successfully downloaded! Please relaunch the application.")
+					Settings.saveSettingsToFile() # last yt-dlp update time is saved to settings so write those to disk
+					exit(0)
+				else:
+					exit(1)
+			YtdlpManager.UpdateYtdlp(None, False, updateFinish)
+			exit(application.exec())
+		else:
+			# User rejected locally managed
+			exit(0)
+
+	except ImportError as err:
+		qtw.QMessageBox.critical(None, "Error", f"Error while loading yt-dlp module!\n{err}\n\nPlease report this at https://github.com/Saju159/YTMediaTool/issues")
+		exit(1)

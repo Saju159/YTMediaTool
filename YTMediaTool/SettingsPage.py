@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 import PySide6.QtWidgets as qtw
 import PySide6.QtGui as qtg
 import PySide6.QtCore as qtc
@@ -7,6 +8,7 @@ from sys import platform
 
 import Settings
 import SMLD
+import YtdlpManager
 
 class HelpBtn(qtw.QToolButton):
 	def __init__(self, parent: qtw.QWidget, helptext: str):
@@ -177,6 +179,29 @@ class Button(qtw.QFrame):
 		self.layout.addWidget(self.btn)
 		self.layout.addStretch()
 
+class YtdlpManagerBox(qtw.QFrame):
+	def __init__(self, parent: qtw.QWidget, page):
+		super().__init__(parent)
+
+		self.val = None
+
+		self.layout = qtw.QHBoxLayout(self)
+		self.layout.setContentsMargins(0,0,0,0)
+
+		def checkForUpdates():
+			def updateFinish(r):
+				if r == True:
+					qtw.QMessageBox.information(self, "YTMediaTool", "yt-dlp was successfully updated!\n\nThe application will now quit to apply the update. Please relaunch the application.")
+					qtc.QCoreApplication.instance().exit(0)
+			YtdlpManager.UpdateYtdlp(parent, True, updateFinish)
+
+		self.updateBtn = qtw.QPushButton(self, text="Check for updates")
+		self.updateBtn.clicked.connect(checkForUpdates)
+		self.lastCheckedLabel = qtw.QLabel(self, text=f"Last checked {datetime.fromtimestamp(Settings.Settings["YDLManager-LastChecked"])}")
+
+		self.layout.addWidget(self.updateBtn)
+		self.layout.addWidget(self.lastCheckedLabel, 1)
+
 class Page(qtw.QWidget):
 	def loadSettings(self):
 		for opt in self.opts.values():
@@ -212,6 +237,19 @@ class Page(qtw.QWidget):
 			self.applyBtn.setEnabled(False)
 			self.undoBtn.setEnabled(False)
 
+		if YtdlpManager.YtdlpPath.is_file():
+
+			self.layout.addWidget(qtw.QLabel(widget, text="Currently using locally managed yt-dlp package", wordWrap=True))
+			self.layout.addWidget(qtw.QLabel(widget, text=f"Version {YtdlpManager.YtdlpVersion}", wordWrap=True))
+			self.layout.addWidget(YtdlpManagerBox(widget, self))
+			if platform != "win32":
+				self.layout.addWidget(qtw.QLabel(widget, text="You can optionally use the system-provided yt-dlp package by removing the locally managed one.", wordWrap=True))
+				self.layout.addWidget(Button(widget, self, "Delete locally managed yt-dlp package", lambda: YtdlpManager.Uninstall(window)))
+		else:
+			self.layout.addWidget(qtw.QLabel(widget, text=f"Currently using system-provided yt-dlp package @ {YtdlpManager.YtdlpImportPath}", wordWrap=True))
+			self.layout.addWidget(qtw.QLabel(widget, text=f"Version {YtdlpManager.YtdlpVersion}", wordWrap=True))
+
+		self.layout.addWidget(Spacer(widget))
 		self.layout.addWidget(TextInputOption(widget, self, "FFmpeg_path", "Path to FFmpeg executable", None, True))
 		self.layout.addWidget(qtw.QLabel(widget, text="FFmpeg is required for merging the downloaded video + audio and for converting formats."))
 		if platform == "win32":
