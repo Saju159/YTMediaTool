@@ -2,6 +2,11 @@ import multiprocessing, os, pathlib, subprocess
 from sys import platform
 import PySide6.QtWidgets as qtw
 
+class DownloadError(Exception):
+	def __init__(self, errors=str, reason=str):
+		self.errors = errors
+		self.reason = reason
+
 def getUserDownloadDir():
 	if platform == "linux":
 		c = subprocess.run(["which", "xdg-user-dir"], stdout=subprocess.PIPE)
@@ -218,32 +223,41 @@ def createYDLProcess(
 
 	return process, returnPipeReceiver, statusQueue
 
-def _FileDownloadProcessTarget(
-	returnPipe: multiprocessing.Pipe,
-	queue: multiprocessing.Queue,
+def downloadFile(
 	url: str,
 	path: pathlib.Path,
-	sha256: str = None
+	maxlength: int = 0,
+	sha256: str = None,
+	statusCallback: callable = None,
 ):
+	"""
+	Downloads a file to specified path.
+
+	Data is written to a file with the same name but with the .part extension.
+
+	After fully downloaded, the file is moved to the correct path.
+
+	Delete the .part file if cancelled (e.g. by killing the child process this function was running in)
+
+	:param maxlength: Maximum amount of data to be downloaded. 0=infinite
+	:param sha256: SHA256 hash to check agaisnt. None=no verification
+	:param statusCallback: Will be called on progress update with the parameters "task", "current", "target"
+	:raise DownloadError: Raised on URLError and verification failure
+	"""
 	import hashlib
 	import shutil
 	import urllib.error
 	import urllib.request
 
-	print(f"Downloading \"{url}\" to \"{path}\"...")
+	print(f"Downloading file from \"{url}\" to \"{path}\"...")
 
-	final_filename = path.name
-	dl_tmpPath = pathlib.Path(tmpPath, final_filename)
+	pathlib.Path(path).parent.mkdir(parents=True, exist_ok=True)
+	partPath = pathlib.Path(path.parent, path.name+".part")
+	partPath.unlink(missing_ok=True)
 
-	def pushStatus(d):
-		import queue as queue2
-		try:
-			queue.get_nowait()
-			queue.put(d, False)
-		except queue2.Empty:
-			queue.put(d, False)
-		except queue2.Full:
-			pass
+	def pushStatus(task, current=0, target=0):
+		if statusCallback != None:
+			statusCallback(task=task, current=current, target=target)
 
 	try:
 		with urllib.request.urlopen(url, None, 30) as r:
@@ -251,60 +265,41 @@ def _FileDownloadProcessTarget(
 			dl_len = (int(dinfo["Content-Length"]) if "Content-Length" in dinfo else 0) or 0
 			chunk_size = 65536 # read in 64kb chunks
 
-			with dl_tmpPath.open("wb") as f:
+			with partPath.open("wb") as f:
 				times = 0
 				while True:
+					if maxlength != 0 and times*chunk_size > maxlength:
+						# over max length to download, break
+						break
 					data = r.read(chunk_size)
 					if not data:
 						break
 					times += 1
-					pushStatus({
-						"task": "downloading",
-						"current": times*chunk_size,
-						"target": dl_len
-					})
+					pushStatus(task="downloading", current=times*chunk_size, target=max(dl_len, maxlength) if dl_len != 0 else 0)
 					f.write(data)
 
 		if sha256 != None:
-			pushStatus({
-				"task": "verifying"
-			})
+			pushStatus(task="verifying")
 
-			h = hashlib.sha256()
-			h.update(open(dl_tmpPath, "rb").read())
-			digest = h.hexdigest()
-			if digest != sha256:
-				# sha256 didn't match so delete file and return error
-				dl_tmpPath.unlink()
-				returnPipe.send(("wrongDigest", f"Downloaded file has wrong sha256 hash:\n\ngot: {digest}\nexpected: {sha256}"))
-				return
+			with partPath.open("rb") as data:
+				h = hashlib.sha256()
+				h.update(data.read())
+				digest = h.hexdigest()
+				if digest != sha256:
+					# sha256 didn't match so delete file and return error
+					partPath.unlink()
+					raise DownloadError("wrongDigest", f"Downloaded file has wrong SHA256 hash:\n\n     got: {digest}\nexpected: {sha256}")
 
 		# sha256 matched or no sha256 passed, so move file to correct path and return success
-		pushStatus({
-			"task": "finishing"
-		})
+		pushStatus(task="moving")
 
-		pathlib.Path(path).parent.mkdir(parents=True, exist_ok=True)
-		shutil.move(dl_tmpPath, path)
-		returnPipe.send(("success")); return
+		shutil.move(partPath, path)
+		print(f"Successfully downloaded file from \"{url}\" to \"{path}\"!")
+		return
 
 	except urllib.error.URLError as e:
-		returnPipe.send(("urlError", f"Download failed:\n{e.reason}\n\nIf this issue is not due to network issues, report it at https://github.com/Saju159/YTMediaTool/issues"))
-
-def createFileDownloadProcess(
-	url: str,
-	path: str|pathlib.Path,
-	sha256: str = None
-):
-	print(f"Creating file download process for url: \"{url}\"...")
-	path = pathlib.PurePath(path)
-	pathlib.Path(tmpPath).mkdir(parents=True, exist_ok=True)
-
-	returnPipeReceiver, returnPipeSender = multiprocessing.Pipe(False)
-	statusQueue = multiprocessing.Queue(1)
-	process = multiprocessing.Process(target=_FileDownloadProcessTarget, args=(returnPipeSender, statusQueue, url, path, sha256))
-
-	return process, returnPipeReceiver, statusQueue
+		partPath.unlink(missing_ok=True)
+		raise DownloadError("urlError", e.reason)
 
 def cleanupYDLTemp():
 	for f in os.listdir(tmpPath):
