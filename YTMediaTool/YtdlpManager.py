@@ -117,6 +117,8 @@ def _UpdateTarget(
 	except EOFError:
 		# pipe most likely dead on purpose, ignore
 		sys.exit(1)
+	except BrokenPipeError:
+		sys.exit(1)
 	except Exception as err:
 		print(f"Unhandled exception during yt-dlp update: {err}")
 		sys.exit(2)
@@ -186,6 +188,8 @@ def UpdateYtdlp(
 					break
 			except EOFError:
 				# pipe broken
+				break
+			except BrokenPipeError:
 				break
 
 		if not process.is_alive():
