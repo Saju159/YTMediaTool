@@ -9,9 +9,9 @@ track1 = 0
 def trackprogress():
 	global track1
 
-	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "libraryfiledirectory.txt")) as f:
-		libraryfiledirectory = f.read()
-		f.close()
+	# with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt")) as f:
+	# 	libraryfiledirectory = f.read()
+	# 	f.close()
 
 	rlines = 0
 	threadnumber = 0
@@ -29,13 +29,13 @@ def trackprogress():
 			rlines = len(file.readlines())
 			file.close()
 
-	with open(os.path.expanduser(libraryfiledirectory), 'r', encoding='utf-8') as file:
+	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt"), 'r', encoding='utf-8') as file:
 		tlines = file.readlines()
 		file.close()
 
 	edistyminen = (100 - (rlines / len(tlines) * 100))
 	edistyminen2 = round(edistyminen, 2)
-	track1 = len(tlines)-rlines
+	track1 = float(len(tlines)-rlines)
 
 	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "progress.txt"), "w") as f:
 		f.write(str(edistyminen2) + "\n" + str(len(tlines)-rlines) + "\n" + str(len(tlines)))
@@ -102,7 +102,6 @@ def check_status():
 
 def measurerate():
 	start_time = time.time()
-	time.sleep(30)
 	while True:
 		try:
 			with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "r") as f:
@@ -112,10 +111,10 @@ def measurerate():
 					print("cancel")
 					break
 
-			elapsed_time = int(time.time() - start_time)
+			elapsed_time = float(time.time() - start_time)
 			time.sleep(5)
-			rate = track1/(elapsed_time/60)
-			rate = round(rate, 0)
+			rate = float(track1/(elapsed_time/60))
+			rate = round(rate, 1)
 
 			with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "rate.txt"), "w") as f:
 				f.write(str(rate))
