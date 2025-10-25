@@ -282,7 +282,6 @@ def getsonginfo(threadnumber):
 			rating = ""  #set rating to none as csv does not contain rating data
 
 			albumname = getmoremetadata(threadnumber, songname, artist)
-			updatemetadata(artist, albumname, songname, threadnumber)
 			with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "songinfo.txt"), "w") as f:
 				f.write(artist + "\n "+ songname + "\n" + albumname)
 				f.close()
@@ -649,7 +648,6 @@ def runsmld(threadnumber):
 				source = Settings["SMLD-source"]
 				if source == "YouTube":
 					downloadyt(songname, artist, albumname, threadnumber)
-					#updatemetadata(artist, albumname, songname, threadnumber)
 				elif source == "YouTube Music":
 					videoid = getvideoid(songname, artist, threadnumber)
 					metadatayt = Settings["SMLD-useytmetadata"]
@@ -660,7 +658,6 @@ def runsmld(threadnumber):
 						if videoid:
 							if not "ERROR" in str(videoid):
 								albumname = getmoremetadata(threadnumber, songname, artist)
-								#updatemetadata(artist, albumname, songname, threadnumber)
 			else:
 				if diagnosis == 1:
 					print("File already exists, skipping download. " + os.path.join(downloaddirectory, getstructure(artist, albumname, songname, fileformat)))
@@ -697,6 +694,6 @@ def runsmld(threadnumber):
 		print(f"Tiedostoa '{tiedostonimi}' ei löydy.")
 	except Exception as e:
 		print(f"An unexpected error occured e12: {e}")
-		addlogentry("Main loop error: " + str(e) + " on thread" + str(threadnumber), threadnumber)
-		addlogentry(f"While trying to download: {downloaddirectory} {artist} {albumname} {songname} Thread: {threadnumber}", threadnumber)
+		addlogentry("Main loop error: " + str(e) + " on thread" + str(threadnumber))
+		addlogentry(f"While trying to download: {downloaddirectory} {artist} {albumname} {songname} Thread: {threadnumber}")
 
