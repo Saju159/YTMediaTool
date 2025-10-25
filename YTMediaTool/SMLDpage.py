@@ -240,10 +240,6 @@ class Page(qtw.QWidget):
 
 		def setupSMLD():
 			resetfiles()
-			with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'w', encoding='utf-8') as log:
-				log.write("")
-				log.close()
-
 			number = 0
 			while number < 17:
 				poistettava = os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist" + str(number) +".txt")
