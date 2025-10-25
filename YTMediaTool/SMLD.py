@@ -71,6 +71,7 @@ def getstructure(artist, albumname, songname, fileformat):
 
 	else:
 		if diagnosis == 1:
+			addlogentry('File structure is invalid. In function "getstructure".')
 			print("File structure is invalid.")
 		raise Exception("File structure is invalid.")
 
@@ -131,80 +132,80 @@ def createsonglist():
 		with open(libraryfiledirectory, 'r', encoding='utf-8') as tiedosto:
 			ensimrivi = tiedosto.readlines(1)
 
-			global filetype
-			#filetype = str(libraryfiledirectory).find(".txt")
+		global filetype
+		#filetype = str(libraryfiledirectory).find(".txt")
 
-			if libraryfiledirectory.lower().endswith(".txt"):
-				if "Quick Download" in str(libraryfiledirectory):
-					filetype = 3
-				else:
-					filetype = 1
+		if libraryfiledirectory.lower().endswith(".txt"):
+			if "Quick Download" in str(libraryfiledirectory):
+				filetype = 3
 			else:
-				filetype = 2
+				filetype = 1
+		else:
+			filetype = 2
 
+		if diagnosis == 1:
+			print("Filetype is: " + str(filetype))
+
+		with open(libraryfiledirectory, 'r', encoding='utf-8') as tiedosto:
+			rivit2 = tiedosto.readlines()
+
+		if filetype == 1:
 			if diagnosis == 1:
-				print("Filetype is: " + str(filetype))
+				print("Selected file is a iTunes media library. With .txt file format")
 
-			with open(libraryfiledirectory, 'r', encoding='utf-8') as tiedosto:
-				rivit2 = tiedosto.readlines()
-
-			if filetype == 1:
-				if diagnosis == 1:
-					print("Selected file is a iTunes media library. With .txt file format")
-
-				with open((os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt")), 'w', encoding='utf-8') as tiedosto:
-					for txtrivi in rivit2:
-						txtosat = txtrivi.split('\t')  # Käytetään kahta tabulaattoria erottimena
-						if len(txtosat) > 4:  # Tarkistetaan, että riittävästi osia löytyy
-							uusi_txtrivi = f"{txtosat[0]}\t{txtosat[3]}\t{txtosat[4]}\t{txtosat[5]}\t{txtosat[6]}\n"  # Ensimmäinen ja kolmas osa
-							tiedosto.write(uusi_txtrivi)
-				if diagnosis == 1:
-					print("File saved successfully.")
-			elif filetype == 2:
-				if diagnosis == 1:
-					print("Selected file is a iTunes or Spotify media library.")
-				with open((os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt")), 'w', encoding='utf-8') as tiedosto:
-					for csvrivi in rivit2:
-						csvosat = csvrivi.split(',')
-						if len(csvosat) > 2:  # Tarkistetaan, että riittävästi osia löytyy
-							uusi_csvrivi = f"{csvosat[0]},{csvosat[1]},{csvosat[2]}\n"
-							tiedosto.write(uusi_csvrivi)
-
-				delete = str(ensimrivi).find("Track name") #Delete the first line if it contains header line "Track name"
-				if not delete == -1:
-					with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt"), 'r') as fin:
-						data = fin.read().splitlines(True)
-					with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt"), 'w') as fout:
-						fout.writelines(data[1:])
-
-					if diagnosis == 1:
-						print("Header line removed")
-			elif filetype == 3:
-				with open((os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt")), 'w', encoding='utf-8') as tiedosto:
-					tiedosto.write("")
-
-				if diagnosis == 1:
-					print("Selected file is a quick download format.")
-					print(rivit2)
-
-			rivit3 = []
-
-			for entry in rivit2[1:]:
-				parts = entry.split(',')
-				artist = parts[0]
-				songs = parts[1:]
-
-				for song in songs:
-					rivit3.append(f"{artist},{song}")
-
-			with open(os.path.join(getBaseConfigDir(), "SMLD", "Temp", "Songlist.txt"), 'a', encoding='utf-8') as tiedosto:
-				for line in rivit3:
-					line_cleaned = line.strip().replace("'", "")
-					print("Kirjoitetaan:", line_cleaned)
-					tiedosto.write(line_cleaned + "\n")
-
+			with open((os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt")), 'w', encoding='utf-8') as tiedosto:
+				for txtrivi in rivit2:
+					txtosat = txtrivi.split('\t')  # Käytetään kahta tabulaattoria erottimena
+					if len(txtosat) > 4:  # Tarkistetaan, että riittävästi osia löytyy
+						uusi_txtrivi = f"{txtosat[0]}\t{txtosat[3]}\t{txtosat[4]}\t{txtosat[5]}\t{txtosat[6]}\n"  # Ensimmäinen ja kolmas osa
+						tiedosto.write(uusi_txtrivi)
 			if diagnosis == 1:
 				print("File saved successfully.")
+		elif filetype == 2:
+			if diagnosis == 1:
+				print("Selected file is a iTunes or Spotify media library.")
+			with open((os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt")), 'w', encoding='utf-8') as tiedosto:
+				for csvrivi in rivit2:
+					csvosat = csvrivi.split(',')
+					if len(csvosat) > 2:  # Tarkistetaan, että riittävästi osia löytyy
+						uusi_csvrivi = f"{csvosat[0]},{csvosat[1]},{csvosat[2]}\n"
+						tiedosto.write(uusi_csvrivi)
+
+			delete = str(ensimrivi).find("Track name") #Delete the first line if it contains header line "Track name"
+			if not delete == -1:
+				with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt"), 'r') as fin:
+					data = fin.read().splitlines(True)
+				with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt"), 'w') as fout:
+					fout.writelines(data[1:])
+
+				if diagnosis == 1:
+					print("Header line removed")
+		elif filetype == 3:
+			with open((os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt")), 'w', encoding='utf-8') as tiedosto:
+				tiedosto.write("")
+
+			if diagnosis == 1:
+				print("Selected file is a quick download format.")
+				print(rivit2)
+
+		rivit3 = []
+
+		for entry in rivit2[1:]:
+			parts = entry.split(',')
+			artist = parts[0]
+			songs = parts[1:]
+
+			for song in songs:
+				rivit3.append(f"{artist},{song}")
+
+		with open(os.path.join(getBaseConfigDir(), "SMLD", "Temp", "Songlist.txt"), 'a', encoding='utf-8') as tiedosto:
+			for line in rivit3:
+				line_cleaned = line.strip().replace("'", "")
+				print("Kirjoitetaan:", line_cleaned)
+				tiedosto.write(line_cleaned + "\n")
+
+		if diagnosis == 1:
+			print("File saved successfully.")
 	except Exception as e:
 		print(f"An error occured231: {e}")
 		global smlderror
@@ -418,8 +419,6 @@ def getvideoid(songname, artist, threadnumber):
 	yt = ytmusicapi.YTMusic()
 	if diagnosis == 1:
 		print("YT Music Keyword: " + str(hakusana)+ " on thread " + str(threadnumber))
-	#videoid = yt.search(hakusana, filter="songs")[0]["videoId"]
-
 
 	tulokset = yt.search(hakusana, filter="songs")
 
@@ -428,7 +427,6 @@ def getvideoid(songname, artist, threadnumber):
 		if r.get("resultType") == "song" and r.get("album") and r["album"].get("name"):
 			videoid = r["videoId"]
 			break
-
 
 	if diagnosis == 1:
 		print("Video ID: " + str(videoid) + " on thread " + str(threadnumber))
@@ -471,18 +469,21 @@ def downloadytmusic(threadnumber, songname, artist, albumname, videoid):
 					except Exception as e:
 						yterror(e, artist, albumname, songname, threadnumber)
 			else:
+				addlogentry("ERROR. Failed to download from YTMusic. Downloading from youtube. ERROR in videoID. On thread "+ str(threadnumber))
 				if diagnosis == 1:
 					print("ERROR. Failed to download from YTMusic. Downloading from youtube. ERROR in videoID. On thread "+ str(threadnumber))
 				downloadyt(songname, artist, albumname, threadnumber)
 		else:
+			addlogentry("ERROR. Failed to download from YTMusic. Downloading from youtube. No videoID was recieved. On thread "+ str(threadnumber))
 			if diagnosis == 1:
 				print("ERROR. Failed to download from YTMusic. Downloading from youtube. No videoID was recieved. On thread "+ str(threadnumber))
 			downloadyt(songname, artist, albumname, threadnumber)
 	except Exception as e:
 		if diagnosis == 1:
 			print("ERROR. Failed to download from YTMusic. Downloading from youtube. Exception: " + e)
-			yterror(e, artist, albumname, songname, threadnumber)
-			downloadyt(songname, artist, albumname, threadnumber)
+		addlogentry("ERROR. Failed to download from YTMusic. Downloading from youtube. Exception: " + e)
+		yterror(e, artist, albumname, songname, threadnumber)
+		downloadyt(songname, artist, albumname, threadnumber)
 
 def getmoremetadata(threadnumber, songname, artist):
 	try:
@@ -644,6 +645,7 @@ def runsmld(threadnumber):
 			if not os.path.isfile(os.path.join(downloaddirectory, getstructure(artist, albumname, songname, fileformat))):
 				if diagnosis == 1:
 					print("File does not exist: " + getstructure(artist, albumname, songname, fileformat))
+				addlogentry("File did not download correctly due to an error. File is: " + getstructure(artist, albumname, songname, fileformat))
 
 				source = Settings["SMLD-source"]
 				if source == "YouTube":
