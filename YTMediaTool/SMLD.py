@@ -580,6 +580,11 @@ def updatemetadata(artist, albumname, songname, threadnumber):
 			if not albumname == "":
 				audio["\xa9alb"] = albumname  # Albumin nimi
 			audio["\xa9ART"] = artist  # Artistin nimi
+			audio["aART"] = artist
+			audio["\xa9nam"] = songname
+
+			#‘\xa9day’ – year
+			#‘\xa9gen’ – genre
 		except Exception as e:
 			print(f"Error in updating metadata e211: {e}")
 		try:
