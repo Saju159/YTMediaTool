@@ -237,6 +237,9 @@ class Page(qtw.QWidget):
 
 		fileformatDropdown = qtw.QComboBox(frame1)
 		fileformatDropdown.addItems(fileformats.keys())
+		def fileformatChanged(to):
+			self.fileformat = to
+		fileformatDropdown.currentTextChanged.connect(fileformatChanged)
 		frame1layout.addWidget(fileformatDropdown)
 
 		def cancel():
