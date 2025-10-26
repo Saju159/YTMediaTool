@@ -280,7 +280,7 @@ def getsonginfo(threadnumber):
 			for char in filter:
 				artist = artist.replace(char, "")
 			#albumname = getmoremetadata(threadnumber, songname, artist)
-			albumname = "UNSUPPORTED FILE TYPE"
+			albumname = ""
 			for char in filter:
 				albumname = albumname.replace(char, "")
 			rating = ""  #set rating to none as csv does not contain rating data
@@ -507,43 +507,50 @@ def downloadytmusic(threadnumber, songname, artist, albumname, videoid):
 		yterror(e, artist, albumname, songname, threadnumber)
 		downloadyt(songname, artist, albumname, threadnumber)
 
+def getmetadata(threadnumber, songname, artist):
+	print (f"Trying to get albumname. Artist {artist}, Song {songname}")
+	# Search for the artist
+	search_url = f"https://musicbrainz.org/ws/2/recording?query=artist:{artist} AND recording:{songname}&fmt=json"
+	response = requests.get(search_url)
+
+	if response.status_code == 200:
+		data = response.json()
+		if data['recordings']:
+			# Get the first recording found
+			recording = data['recordings'][0]
+			# Get the release information
+			release_id = recording['releases'][0]['id']
+			release_url = f"https://musicbrainz.org/ws/2/release/{release_id}?fmt=json"
+			release_response = requests.get(release_url)
+
+			if release_response.status_code == 200:
+				release_data = release_response.json()
+				albumname = release_data['title']
+				return str(albumname)
+
+			else:
+				print( "Error fetching release data.")
+				return ("")
+		else:
+			print( "No recordings found.")
+			time.sleep(5)
+			return ("")
+	else:
+		return ("")
+
 def getmoremetadata(threadnumber, songname, artist):
 	try:
-		print (f"Trying to get albumname. Artist {artist}, Song {songname}")
-		# Search for the artist
-		search_url = f"https://musicbrainz.org/ws/2/recording?query=artist:{artist} AND recording:{songname}&fmt=json"
-		response = requests.get(search_url)
+		albumname =""
+		albumname = getmetadata(threadnumber, songname, artist)
 
-		if response.status_code == 200:
-			data = response.json()
-			if data['recordings']:
-				# Get the first recording found
-				recording = data['recordings'][0]
-				# Get the release information
-				release_id = recording['releases'][0]['id']
-				release_url = f"https://musicbrainz.org/ws/2/release/{release_id}?fmt=json"
-				release_response = requests.get(release_url)
-
-				if release_response.status_code == 200:
-					release_data = release_response.json()
-					albumname = release_data['title']
-					albumname = str(albumname)
-
-				else:
-					print( "Error fetching release data.")
-					time.sleep(5)
-					albumname = ("ALBUMNAME IS MISSING")
-			else:
-				print( "No recordings found.")
-				time.sleep(5)
-				albumname = ("ALBUMNAME IS MISSING")
-		else:
-			print("Error fetching data from MusicBrainz.")
-			time.sleep(5)
-			albumname = ("ALBUMNAME IS MISSING")
+		if Settings["SMLD-retry"]:
+			if albumname == "":
+				print("Rate limit reached. Retrying in 12 seconds...----------------------------------------------------------------")
+				time.sleep(12)
+				getmetadata(threadnumber, songname, artist)
 
 	except Exception:
-		albumname = ("ALBUMNAME IS MISSING")
+		albumname = ("")
 
 	if diagnosis == 1:
 		print(f"The album for '{songname}' by '{artist}' is: {albumname}")
@@ -570,7 +577,8 @@ def updatemetadata(artist, albumname, songname, threadnumber):
 		audio = MP4(tiedosto)
 		try:
 			# Lisää metatiedot
-			audio["\xa9alb"] = albumname  # Albumin nimi
+			if not albumname == "":
+				audio["\xa9alb"] = albumname  # Albumin nimi
 			audio["\xa9ART"] = artist  # Artistin nimi
 		except Exception as e:
 			print(f"Error in updating metadata e211: {e}")
@@ -637,10 +645,6 @@ def runsmld(threadnumber):
 			if cancel:
 				print("cancel")
 				break
-
-			# with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Done" + str(threadnumber) + ".txt"), "r") as f:
-			# 	done = f.read()
-			# 	f.close()
 
 			if donelist[threadnumber]:
 				print("done")

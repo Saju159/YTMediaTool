@@ -26,7 +26,8 @@ DefaultSettings = {
 	"SMLD-mutithreading": (4, int),
 	"SMLD-source": ("YouTube Music", str),
 	"SMLD-useytmetadata": (True, bool),
-	"SMLD-structure":  ("/ARTIST/SONG", str)
+	"SMLD-structure":  ("/ARTIST/SONG", str),
+	"SMLD-retry": (False, bool)
 }
 SettingsFilePath = os.path.join(getBaseConfigDir(), "settings.json")
 
