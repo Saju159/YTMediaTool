@@ -145,7 +145,7 @@ class Page(qtw.QWidget):
 		openlink.clicked.connect(lambda: qtg.QDesktopServices.openUrl("https://www.tunemymusic.com/transfer"))
 		self.layout.addWidget(openlink, 3, 2, 1, 1, qtc.Qt.AlignmentFlag.AlignRight)
 
-		info = qtw.QLabel(self, text="\n SMLD is a tool designed to download large amounts of audio files from YouTube. Currently it works with iTunes and Spotify playlists. Select .csv files with the library list directory picker and use the .csv tool to make them. Metadata is only added to .m4a files.", wordWrap=True)
+		info = qtw.QLabel(self, text="\n SMLD is a tool designed to download small and large amounts of audio files from YouTube and YouTube Music. Select library files with the library list directory picker and use the .csv tool or Quick Download format to make them. Metadata is only added to .m4a files. Quick download format can be used to add metadata to .m4a files. See GitHub page for more information.", wordWrap=True)
 		self.layout.addWidget(info, 8, 1, 1, 3)
 
 		def refresher():

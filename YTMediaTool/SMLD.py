@@ -321,14 +321,16 @@ def setupplaylists():
 		f2.write("#EXTM3U")
 		f2.write("\n")
 		f2.close()
-	favoritesplaylist = (os.path.join(downloaddirectory, "Favorites.m3u" ))
 
-	with open(favoritesplaylist, 'w', encoding='utf-8') as f2:
-		f2.write("#EXTM3U")
-		f2.write("\n")
-		f2.close()
-	if diagnosis == 1:
-		print("Playlists were setup")
+	if filetype == 1:
+		favoritesplaylist = (os.path.join(downloaddirectory, "Favorites.m3u" ))
+
+		with open(favoritesplaylist, 'w', encoding='utf-8') as f2:
+			f2.write("#EXTM3U")
+			f2.write("\n")
+			f2.close()
+		if diagnosis == 1:
+			print("Playlists were setup")
 
 def setytoptions(threadnumber):
 	albumname, songname, artist, songfilewithoutformat, filteredsongline, rating = getsonginfo(threadnumber)
