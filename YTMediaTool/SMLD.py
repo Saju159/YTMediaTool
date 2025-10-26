@@ -21,7 +21,14 @@ enable_yt_output = False #enable YT-DLP output printing
 filter = '?ü"[];:,.()®*\'é' #global filter for song album and artist names
 filter3 = '?ü"[];:,()®*\'é'
 
-global ratelimited, smlderror, filenotfound
+global ratelimited, smlderror, filenotfound, cancel
+global libraryfiledirectory, libraryfiledirectory, downloaddirectory, fileformat
+global donelist
+donelist = [False,False,False,False,False,False,False,False,False,False,False,False,False,False,False,False]
+
+fileformat = ""
+libraryfiledirectory = ""
+downloaddirectory = ""
 ratelimited = False
 smlderror = False
 filenotfound = False
@@ -35,19 +42,6 @@ def clearlog():
 		print("Log cleared")
 
 def getinfo():
-	global libraryfiledirectory, libraryfiledirectory, downloaddirectory, fileformat
-	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "downloaddirectory.txt")) as f:
-		downloaddirectory = f.read()
-		f.close()
-
-	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "libraryfiledirectory.txt")) as f:
-		libraryfiledirectory = f.read()
-		f.close()
-
-	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "fileformat.txt")) as f:
-		fileformat= f.read()
-		f.close()
-
 	if diagnosis == 1:
 		print(f"Download Directory: {downloaddirectory}")
 		print(f"Library location: {libraryfiledirectory}")
@@ -94,15 +88,14 @@ def downloadfail():
 			print("Error while trying to write error log.")
 
 def checkfails():
-	global failalert
+	global failalert, cancel
 	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "SMLDfail.txt"), 'r', encoding='utf-8') as file:
 		fails = len(file.readlines())
 		file.close()
 	if fails > 10:
 		failalert = True
-		with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "w") as f:
-			f.write("1")
-			f.close()
+
+		cancel = True
 
 def emptyfails():
 	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "SMLDfail.txt"), 'w', encoding='utf-8') as f:
@@ -246,6 +239,7 @@ def createsonglist():
 		file.close()
 
 def getsonginfo(threadnumber):
+	global artisttoshow, songnametoshow, albumnametoshow
 	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist" + str(threadnumber) + ".txt"), 'r') as tiedosto:
 		 songlistlines = tiedosto.readlines()
 	# Ota ensimmäinen rivi ja poista se tiedoston riveistä
@@ -272,9 +266,9 @@ def getsonginfo(threadnumber):
 				albumname = albumname1.replace("(", "")
 				rating = f"{txtparts[4]}"
 
-				with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "songinfo.txt"), "w") as f:
-					f.write(artist + "\n "+ songname + "\n" + albumname)
-					f.close()
+				artisttoshow = artist
+				songnametoshow = songname
+				albumnametoshow = albumname
 		elif filetype == 2:
 			if diagnosis == 1:
 				print("Spotify or iTunes lite.")
@@ -290,9 +284,9 @@ def getsonginfo(threadnumber):
 			for char in filter:
 				albumname = albumname.replace(char, "")
 			rating = ""  #set rating to none as csv does not contain rating data
-			with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "songinfo.txt"), "w") as f:
-				f.write(artist + "\n "+ songname + "\n" + albumname)
-				f.close()
+			artisttoshow = artist
+			songnametoshow = songname
+			albumnametoshow = albumname
 
 		elif filetype == 3:
 			if diagnosis == 1:
@@ -309,9 +303,9 @@ def getsonginfo(threadnumber):
 			rating = ""  #set rating to none as csv does not contain rating data
 
 			albumname = getmoremetadata(threadnumber, songname, artist)
-			with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "songinfo.txt"), "w") as f:
-				f.write(artist + "\n "+ songname + "\n" + albumname)
-				f.close()
+			artisttoshow = artist
+			songnametoshow = songname
+			albumnametoshow = albumname
 
 	if diagnosis == 1:
 		print ("Artist: " + artist)
@@ -611,9 +605,6 @@ def updatemetadata(artist, albumname, songname, threadnumber):
 def setupSMLD(threadcount, libraryfilelocation):
 	if diagnosis == 1:
 		print("------------------------------------------------------------------SMLD STARTS-----------------------------------------------------------------")
-	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "rate.txt"), "w") as f:
-		f.write("0")
-		f.close()
 	if os.path.isfile(libraryfilelocation):
 		threadnumber = 0
 		getinfo()
@@ -622,7 +613,6 @@ def setupSMLD(threadcount, libraryfilelocation):
 		dividesonglist()
 		albumname, songname, artist, songfilewithoutformat, filteredsongline, rating  = getsonginfo(threadnumber)
 		setupplaylists()
-		#tiedostonimi = os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist0.txt")
 		if startrunloop_after_setup:
 			SMLDpage.startthreads()
 		def measurerate_a():
@@ -643,18 +633,16 @@ def runsmld(threadnumber):
 
 			if diagnosis == 1:
 				print("Thread " + str(threadnumber) +" is running.--------------------------------------------------------------------------------------------------------------------------------")
-			with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "r") as f:
-				cancel = f.read()
-				f.close()
-			if int(cancel) == 1:
+
+			if cancel:
 				print("cancel")
 				break
 
-			with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Done" + str(threadnumber) + ".txt"), "r") as f:
-				done = f.read()
-				f.close()
+			# with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Done" + str(threadnumber) + ".txt"), "r") as f:
+			# 	done = f.read()
+			# 	f.close()
 
-			if int(done) == 1:
+			if donelist[threadnumber]:
 				print("done")
 				break
 			libraryfiledirectory = os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist" + str(threadnumber) + ".txt")
@@ -662,11 +650,10 @@ def runsmld(threadnumber):
 				if diagnosis == 1:
 					print("Rivit updated")
 				rivit = tiedosto.readlines()
-				#print("ensim. rivi:" + rivit[0].strip())
 			if not rivit:  # Lopeta, jos tiedosto on tyhjä
 				print("File is empty. No more files to add.")
-				with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Done" + str(threadnumber) + ".txt"), 'w') as f:
-					f.write("1")
+
+				donelist[threadnumber] = True
 
 			getinfo()
 			if rivit:

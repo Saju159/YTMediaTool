@@ -17,7 +17,14 @@ global downloaddirectory
 global getprogress
 global downloaddirectory1
 global rate
+global done
+global progresstoshow, remainingtoshow, totaltoshow
+progresstoshow =  ""
+remainingtoshow = ""
+totaltoshow = ""
+
 process1 = None
+done = False
 
 librarydirfortextbox, download = None, None
 downloaddirectory1 = os.path.expanduser("~/YTMediaTool/Downloads/")
@@ -44,12 +51,7 @@ def setupfolders():
 		os.makedirs(os.path.join(getBaseConfigDir(),"SMLD", "Temp"))
 
 def resetfiles():
-	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "progress.txt"), "w") as f:
-		f.close()
-
-	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "w") as f:
-		f.write("0")
-		f.close()
+	SMLD.cancel = False
 
 def startthreads():
 	global threadnumber
@@ -58,14 +60,12 @@ def startthreads():
 	threadcount = int(Settings["SMLD-mutithreading"])
 	for threadnumber in range(threadcount):
 
-		with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Done" + str(threadnumber) + ".txt"), 'w') as f:
-			f.write("0")
+		# with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Done" + str(threadnumber) + ".txt"), 'w') as f:
+		# 	f.write("0")
+		SMLD.donelist[threadnumber] = False
 
 		def smld_a():
 			SMLD.runsmld(threadnumber)
-		#libraryfiledirectory = os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist" + str(threadnumber) + ".txt")
-		#with open(libraryfiledirectory, 'r', encoding='utf-8') as tiedosto:
-			#rivit = tiedosto.readlines()
 
 		print("Threadcount:" + str(threadnumber))
 		smld_b = threading.Thread(target=smld_a)
@@ -96,9 +96,7 @@ class Page(qtw.QWidget):
 				self.downloaddirectory2 = downloaddirectory1
 				dirInputBox.setText(downloaddirectory1)
 				print(downloaddirectory1)
-				with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "downloaddirectory.txt"), "w") as f:
-					f.write(downloaddirectory1)
-					f.close()
+				SMLD.downloaddirectory = downloaddirectory1
 				if not os.path.isfile(os.path.join(downloaddirectory1,"Quick Download.txt")):
 					with open(os.path.join(downloaddirectory1,"Quick Download.txt"), "w") as f:
 						f.write("CUSTOM DOWNLOAD FORMAT FOR QUICK DOWNLOADS. FORMAT: (ARTIST,SONG1,SONG2,SONG3...), DO NOT REMOVE THIS LINE.")
@@ -170,79 +168,28 @@ class Page(qtw.QWidget):
 			if not os.path.exists(currentlibrarydirectory + "Downloads/"):
 				os.makedirs(currentlibrarydirectory + "Downloads/")
 
-			with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Done.txt"), "r") as f:
-				done = f.read()
-				f.close()
-				if done == "1":
-					qtw.QMessageBox.information(window, "Done", "Downloading has been completed")
+			if done:
+				qtw.QMessageBox.information(window, "Done", "Downloading has been completed")
 
-			with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "r") as f:
-				cancel1 = f.read()
-				if int(cancel1) == 1:
-					print("cancel")
-				else:
-					with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Done.txt"), "r") as f:
-						done = f.read()
-						f.close()
-						if done == "1":
-							SMLDprogressTracker.writecancel()
-							print("Done")
+			if SMLD.cancel:
+				print("cancel")
+			else:
+				self.refresherTimer.start(1000)
+			if done:
+				SMLDprogressTracker.writecancel()
+				print("Done")
 
-					self.refresherTimer.start(1000)
-			f.close()
+			songinfo1.setText("Artist: "+ str(SMLD.artisttoshow))
+			songinfo2.setText("Song: "+ str(SMLD.songnametoshow))
+			songinfo3.setText("Album: "+ str(SMLD.albumnametoshow))
 
-			if os.path.isfile(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "songinfo.txt")):
-				with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "songinfo.txt"), "r") as f:
-					filter = "[]'"
-					artist = f.readlines(1)
-					for char in filter:
-						artist = str(artist).replace(char, "")
-						artist = artist.replace("\\n", "")
-					songinfo1.setText("Artist: "+ str(artist))
-					song = f.readlines(2)
-					for char in filter:
-						song = str(song).replace(char, "")
-						song = song.replace("\\n", "")
-					songinfo2.setText("Song: "+ str(song))
-					album = f.readlines(3)
-					for char in filter:
-						album = str(album).replace(char, "")
-					songinfo3.setText("Album: "+ str(album))
-				f.close()
+			pg.setText("Progress: "+ str(progresstoshow) + "%")
+			np.setText(f"  Songs downloaded: {str(remainingtoshow)} / {str(totaltoshow)} ")
 
-			if os.path.isfile(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "progress.txt")):
-				with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "progress.txt"), "r") as f:
-					progress = str(f.readlines(1))
-
-					filter2 = "[]/',"
-					for char in filter2:
-						progress = str(progress).replace(char, "")
-					progress = progress.replace("\\n", "")
-					pg.setText("Progress: "+ str(progress) + "%")
-
-					rlines = str(f.readlines(2))
-					for char in filter2:
-						rlines = str(rlines).replace(char, "")
-					rlines = rlines.replace("\\n", "")
-
-					tlines = str(f.readlines(3))
-					for char in filter2:
-						tlines = str(tlines).replace(char, "")
-					tlines = tlines.replace("\\n", "")
-
-					np.setText(f"  Songs downloaded: {str(rlines)} / {str(tlines)} ")
-					f.close()
-
-			if os.path.isfile(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "rate.txt")):
-				with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "rate.txt"), "r") as f:
-					rate = str(f.readlines(1))
-				filter2 = "[]'"
-				for char in filter2:
-					rate = str(rate).replace(char, "")
-				rate = rate.replace("\\n", "")
-				rd.setText("Rate is: "+ str(rate) + " SPM")
+			rd.setText("Rate is: "+ str(rate) + " SPM")
 
 		def setupSMLD():
+			global done
 			resetfiles()
 			number = 0
 			while number < 17:
@@ -261,22 +208,13 @@ class Page(qtw.QWidget):
 				np.setVisible(True)
 				rd.setVisible(True)
 
+				SMLD.libraryfiledirectory = currentlibrarydirectory
 
-				with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "libraryfiledirectory.txt"), "w") as f:
-					f.write(str(currentlibrarydirectory))
-					f.close()
+				SMLD.cancel = False
 
-				with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "w") as f:
-					f.write("0")
-					f.close()
+				SMLD.fileformat = self.fileformat
 
-				with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "fileformat.txt"), "w") as f:
-					f.write(self.fileformat)
-					f.close()
-
-				with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Done.txt"), "w") as f:
-					f.write("0")
-					f.close()
+				done = False
 
 				self.refresherTimer.start(1)
 				threadcount = int(Settings["SMLD-mutithreading"])
@@ -302,9 +240,8 @@ class Page(qtw.QWidget):
 		frame1layout.addWidget(fileformatDropdown)
 
 		def cancel():
-			with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "w") as f:
-				f.write("1")
-				f.close()
+			SMLD.cancel = True
+
 
 			cancelb.setVisible(False)
 			downloadb1.setEnabled(True)

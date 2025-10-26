@@ -3,15 +3,12 @@ from Common import getBaseConfigDir
 from Settings import Settings
 import SMLDpage
 import time
+import SMLD
 
 track1 = 0
 
 def trackprogress():
 	global track1
-
-	# with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt")) as f:
-	# 	libraryfiledirectory = f.read()
-	# 	f.close()
 
 	rlines = 0
 	threadnumber = 0
@@ -37,15 +34,12 @@ def trackprogress():
 	edistyminen2 = round(edistyminen, 2)
 	track1 = float(len(tlines)-rlines)
 
-	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "progress.txt"), "w") as f:
-		f.write(str(edistyminen2) + "\n" + str(len(tlines)-rlines) + "\n" + str(len(tlines)))
-		f.close()
+	SMLDpage.progresstoshow =  edistyminen2
+	SMLDpage.remainingtoshow = str(len(tlines)-rlines)
+	SMLDpage.totaltoshow = str(len(tlines))
 
 	if edistyminen2 == 100:
-		with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "r") as f:
-			cancel = f.read()
-			f.close()
-		if int(cancel) == 0:
+		if SMLD.cancel == False:
 			print("valmis")
 			check_status()
 
@@ -54,49 +48,27 @@ def writecancel():
 		print("Päällä")
 		SMLDpage.cancel()
 
-		with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "r") as f:
-			cancel = f.read()
-			f.close()
-			if int(cancel) == 1:
-				print("cancel")
-				break
-
-
+		if SMLD.cancel:
+			print("cancel")
+			break
 
 def check_status():
-	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "r") as f:
-		cancel = f.read()
-		f.close()
-	if int(cancel) == 0:
-		#print("Totta")
+	if SMLD.cancel == False:
 
-		directory = os.path.join(getBaseConfigDir(),"SMLD", "Temp")
 		status = True
-
 		threadcount = int(Settings["SMLD-mutithreading"])
 
 		if not threadcount == 1:
 			for i in range(threadcount):
-				file_path = os.path.join(directory, f"Done{i}.txt")
-
-				if os.path.exists(file_path):
-					with open(file_path, "r") as file:
-						content = file.read().strip()
-						if content == "0":
-							status = False
-							break
-
-		else:
-			file_path = os.path.join(directory, "Done0.txt")
-			with open(file_path, "r") as file:
-				content = file.read().strip()
-				if content == "1":
+				if not SMLD.donelist[i]:
 					status = False
+					break
+		else:
+			if SMLD.donelist[0]:
+				status = False
 
 		if status:
-			with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Done.txt"), "w") as f:
-				f.write("1")
-				f.close()
+			SMLDpage.done = True
 			writecancel()
 
 
@@ -104,21 +76,16 @@ def measurerate():
 	start_time = time.time()
 	while True:
 		try:
-			with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "r") as f:
-				cancel = f.read()
-				f.close()
-				if int(cancel) == 1:
-					print("cancel")
-					break
+			if SMLD.cancel:
+				print("cancel")
+				break
 
 			elapsed_time = float(time.time() - start_time)
 			time.sleep(5)
 			rate = float(track1/(elapsed_time/60))
 			rate = round(rate, 1)
 
-			with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "rate.txt"), "w") as f:
-				f.write(str(rate))
-				f.close()
+			SMLDpage.rate = rate
 
 		except Exception:
 			print ("Rate calculation failed")

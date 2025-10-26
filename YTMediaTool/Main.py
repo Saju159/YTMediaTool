@@ -1,4 +1,5 @@
 from sys import argv, exit
+import SMLD
 
 if len(argv) > 1 and argv[1] == "--version":
 	import Version
@@ -9,7 +10,6 @@ if __name__ == "__main__": # Only run if this is the main process.
 	import os
 	import sys
 	import PySide6.QtWidgets as qtw
-	from Common import getBaseConfigDir
 	import YtdlpManager
 	import Settings
 
@@ -55,9 +55,7 @@ if __name__ == "__main__": # Only run if this is the main process.
 		if not os.path.isfile(Settings.Settings["FFmpeg_path"]):
 			print(f'FFmpeg cannot be found in: "{Settings.Settings["FFmpeg_path"]}". Please enter a valid FFmpeg path in the settings.')
 		code = application.exec()
-		with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "w") as f:
-			f.write("1")
-			f.close()
+		SMLD.cancel = True
 		Settings.saveSettingsToFile()
 		exit(code)
 
