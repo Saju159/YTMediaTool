@@ -25,6 +25,7 @@ global ratelimited, smlderror, filenotfound
 ratelimited = False
 smlderror = False
 filenotfound = False
+failalert = False
 
 def clearlog():
 	with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'w') as log:
@@ -83,6 +84,31 @@ def addlogentry(logentry):
 		except:
 			print("Error while trying to write error log.")
 		log.close()
+
+def downloadfail():
+	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp","SMLDfail.txt"), 'a', encoding='utf-8') as log:
+		try:
+			log.write(f"Fail at  {datetime.now()} with list {libraryfiledirectory}")
+			log.write("\n")
+		except:
+			print("Error while trying to write error log.")
+
+def checkfails():
+	global failalert
+	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "SMLDfail.txt"), 'r', encoding='utf-8') as file:
+		fails = len(file.readlines())
+		file.close()
+	if fails > 10:
+		failalert = True
+		with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "w") as f:
+			f.write("1")
+			f.close()
+
+def emptyfails():
+	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "SMLDfail.txt"), 'w', encoding='utf-8') as f:
+		f.write("")
+		f.close
+
 
 def removeline(filteredsongline, threadnumber):
 	if filteredsongline:  # Ohitetaan tyhjät rivit
@@ -591,6 +617,7 @@ def setupSMLD(threadcount, libraryfilelocation):
 	if os.path.isfile(libraryfilelocation):
 		threadnumber = 0
 		getinfo()
+		emptyfails()
 		createsonglist()
 		dividesonglist()
 		albumname, songname, artist, songfilewithoutformat, filteredsongline, rating  = getsonginfo(threadnumber)
@@ -609,6 +636,11 @@ def runsmld(threadnumber):
 	global filenotfound
 	try:
 		while True:
+			try:
+				checkfails()
+			except Exception:
+				print("Fail checking failed")
+
 			if diagnosis == 1:
 				print("Thread " + str(threadnumber) +" is running.--------------------------------------------------------------------------------------------------------------------------------")
 			with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "cancel.txt"), "r") as f:
@@ -673,6 +705,7 @@ def runsmld(threadnumber):
 			if rivit:
 				addtoplaylists(threadnumber)
 			if os.path.isfile(os.path.join(downloaddirectory, getstructure(artist, albumname, songname, fileformat))):
+				emptyfails()
 				tiedostonimi = removeline(filteredsongline, threadnumber)
 				if diagnosis == 1:
 					print(f"File {getstructure(artist, albumname, songname, fileformat)} was saved")
@@ -687,6 +720,7 @@ def runsmld(threadnumber):
 					if diagnosis == 1:
 						print("Log entry failed.-------------------------------")
 			else:
+				downloadfail()
 				print("The file was not saved due to an unknown error.")
 				addlogentry(f"File save error while trying to download: {getstructure(artist, albumname, songname, fileformat)} on thread {threadnumber}")
 			SMLDprogressTracker.check_status()

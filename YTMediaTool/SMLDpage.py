@@ -161,6 +161,10 @@ class Page(qtw.QWidget):
 				qtw.QMessageBox.critical(window, "Rate limited!", "You have been rate limited! Try to enable cookies!")
 				SMLD.ratelimited = False
 
+			if SMLD.failalert:
+				qtw.QMessageBox.critical(window, "Download failed!", "Download has failed for over 10 times! Try updating yt-dlp and YTMediaTool!")
+				SMLD.failalert = False
+
 			currentlibrarydirectory = os.path.expanduser("~/YTMediaTool/")
 
 			if not os.path.exists(currentlibrarydirectory + "Downloads/"):
