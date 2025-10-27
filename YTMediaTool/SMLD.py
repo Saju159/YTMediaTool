@@ -36,7 +36,7 @@ filenotfound = False
 failalert = False
 
 def clearlog():
-	with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'w') as log:
+	with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'w', encoding='utf-8') as log:
 		log.write("")
 		log.close()
 	if diagnosis == 1:
@@ -107,7 +107,7 @@ def emptyfails():
 def removeline(filteredsongline, threadnumber):
 	if filteredsongline:  # Ohitetaan tyhjät rivit
 		# Päivitetään tiedosto ilman ensimmäistä riviä
-		with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist" + str(threadnumber) + ".txt"), 'r') as tiedosto:
+		with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist" + str(threadnumber) + ".txt"), 'r', encoding='utf-8') as tiedosto:
 			songlistlines = tiedosto.readlines()
 			tiedosto.close()
 		jäljellä_olevat_rivit = songlistlines[1:]  # Jäljellä olevat rivit
@@ -193,9 +193,9 @@ def createsonglist():
 
 			delete = str(ensimrivi).find("Track name") #Delete the first line if it contains header line "Track name"
 			if not delete == -1:
-				with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt"), 'r') as fin:
+				with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt"), 'r', encoding='utf-8') as fin:
 					data = fin.read().splitlines(True)
-				with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt"), 'w') as fout:
+				with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt"), 'w', encoding='utf-8') as fout:
 					fout.writelines(data[1:])
 
 				if diagnosis == 1:
@@ -241,7 +241,7 @@ def createsonglist():
 
 def getsonginfo(threadnumber):
 	global artisttoshow, songnametoshow, albumnametoshow
-	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist" + str(threadnumber) + ".txt"), 'r') as tiedosto:
+	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist" + str(threadnumber) + ".txt"), 'r', encoding='utf-8') as tiedosto:
 		 songlistlines = tiedosto.readlines()
 	# Ota ensimmäinen rivi ja poista se tiedoston riveistä
 

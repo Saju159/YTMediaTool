@@ -96,7 +96,7 @@ class Page(qtw.QWidget):
 				print(downloaddirectory1)
 				SMLD.downloaddirectory = downloaddirectory1
 				if not os.path.isfile(os.path.join(downloaddirectory1,"Quick Download.txt")):
-					with open(os.path.join(downloaddirectory1,"Quick Download.txt"), "w") as f:
+					with open(os.path.join(downloaddirectory1,"Quick Download.txt"), "w", encoding='utf-8') as f:
 						f.write("CUSTOM DOWNLOAD FORMAT FOR QUICK DOWNLOADS. FORMAT: (ARTIST,SONG1,SONG2,SONG3...), DO NOT REMOVE THIS LINE.")
 						f.close()
 
