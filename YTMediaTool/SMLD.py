@@ -3,7 +3,7 @@ from mutagen.mp4 import MP4
 import os.path
 from yt_dlp import YoutubeDL
 from Settings import Settings
-from Common import getBaseConfigDir
+from Common import getBaseConfigDir, getFFmpegPath
 import ytmusicapi
 import SMLDprogressTracker
 import threading
@@ -369,8 +369,9 @@ def setytoptions(threadnumber):
 	else:
 		ytoptions['quiet']= True
 		ytoptions['noprogress']= True
-	if "FFmpeg_path" in Settings:
-		ytoptions["ffmpeg_location"] = Settings["FFmpeg_path"]
+	ffmpegPath = getFFmpegPath()
+	if ffmpegPath:
+		ytoptions["ffmpeg_location"] = ffmpegPath
 	if len(Settings["YDL-CookiesFilePath"]) > 2:
 		if diagnosis == 1:
 			print("Using cookie file!")

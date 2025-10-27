@@ -3,7 +3,7 @@ from datetime import datetime
 import PySide6.QtWidgets as qtw
 import PySide6.QtGui as qtg
 import PySide6.QtCore as qtc
-from Common import openFilePicker, getBaseConfigDir
+from Common import openFilePicker, getBaseConfigDir, getFFmpegPath
 from sys import platform
 
 import Settings
@@ -46,7 +46,7 @@ class TextInputOption(BaseOptFrame):
 		if self.val != Settings.Settings[self.optId]:
 			self.page.showButtonsFrame()
 
-	def __init__(self, parent: qtw.QWidget, page, optId: str, text: str, helptext: str|None=None, isfilepath: bool|None=False):
+	def __init__(self, parent: qtw.QWidget, page, optId: str, text: str, helptext: str|None=None, isfilepath: bool|None=False, placeholderText: str=""):
 		super().__init__(parent)
 
 		self.page = page
@@ -55,7 +55,7 @@ class TextInputOption(BaseOptFrame):
 
 		label = qtw.QLabel(self, text=f"{text}: ")
 		self.layout.addWidget(label)
-		self.inputBox = qtw.QLineEdit(self)
+		self.inputBox = qtw.QLineEdit(self, placeholderText=placeholderText)
 		self.inputBox.textChanged.connect(self.modified)
 		self.reset()
 		self.layout.addWidget(self.inputBox)
@@ -250,11 +250,7 @@ class Page(qtw.QWidget):
 			self.layout.addWidget(qtw.QLabel(widget, text=f"Version {YtdlpManager.YtdlpVersion}", wordWrap=True))
 
 		self.layout.addWidget(Spacer(widget))
-		self.layout.addWidget(TextInputOption(widget, self, "FFmpeg_path", "Path to FFmpeg executable", None, True))
-		self.layout.addWidget(qtw.QLabel(widget, text="FFmpeg is required for merging the downloaded video + audio and for converting formats."))
-		if platform == "win32":
-			self.layout.addWidget(Button(widget, self, "Download FFmpeg for Windows from github.com/BtbN/FFmpeg-Builds", lambda: qtg.QDesktopServices.openUrl("https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip")))
-		self.layout.addWidget(Button(widget, self, "Get binaries from https://www.ffmpeg.org/download.html", lambda: qtg.QDesktopServices.openUrl("https://www.ffmpeg.org/download.html")))
+		self.layout.addWidget(TextInputOption(widget, self, "FFmpeg_path", "Path to custom FFmpeg bin.", "Path to a custom ffmpeg & ffprobe binary.\nLeave blank to use system ffmpeg or the bundled one\nif you're using a packaged version of YTMediaTool.", True, f"Default: {getFFmpegPath(ignoreCustomPath=True)}"))
 
 		self.layout.addWidget(Spacer(widget))
 		self.layout.addWidget(qtw.QLabel(widget, text="Settings for 'Basic' tab:"))

@@ -40,6 +40,23 @@ def getExeDir():
 	else:
 		return pathlib.Path(__file__).parent
 
+def getFFmpegPath(ignoreCustomPath=False):
+	from Settings import Settings
+	customPathStr = Settings["FFmpeg_path"]
+
+	if not ignoreCustomPath and len(customPathStr.strip()) > 0:
+		return pathlib.Path(customPathStr)
+
+	if platform == "win32":
+		# TODO
+		return None
+	else:
+		c = subprocess.run(["which", "ffmpeg"], stdout=subprocess.PIPE, encoding="utf-8")
+		if c.returncode == 0:
+			return pathlib.Path(c.stdout.strip())
+		else:
+			return None
+
 def openDirInFileBrowser(directory: str):
 	if platform == "linux":
 		c = subprocess.run(["which", "xdg-open"], stdout=subprocess.PIPE)
@@ -133,8 +150,9 @@ def ydlProcessTarget(returnPipe, queue, url, path, fileformat, dlvideo, dlaudio,
 		'progress_hooks': [progress_hook]
 	}
 
-	if "FFmpeg_path" in Settings:
-		opts["ffmpeg_location"] = Settings["FFmpeg_path"]
+	ffmpegPath = getFFmpegPath()
+	if ffmpegPath:
+		opts["ffmpeg_location"] = ffmpegPath
 
 	if ff["video"] == False: dlvideo = False
 	if ff["audio"] == False: dlaudio = False

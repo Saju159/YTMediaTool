@@ -8,7 +8,7 @@ from Common import getUserDownloadDir, getBaseConfigDir
 #   [1]: type of value
 DefaultSettings = {
 	"YDLManager-LastChecked": (0, int),
-	"FFmpeg_path": ("ffmpeg", str),
+	"FFmpeg_path": ("", str),
 	"BasicPage-ShowDialogAfterDLSuccess": (True, bool),
 	"BasicPage-DownloadDir": (getUserDownloadDir(), str),
 	"BasicPage-DLVideo": (True, bool),
@@ -51,10 +51,6 @@ def setSetting(key: str, val):
 
 def resetSetting(key: str):
 	Settings[key] = DefaultSettings[key][0]
-
-if platform == "linux":
-	# Set default FFmpeg path on linux to use the system installed one
-	setSetting("FFmpeg_path", "/usr/bin/ffmpeg")
 
 def loadSettingsFromFile():
 	print(f"Loading settings from '{SettingsFilePath}'...")
