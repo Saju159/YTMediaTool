@@ -8,6 +8,12 @@ if len(argv) > 1 and argv[1] == "--version":
 if __name__ == "__main__": # Only run if this is the main process.
 	import os
 	import sys
+	import multiprocessing
+
+	if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+		# script is "frozen", so enable freeze support in multiprocessing
+		multiprocessing.freeze_support()
+
 	import PySide6.QtWidgets as qtw
 	import YtdlpManager
 	import Settings
