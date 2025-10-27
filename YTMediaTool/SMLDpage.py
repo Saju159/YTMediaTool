@@ -179,7 +179,8 @@ class Page(qtw.QWidget):
 
 			songinfo1.setText("Artist: "+ str(SMLD.artisttoshow))
 			songinfo2.setText("Song: "+ str(SMLD.songnametoshow))
-			songinfo3.setText("Album: "+ str(SMLD.albumnametoshow))
+			if str(SMLD.albumnametoshow):
+				songinfo3.setText("Album: "+ str(SMLD.albumnametoshow))
 
 			pg.setText("Progress: "+ str(progresstoshow) + "%")
 			np.setText(f"  Songs downloaded: {str(remainingtoshow)} / {str(totaltoshow)} ")

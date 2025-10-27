@@ -29,6 +29,7 @@ donelist = [False,False,False,False,False,False,False,False,False,False,False,Fa
 fileformat = ""
 libraryfiledirectory = ""
 downloaddirectory = ""
+albumnametoshow = ""
 ratelimited = False
 smlderror = False
 filenotfound = False
@@ -290,7 +291,7 @@ def getsonginfo(threadnumber):
 
 		elif filetype == 3:
 			if diagnosis == 1:
-				print("Quick download format detected. Taking metadata from YT Music")
+				print("Quick download format detected.")
 			cusparts = filteredsongline.split(',')
 			songname = f"{cusparts[1]}"
 			for char in filter:
@@ -302,10 +303,9 @@ def getsonginfo(threadnumber):
 				artist = artist.strip()
 			rating = ""  #set rating to none as csv does not contain rating data
 
-			albumname = getmoremetadata(threadnumber, songname, artist)
+			albumname = ""
 			artisttoshow = artist
 			songnametoshow = songname
-			albumnametoshow = albumname
 
 	if diagnosis == 1:
 		print ("Artist: " + artist)
@@ -538,7 +538,40 @@ def getmetadata(threadnumber, songname, artist):
 	else:
 		return ("")
 
+def checkformetadata(filepath):
+	if os.path.isfile(filepath):
+		print(f"Checking for metadata in file {filepath}.")
+
+		filepath = MP4(filepath)
+
+		# Extract and display specific metadata
+		try:
+			artist = filepath["\xa9ART"]
+		except Exception:
+			print("No Artist info")
+			artist = ""
+		try:
+			album = filepath["\xa9alb"]
+		except Exception:
+			print("No Album info")
+			album = ""
+		try:
+			title = filepath["\xa9nam"]
+		except Exception:
+			print("No title info")
+			title = ""
+
+		if album == "ALBUMNAME IS MISSING" or album == "" or artist == "" or title == "":
+			print(f"File {filepath} does not have metadata.")
+			return False
+
+		else:
+			print(f"File {filepath} has metadata")
+			return True
+
+
 def getmoremetadata(threadnumber, songname, artist):
+	global albumnametoshow
 	try:
 		albumname =""
 		time.sleep(5)
@@ -566,6 +599,8 @@ def getmoremetadata(threadnumber, songname, artist):
 
 	if diagnosis == 1:
 		print(f"The album for '{songname}' by '{artist}' is: {albumname}")
+
+	albumnametoshow = albumname
 	return albumname
 
 def updatemetadata(artist, albumname, songname, threadnumber):
@@ -684,7 +719,8 @@ def runsmld(threadnumber):
 			print(artist, songname, albumname)
 			if diagnosis == 1:
 				print("Checking if file exists before downloading. File: " + getstructure(artist, albumname, songname, fileformat))
-			if not os.path.isfile(os.path.join(downloaddirectory, getstructure(artist, albumname, songname, fileformat))):
+			filepath = os.path.join(downloaddirectory, getstructure(artist, albumname, songname, fileformat))
+			if not os.path.isfile(filepath):
 				if diagnosis == 1:
 					print("File does not exist: " + getstructure(artist, albumname, songname, fileformat))
 				addlogentry("File did not download correctly due to an error. File is: " + getstructure(artist, albumname, songname, fileformat))
@@ -694,19 +730,28 @@ def runsmld(threadnumber):
 					downloadyt(songname, artist, albumname, threadnumber)
 				elif source == "YouTube Music":
 					videoid = getvideoid(songname, artist, threadnumber)
-					metadatayt = Settings["SMLD-useytmetadata"]
 					downloadytmusic(threadnumber, songname, artist, albumname, videoid)
-					if metadatayt == True:
+
+				if filetype == 3:
+					metadatayt = Settings["SMLD-useytmetadata"]
+					if metadatayt:
 						if diagnosis:
-							print("Using metadata from YT Music")
-						if videoid:
-							if not "ERROR" in str(videoid):
-								albumname = getmoremetadata(threadnumber, songname, artist)
+							print("Using metadata from Music Brainz")
+						if not checkformetadata(filepath):
+							albumname = getmoremetadata(threadnumber, songname, artist)
+
 			else:
 				if diagnosis == 1:
 					print("File already exists, skipping download. " + os.path.join(downloaddirectory, getstructure(artist, albumname, songname, fileformat)))
 
-			updatemetadata(artist, albumname, songname, threadnumber)
+				metadatayt = Settings["SMLD-useytmetadata"]
+				if filetype == 3 and metadatayt:
+					if not checkformetadata(filepath):
+						albumname = getmoremetadata(threadnumber, songname, artist)
+
+			if not checkformetadata(filepath):
+				updatemetadata(artist, albumname, songname, threadnumber)
+
 			if diagnosis == 1:
 				print("Filtered song line: " + filteredsongline +" on thread " + str(threadnumber))
 

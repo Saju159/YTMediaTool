@@ -273,7 +273,7 @@ class Page(qtw.QWidget):
 		self.layout.addWidget(Button(widget, self, "Clear SMLD Logs", lambda: SMLD.clearlog()))
 		self.layout.addWidget(SpinBoxOption(widget, self, "SMLD-mutithreading", "Number of concurrent downloads (EXPERIMENTAL)", 2, 16))
 		self.layout.addWidget(DropdownOption(widget, self, "SMLD-source", "Select the media download source", ["YouTube Music", "YouTube"]))
-		self.layout.addWidget(BooleanOption(widget, self, "SMLD-useytmetadata", "Get metadata from YouTube Music."))
+		self.layout.addWidget(BooleanOption(widget, self, "SMLD-useytmetadata", "Get metadata from Music Brainz."))
 		self.layout.addWidget(BooleanOption(widget, self, "SMLD-retry", "Retry getting metadata on fail (Slows the program down)."))
 		self.layout.addWidget(DropdownOption(widget, self, "SMLD-structure", "Folder structure for SMLD", ["/SONG", "/ALBUM/SONG", "/ARTIST/SONG", "/ARTIST ALBUM/SONG", "/ARTIST/ALBUM/SONG"]))
 
