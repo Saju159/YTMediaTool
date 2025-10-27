@@ -1,4 +1,5 @@
 import multiprocessing, os, pathlib, subprocess
+import sys
 from sys import platform
 import PySide6.QtWidgets as qtw
 
@@ -32,6 +33,12 @@ def getBaseConfigDir():
 		print("Config dir doesn't exist! Creating...")
 		os.makedirs(configPath)
 	return configPath
+
+def getExeDir():
+	if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+		return pathlib.Path(sys.executable).parent
+	else:
+		return pathlib.Path(__file__).parent
 
 def openDirInFileBrowser(directory: str):
 	if platform == "linux":
