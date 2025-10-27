@@ -5,8 +5,8 @@ __pycache__/
 build/
 dist/
 dist-installer/
+include/
 *.manifest
-*.spec
 
 PKGBUILD/pkg/
 PKGBUILD/src/

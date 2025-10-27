@@ -1,6 +1,7 @@
 set distpath=%CD%\dist
 cd YTMediaTool
-pyinstaller -D Main.py --distpath "%distpath%" --noconsole --name YTMediaTool --hidden-import yt_dlp --hidden-import BasicPage --hidden-import SMLDpage --hidden-import SettingsPage --hidden-import AboutPage
+pyinstaller -y --distpath "%distpath%" YTMediaTool.spec
 cd ..
 copy "LICENSE" "dist\YTMediaTool\LICENSE.txt"
+xcopy /s/v "include" "dist\YTMediaTool"
 explorer dist
