@@ -541,13 +541,25 @@ def getmetadata(threadnumber, songname, artist):
 def getmoremetadata(threadnumber, songname, artist):
 	try:
 		albumname =""
+		time.sleep(5)
 		albumname = getmetadata(threadnumber, songname, artist)
+
+		if albumname == "":
+			addlogentry(f"Primary way of getting albumname failed on thread: {threadnumber}.")
+			print(f"Primary way of getting albumname failed on thread: {threadnumber}.")
+		else:
+			addlogentry(f"Primary way of getting albumname was successfull on thread {threadnumber}. Albumname is: {albumname}")
 
 		if Settings["SMLD-retry"]:
 			if albumname == "":
-				print("Rate limit reached. Retrying in 12 seconds...----------------------------------------------------------------")
+				print("Music Brainz rate limit reached. Retrying in 12 seconds...----------------------------------------------------------------")
 				time.sleep(12)
-				getmetadata(threadnumber, songname, artist)
+				albumname = getmetadata(threadnumber, songname, artist)
+
+				if albumname == "":
+					addlogentry(f"Secondary way of getting albumname also failed on thread {threadnumber}.")
+				else:
+					addlogentry(f"Secondary way of getting albumname was successfull on thread {threadnumber}. Albumname is: {albumname}")
 
 	except Exception:
 		albumname = ("")

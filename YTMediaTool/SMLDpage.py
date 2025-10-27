@@ -60,8 +60,6 @@ def startthreads():
 	threadcount = int(Settings["SMLD-mutithreading"])
 	for threadnumber in range(threadcount):
 
-		# with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Done" + str(threadnumber) + ".txt"), 'w') as f:
-		# 	f.write("0")
 		SMLD.donelist[threadnumber] = False
 
 		def smld_a():
