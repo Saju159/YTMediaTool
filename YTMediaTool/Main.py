@@ -65,7 +65,10 @@ if __name__ == "__main__": # Only run if this is the main process.
 		Settings.saveSettingsToFile()
 		exit(code)
 
-	except ModuleNotFoundError:
+	except ModuleNotFoundError as err:
+		if err.name != "yt_dlp":
+			raise err
+
 		answer = qtw.QMessageBox.question(None, "YTMediaTool", "YTMediaTool requires yt-dlp for downloading media, but it isn't installed on your system.\n\nWould you like for YTMediaTool to locally manage it and download it now?\n(clicking no quits the application)")
 		if answer == qtw.QMessageBox.StandardButton.Yes:
 			def updateFinish(r):
