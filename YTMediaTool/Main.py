@@ -48,6 +48,9 @@ if __name__ == "__main__": # Only run if this is the main process.
 
 
 	application = qtw.QApplication(argv)
+	if sys.platform == "win32":
+		# Force fusion style on windows for dark theme support
+		application.setStyle("fusion")
 
 	try:
 		ytdlpModule = __import__("yt_dlp")
