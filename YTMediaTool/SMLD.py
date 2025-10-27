@@ -371,7 +371,7 @@ def setytoptions(threadnumber):
 		ytoptions['noprogress']= True
 	ffmpegPath = getFFmpegPath()
 	if ffmpegPath:
-		ytoptions["ffmpeg_location"] = ffmpegPath
+		ytoptions["ffmpeg_location"] = str(ffmpegPath)
 	if len(Settings["YDL-CookiesFilePath"]) > 2:
 		if diagnosis == 1:
 			print("Using cookie file!")

@@ -48,8 +48,15 @@ def getFFmpegPath(ignoreCustomPath=False):
 		return pathlib.Path(customPathStr)
 
 	if platform == "win32":
-		# TODO
-		return None
+		exedir = getExeDir()
+		if pathlib.Path(exedir, "ffmpeg.exe").is_file() and pathlib.Path(exedir, "ffprobe.exe").is_file():
+			return pathlib.Path(exedir, "ffmpeg.exe")
+
+		c = subprocess.run(["where", "ffmpeg"], stdout=subprocess.PIPE, encoding="utf-8")
+		if c.returncode == 0:
+			return pathlib.Path(c.stdout.strip())
+		else:
+			return None
 	else:
 		c = subprocess.run(["which", "ffmpeg"], stdout=subprocess.PIPE, encoding="utf-8")
 		if c.returncode == 0:
@@ -152,7 +159,7 @@ def ydlProcessTarget(returnPipe, queue, url, path, fileformat, dlvideo, dlaudio,
 
 	ffmpegPath = getFFmpegPath()
 	if ffmpegPath:
-		opts["ffmpeg_location"] = ffmpegPath
+		opts["ffmpeg_location"] = str(ffmpegPath)
 
 	if ff["video"] == False: dlvideo = False
 	if ff["audio"] == False: dlaudio = False
