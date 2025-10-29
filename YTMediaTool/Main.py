@@ -60,8 +60,6 @@ if __name__ == "__main__": # Only run if this is the main process.
 		window.setWindowTitle("YTMediaTool")
 		window.show()
 
-		if not os.path.isfile(Settings.Settings["FFmpeg_path"]):
-			print(f'FFmpeg cannot be found in: "{Settings.Settings["FFmpeg_path"]}". Please enter a valid FFmpeg path in the settings.')
 		code = application.exec()
 		import SMLD
 		SMLD.cancel = True
