@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools >= 77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "YTMediaTool"}
+
+[project]
+name = "YTMediaTool"
+license = "GPL-3.0-or-later"
+dependencies = [
+	"PySide6-Essentials; os_name == 'nt'",
+	"PySide6; os_name != 'nt'",
+	"mutagen",
+	"ytmusicapi"
+]
+version = "0.5"
