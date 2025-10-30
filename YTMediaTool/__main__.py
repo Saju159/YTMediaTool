@@ -5,14 +5,17 @@ if len(argv) > 1 and argv[1] == "--version":
 	print(f"{Version.Name} {Version.Version} - {Version.ShortDesc}\n{Version.GPLNotice}")
 	exit()
 
-if __name__ == "__main__": # Only run if this is the main process.
+def Main():
 	import os
+	import pathlib
 	import sys
 	import multiprocessing
 
 	if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
 		# script is "frozen", so enable freeze support in multiprocessing
 		multiprocessing.freeze_support()
+
+	sys.path.append(str(pathlib.Path(__file__).parent))
 
 	import PySide6.QtWidgets as qtw
 	import YtdlpManager
@@ -88,3 +91,6 @@ if __name__ == "__main__": # Only run if this is the main process.
 	except ImportError as err:
 		qtw.QMessageBox.critical(None, "Error", f"Error while loading yt-dlp module!\n{err}\n\nPlease report this at https://github.com/Saju159/YTMediaTool/issues")
 		exit(1)
+
+if __name__ == "__main__": # Only run if this is the main process.
+	Main()
