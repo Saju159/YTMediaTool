@@ -1,17 +1,22 @@
 pkgname="ytmediatool"
-pkgver="0.4"
+pkgver="0.5"
 pkgrel="1"
 pkgdesc="Tool to download large and small quantities of video and audio files"
 arch=('any')
 url="https://github.com/Saju159/YTMediaTool/"
 license=("GPL-3.0")
-depends=("ffmpeg" "python>=3.12" "tk" "yt-dlp" "python-mutagen" "python-ytmusicapi")
-optdepends=("kdialog: KDE filedialog")
+depends=("ffmpeg" "python" "pyside6" "yt-dlp" "python-mutagen" "python-ytmusicapi")
+makedepends=("python-build" "python-installer" "python-wheel")
 source=("${pkgname}-${pkgver}.tar.gz::https://github.com/Saju159/YTMediaTool/archive/refs/tags/v${pkgver}.tar.gz" "YTMediaTool.desktop")
-sha256sums=("872294b44d4bdeec8e2aff38230bcce931afb40e549212546823da0c38e4f53b" "SKIP")
+sha256sums=("d5a76144e314d0c8c32ee8129a953ff08f599e227ec891e0b12f7039c3d1200e" "SKIP")
+
+build() {
+	cd "YTMediaTool-${pkgver}"
+	python -m build --wheel --no-isolation
+}
 
 package() {
-	shopt -s extglob
-	install -vDm 755 ./YTMediaTool-${pkgver}/YTMediaTool/*.py -t "${pkgdir}/opt/YTMediaTool/"
-	install -vDm 755 YTMediaTool.desktop "${pkgdir}/usr/share/applications/YTMediaTool.desktop"
+	cd "YTMediaTool-${pkgver}"
+	python -m installer --destdir="$pkgdir" dist/*.whl
+	install -vDm 755 ../YTMediaTool.desktop "${pkgdir}/usr/share/applications/YTMediaTool.desktop"
 }
