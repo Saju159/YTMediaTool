@@ -39,7 +39,7 @@ This tool works with many websites not listed here. These websites just have bee
  - SMLD adds metadata to the downloaded songs either from the input file or the Music Brainz API.
  - SMLD gives download rate as SPM (Songs Per Minute).
  - You can select your library file structure in the settings. For best results "/ARTIST/SONG" format is recommended as it produces the most consistant results. 
- <img src="https://github.com/Saju159/YTMediaTool/blob/main/Screenshots/SMLD.png" width="400" title="SMLD" alt="SMLD"/>
+ <img src="https://github.com/Saju159/YTMediaTool/blob/main/Screenshots/SMLD.png" width="400" title="SMLD page" alt="SMLD page"/>
 #### SMLD Page (Primary)
 SMLD works with Spotify, iTunes and Youtube Music.
  - SMLD destination folder is the base folder where SMLD starts building the folder structure selected in the settings.
@@ -92,5 +92,6 @@ The binaries in the releases are currently made by using the included build scri
  - [FFmpeg](https://www.ffmpeg.org/) (runtime only)
  - kdialog (optional, linux only)
 
-<img src="https://github.com/Saju159/YTMediaTool/blob/main/Screenshots/Settings.png" width="400" title="Settings" alt="Settings"/>
-<img src="https://github.com/Saju159/YTMediaTool/blob/main/Screenshots/About.png" width="400" title="About" alt="About"/>
+## More Images
+<img src="https://github.com/Saju159/YTMediaTool/blob/main/Screenshots/Settings.png" width="400" title="Settings page" alt="Settings page"/>
+<img src="https://github.com/Saju159/YTMediaTool/blob/main/Screenshots/About.png" width="400" title="About page" alt="About page"/>
