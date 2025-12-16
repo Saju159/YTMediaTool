@@ -32,14 +32,14 @@ This tool works with many websites not listed here. These websites just have bee
  - To reduce downloading times, original format and source video quality is recommemded as the program does not need to convert the files to another format.
  - Downloading playlists does work, but currently you can not cancel the downloading process.
 
-<img src="https://github.com/Saju159/YTMediaTool/blob/main/Screenshots/Basic%20Page.png" width="200" title="Basic Page" alt="Basic Page"/>
+<img src="https://github.com/Saju159/YTMediaTool/blob/main/Screenshots/Basic%20Page.png" width="400" title="Basic Page" alt="Basic Page"/>
 
 ### SMLD
  - SMLD saves a download history to the home directory of your system (~/YTMediaTool/SMLD_History.txt).
  - SMLD adds metadata to the downloaded songs either from the input file or the Music Brainz API.
  - SMLD gives download rate as SPM (Songs Per Minute).
  - You can select your library file structure in the settings. For best results "/ARTIST/SONG" format is recommended as it produces the most consistant results. 
- ![alt text](https://github.com/Saju159/YTMediaTool/blob/main/Screenshots/SMLD.png "SMLD")
+ <img src="https://github.com/Saju159/YTMediaTool/blob/main/Screenshots/SMLD.png" width="400" title="SMLD" alt="SMLD"/>
 #### SMLD Page (Primary)
 SMLD works with Spotify, iTunes and Youtube Music.
  - SMLD destination folder is the base folder where SMLD starts building the folder structure selected in the settings.
@@ -92,5 +92,5 @@ The binaries in the releases are currently made by using the included build scri
  - [FFmpeg](https://www.ffmpeg.org/) (runtime only)
  - kdialog (optional, linux only)
 
-![alt text](https://github.com/Saju159/YTMediaTool/blob/main/Screenshots/Settings.png "Settings")
-![alt text](https://github.com/Saju159/YTMediaTool/blob/main/Screenshots/About.png "About")
+<img src="https://github.com/Saju159/YTMediaTool/blob/main/Screenshots/Settings.png" width="400" title="Settings" alt="Settings"/>
+<img src="https://github.com/Saju159/YTMediaTool/blob/main/Screenshots/About.png" width="400" title="About" alt="About"/>
