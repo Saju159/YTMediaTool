@@ -76,6 +76,9 @@ class Page(qtw.QWidget):
 	def __init__(self, window: qtw.QWidget):
 		super().__init__()
 
+		def showerror(title, body):
+			qtw.QMessageBox.warning(self, title, body)
+
 		self.layout = qtw.QGridLayout(self)
 		self.layout.setColumnStretch(2, 1)
 
@@ -176,16 +179,28 @@ class Page(qtw.QWidget):
 			if done:
 				SMLDprogressTracker.writecancel()
 				print("Done")
+			
+			if SMLD.spotifyerror:
+				showerror("Spotify API error", "Spotify API returned error code 400. Is Spotify API configured in the settings?")
+				SMLD.spotifyerror = False
 
-			songinfo1.setText("Artist: "+ str(SMLD.artisttoshow))
-			songinfo2.setText("Song: "+ str(SMLD.songnametoshow))
-			if str(SMLD.albumnametoshow):
-				songinfo3.setText("Album: "+ str(SMLD.albumnametoshow))
+			if SMLD.spotifyerror2:
+				showerror("Spotify API error", "Spotify API returned error code 404. Is the link valid?")
+				cancel()
+				SMLD.spotifyerror2 = False
 
-			pg.setText("Progress: "+ str(progresstoshow) + "%")
-			np.setText(f"  Songs downloaded: {str(remainingtoshow)} / {str(totaltoshow)} ")
+			try:
+				songinfo1.setText("Artist: "+ str(SMLD.artisttoshow))
+				songinfo2.setText("Song: "+ str(SMLD.songnametoshow))
+				if str(SMLD.albumnametoshow):
+					songinfo3.setText("Album: "+ str(SMLD.albumnametoshow))
 
-			rd.setText("Rate is: "+ str(rate) + " SPM")
+				pg.setText("Progress: "+ str(progresstoshow) + "%")
+				np.setText(f"  Songs downloaded: {str(remainingtoshow)} / {str(totaltoshow)} ")
+
+				rd.setText("Rate is: "+ str(rate) + " SPM")
+			except Exception:
+				pass
 
 		def setupSMLD():
 			pathtocheck = libraryDirInputBox.text()
@@ -225,7 +240,8 @@ class Page(qtw.QWidget):
 
 
 			else:
-				qtw.QMessageBox.warning(self, "File not found", "File cannot be found or it doesn't exist. Please enter a valid file path.")
+				#qtw.QMessageBox.warning(self, "File not found", "File cannot be found or it doesn't exist. Please enter a valid file path.")
+				showerror("File not found", "File cannot be found or it doesn't exist. Please enter a valid file path.")
 
 		self.refresherTimer = qtc.QTimer(self, singleShot=True)
 		self.refresherTimer.timeout.connect(refresher)

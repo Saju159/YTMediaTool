@@ -24,7 +24,7 @@ filter = '?ü"[];:,.()®*\'é' #global filter for song album and artist names
 filter3 = '?ü"[];:,()®*\'é'
 
 global ratelimited, smlderror, filenotfound, cancel
-global libraryfiledirectory, libraryfiledirectory, downloaddirectory, fileformat
+global libraryfiledirectory, libraryfiledirectory, downloaddirectory, fileformat, spotifyerror, spotifyerror2
 global donelist
 donelist = [False,False,False,False,False,False,False,False,False,False,False,False,False,False,False,False]
 
@@ -36,6 +36,8 @@ ratelimited = False
 smlderror = False
 filenotfound = False
 failalert = False
+spotifyerror = False
+spotifyerror2 = False
 
 def clearlog():
 	with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'w', encoding='utf-8') as log:
@@ -150,44 +152,56 @@ def dividesonglist():
 	print(f"Tiedosto jaettu {threadcount} osaan.")
 
 def getspotifylist(link):
-	os.environ['SPOTIPY_CLIENT_ID'] = Settings["spo_cli_id"]
-	os.environ['SPOTIPY_CLIENT_SECRET'] = Settings["spo_cli_sec"]
-	os.environ['SPOTIPY_REDIRECT_URI'] = Settings["spo_cli_red"]
+	try:
+		os.environ['SPOTIPY_CLIENT_ID'] = Settings["spo_cli_id"]
+		os.environ['SPOTIPY_CLIENT_SECRET'] = Settings["spo_cli_sec"]
+		os.environ['SPOTIPY_REDIRECT_URI'] = Settings["spo_cli_red"]
 
-	sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope='playlist-read-private'))
+		sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope='playlist-read-private'))
 
-	# Function to get song names, artists, and albums from a playlist
-	def get_playlist_details(playlist_id):
-		songs_details = []  # Store details as a list of dictionaries
-		results = sp.playlist_tracks(playlist_id)
+		# Function to get song names, artists, and albums from a playlist
+		def get_playlist_details(playlist_id):
+			songs_details = []  # Store details as a list of dictionaries
+			results = sp.playlist_tracks(playlist_id)
 
-		for item in results['items']:
-			track = item['track']
-			if track:
-				song_info = {
-					'name': track['name'],  # Song name
-					'artist': ', '.join([artist['name'] for artist in track['artists']]),  # Artists
-					'album': track['album']['name']  # Album name
-				}
-				songs_details.append(song_info)
+			for item in results['items']:
+				track = item['track']
+				if track:
+					song_info = {
+						'name': track['name'],  # Song name
+						'artist': ', '.join([artist['name'] for artist in track['artists']]),  # Artists
+						'album': track['album']['name']  # Album name
+					}
+					songs_details.append(song_info)
 
-		return songs_details
+			return songs_details
 
-	# Replace with your specific playlist ID
-	#link = "https://open.spotify.com/playlist/3NbmkRjU8BOT8HwdckIkjO"
-	playlist_id = link.split("/")[-1]
+		# Replace with your specific playlist ID
+		#link = "https://open.spotify.com/playlist/3NbmkRjU8BOT8HwdckIkjO"
+		playlist_id = link.split("/")[-1]
 
 
 
-	# Fetch and print song details
-	songs = get_playlist_details(playlist_id)
-	list = []
-	for song in songs:
-		list.append(f"{song['artist']},{song['name']},A@{song['album']}\n")
-		#print(f"Song: {song['name']}, Artist: {song['artist']}, Album: {song['album']}")
+		# Fetch and print song details
+		songs = get_playlist_details(playlist_id)
+		list = []
+		for song in songs:
+			list.append(f"{song['artist']},{song['name']},A@{song['album']}\n")
+			#print(f"Song: {song['name']}, Artist: {song['artist']}, Album: {song['album']}")
 
-	return list
-
+		return list
+	except Exception as e:
+		print(e)
+		if "invalid_client" in str(e):
+			print("http status 400")
+			global spotifyerror
+			spotifyerror = True
+			SMLDpage.cancel()
+		if "Invalid base" in str(e):
+			print("http status 404")
+			global spotifyerror2
+			spotifyerror2 = True
+			SMLDpage.cancel()
 
 def createsonglist():
 	try:
@@ -282,11 +296,12 @@ def createsonglist():
 		if diagnosis == 1:
 			print("File saved successfully.")
 	except Exception as e:
-		if diagnosis == 1:
-			raise
+		#if diagnosis == 1:
+			#raise
 		print(f"An error occured231: {e}")
 		global smlderror
-		smlderror = True
+		if not spotifyerror and not spotifyerror2:
+			smlderror = True
 		addlogentry("Error: " + str(e))
 	#Delete empty lines:
 	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt"), 'r', encoding='utf-8') as file:
@@ -755,17 +770,18 @@ def setupSMLD(threadcount, libraryfilelocation):
 	getinfo()
 	emptyfails()
 	createsonglist()
-	dividesonglist()
-	albumname, songname, artist, songfilewithoutformat, filteredsongline, rating  = getsonginfo(threadnumber)
-	setupplaylists()
-	if startrunloop_after_setup:
-		SMLDpage.startthreads()
-	def measurerate_a():
-		SMLDprogressTracker.measurerate()
-	measurerate_b = threading.Thread(target=measurerate_a)
-	measurerate_b.start()
-	#else:
-	#	print("ERROR. Given path is not a file. Path: " + libraryfilelocation)
+	if not spotifyerror and not spotifyerror2:
+		dividesonglist()
+		albumname, songname, artist, songfilewithoutformat, filteredsongline, rating  = getsonginfo(threadnumber)
+		setupplaylists()
+		if startrunloop_after_setup:
+			SMLDpage.startthreads()
+		def measurerate_a():
+			SMLDprogressTracker.measurerate()
+		measurerate_b = threading.Thread(target=measurerate_a)
+		measurerate_b.start()
+		#else:
+		#	print("ERROR. Given path is not a file. Path: " + libraryfilelocation)
 
 def runsmld(threadnumber):
 	global filenotfound
@@ -856,7 +872,7 @@ def runsmld(threadnumber):
 
 				except Exception:
 					if diagnosis == 1:
-						raise
+						#raise
 						print("Log entry failed.-------------------------------")
 			else:
 				downloadfail()
