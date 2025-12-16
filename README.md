@@ -40,6 +40,7 @@ This tool works with many websites not listed here. These websites just have bee
  - SMLD gives download rate as SPM (Songs Per Minute).
  - You can select your library file structure in the settings. For best results "/ARTIST/SONG" format is recommended as it produces the most consistant results. 
  <img src="https://github.com/Saju159/YTMediaTool/blob/main/Screenshots/SMLD.png" width="400" title="SMLD page" alt="SMLD page"/>
+ 
 #### SMLD Page (Primary)
 SMLD works with Spotify, iTunes and Youtube Music.
  - SMLD destination folder is the base folder where SMLD starts building the folder structure selected in the settings.
