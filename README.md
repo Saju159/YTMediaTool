@@ -11,7 +11,9 @@ YTMediaTool is licensed under the terms of the GNU General Public License Versio
  - Select from multiple audio formats to download.
  - Download by keyword or with a provided link.
  - Download HUGE music collections with SMLD from YouTube or Spotify.
- - Donwload music with metadata with SMLD
+ - Download music with metadata with SMLD
+ - Download music directly from Spotify with a link. This function also adds metadata to the songs
+
  
 ### Verified websites that works with Basic page
 This tool works with many websites not listed here. These websites just have been confirmed working:
@@ -50,6 +52,14 @@ SMLD works with Spotify, iTunes and Youtube Music.
  - This format allows the user to download smaller quantities of songs at a time. 
  - This format has one major benefit to Basic Page. It adds metadata to songs. The program tries to get a name for the album from the Music Brainz API.
  - Simply select your download directory and SMLD will automatically create a file with instructions on how to use the format. Write the name of the artist and the song separated by a comma (ARTIST,SONG1,SONG2,SONG3...).
+
+#### SMLD Spotify API
+ - You can download your playlists directly with a link by putting the link in the second text box.
+ ##### How to do it
+ 1. Go to https://developer.spotify.com/dashboard and authorize your account.
+ 2. Create a new app. Add a name and description for it. (these can be what ever you want.) Enter redirect url (example: "http://127.0.0.1:8888/callback").
+ 3. From the next page copy the Client ID, Client Secret and redirect URL to the SMLD settings.
+ 4. Done! Now downloading with the Spotify API **should** work.
 
 ### Installation
 Installation of this program is very simple. 
