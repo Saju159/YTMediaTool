@@ -123,13 +123,13 @@ class Page(qtw.QWidget):
 		selectDirButton.clicked.connect(seldownloaddir1)
 		self.layout.addWidget(selectDirButton, 1, 3)
 
-		self.layout.addWidget(qtw.QLabel(self, text="Library list file: "), 2, 1, 1, 1, qtc.Qt.AlignmentFlag.AlignRight)
+		self.layout.addWidget(qtw.QLabel(self, text="Library list file or playlist link: "), 2, 1, 1, 1, qtc.Qt.AlignmentFlag.AlignRight)
 		self.librarydirfortextbox = ""
 
 		def librarydirfortextboxchanged(val):
 			self.librarydirfortextbox = str(val)
 
-		libraryDirInputBox = qtw.QLineEdit(self, placeholderText="Enter library file path here.")
+		libraryDirInputBox = qtw.QLineEdit(self, placeholderText="Enter library file path or playlist link here.", clearButtonEnabled=True)
 		libraryDirInputBox.textChanged.connect(librarydirfortextboxchanged)
 		self.layout.addWidget(libraryDirInputBox, 2, 2)
 
@@ -188,6 +188,7 @@ class Page(qtw.QWidget):
 			rd.setText("Rate is: "+ str(rate) + " SPM")
 
 		def setupSMLD():
+			pathtocheck = libraryDirInputBox.text()
 			global done
 			resetfiles()
 			number = 0
@@ -198,7 +199,7 @@ class Page(qtw.QWidget):
 					print("Removed songlist: "+ str(number))
 				number = number + 1
 
-			if os.path.isfile(currentlibrarydirectory):
+			if os.path.isfile(pathtocheck) or "open.spotify.com"in str(pathtocheck):
 				downloadb1.setEnabled(False)
 				fileformatDropdown.setEnabled(False)
 
@@ -207,7 +208,7 @@ class Page(qtw.QWidget):
 				np.setVisible(True)
 				rd.setVisible(True)
 
-				SMLD.libraryfiledirectory = currentlibrarydirectory
+				SMLD.libraryfiledirectory = pathtocheck
 
 				SMLD.cancel = False
 

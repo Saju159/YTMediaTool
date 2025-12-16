@@ -12,3 +12,5 @@ PKGBUILD/pkg/
 PKGBUILD/src/
 PKGBUILD/*.tar.zst
 PKGBUILD/*.tar.gz
+/YTMediaTool/.vscode
+YTMediaTool/.cache

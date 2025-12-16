@@ -27,7 +27,10 @@ DefaultSettings = {
 	"SMLD-source": ("YouTube Music", str),
 	"SMLD-useytmetadata": (True, bool),
 	"SMLD-structure":  ("/ARTIST/SONG", str),
-	"SMLD-retry": (False, bool)
+	"SMLD-retry": (False, bool),
+	"spo_cli_id": ("", str),
+	"spo_cli_sec": ("", str),
+	"spo_cli_red": ("http://127.0.0.1:8888/callback", str)
 }
 SettingsFilePath = os.path.join(getBaseConfigDir(), "settings.json")
 

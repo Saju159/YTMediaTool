@@ -11,6 +11,8 @@ import SMLDpage
 import requests
 import time
 from datetime import datetime
+import spotipy
+from spotipy.oauth2 import SpotifyOAuth
 
 diagnosis = 1 #1 = on, 0 = off
 
@@ -147,27 +149,73 @@ def dividesonglist():
 		start = end
 	print(f"Tiedosto jaettu {threadcount} osaan.")
 
+def getspotifylist(link):
+	os.environ['SPOTIPY_CLIENT_ID'] = Settings["spo_cli_id"]
+	os.environ['SPOTIPY_CLIENT_SECRET'] = Settings["spo_cli_sec"]
+	os.environ['SPOTIPY_REDIRECT_URI'] = Settings["spo_cli_red"]
+
+	sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope='playlist-read-private'))
+
+	# Function to get song names, artists, and albums from a playlist
+	def get_playlist_details(playlist_id):
+		songs_details = []  # Store details as a list of dictionaries
+		results = sp.playlist_tracks(playlist_id)
+
+		for item in results['items']:
+			track = item['track']
+			if track:
+				song_info = {
+					'name': track['name'],  # Song name
+					'artist': ', '.join([artist['name'] for artist in track['artists']]),  # Artists
+					'album': track['album']['name']  # Album name
+				}
+				songs_details.append(song_info)
+
+		return songs_details
+
+	# Replace with your specific playlist ID
+	#link = "https://open.spotify.com/playlist/3NbmkRjU8BOT8HwdckIkjO"
+	playlist_id = link.split("/")[-1]
+
+
+
+	# Fetch and print song details
+	songs = get_playlist_details(playlist_id)
+	list = []
+	for song in songs:
+		list.append(f"{song['artist']},{song['name']},A@{song['album']}\n")
+		#print(f"Song: {song['name']}, Artist: {song['artist']}, Album: {song['album']}")
+
+	return list
+
+
 def createsonglist():
 	try:
-		with open(libraryfiledirectory, 'r', encoding='utf-8') as tiedosto:
-			ensimrivi = tiedosto.readlines(1)
-
 		global filetype
 		#filetype = str(libraryfiledirectory).find(".txt")
 
-		if libraryfiledirectory.lower().endswith(".txt"):
-			if "Quick Download" in str(libraryfiledirectory):
-				filetype = 3
-			else:
-				filetype = 1
+		if "open.spotify.com" in libraryfiledirectory:
+			filetype = 4
 		else:
-			filetype = 2
+			with open(libraryfiledirectory, 'r', encoding='utf-8') as tiedosto:
+				ensimrivi = tiedosto.readlines(1)
+
+			if libraryfiledirectory.lower().endswith(".txt"):
+				if "Quick Download" in str(libraryfiledirectory):
+					filetype = 3
+				else:
+					filetype = 1
+			else:
+				filetype = 2
 
 		if diagnosis == 1:
 			print("Filetype is: " + str(filetype))
 
-		with open(libraryfiledirectory, 'r', encoding='utf-8') as tiedosto:
-			rivit2 = tiedosto.readlines()
+		if not filetype == 4:
+			with open(libraryfiledirectory, 'r', encoding='utf-8') as tiedosto:
+				rivit2 = tiedosto.readlines()
+
+		rivit3 = []
 
 		if filetype == 1:
 			if diagnosis == 1:
@@ -208,15 +256,22 @@ def createsonglist():
 				print("Selected file is a quick download format.")
 				print(rivit2)
 
-		rivit3 = []
+		elif filetype == 4:
+			with open((os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt")), 'w', encoding='utf-8') as tiedosto:
+				tiedosto.write("")
+			if diagnosis == 1:
+				print("Selected format is a spotify link.")
+			rivit3 = getspotifylist(libraryfiledirectory)
+			print(rivit3)
 
-		for entry in rivit2[1:]:
-			parts = entry.split(',')
-			artist = parts[0]
-			songs = parts[1:]
+		if not filetype == 4:
+			for entry in rivit2[1:]:
+				parts = entry.split(',')
+				artist = parts[0]
+				songs = parts[1:]
 
-			for song in songs:
-				rivit3.append(f"{artist},{song}")
+				for song in songs:
+					rivit3.append(f"{artist},{song}")
 
 		with open(os.path.join(getBaseConfigDir(), "SMLD", "Temp", "Songlist.txt"), 'a', encoding='utf-8') as tiedosto:
 			for line in rivit3:
@@ -227,6 +282,8 @@ def createsonglist():
 		if diagnosis == 1:
 			print("File saved successfully.")
 	except Exception as e:
+		if diagnosis == 1:
+			raise
 		print(f"An error occured231: {e}")
 		global smlderror
 		smlderror = True
@@ -307,6 +364,29 @@ def getsonginfo(threadnumber):
 			artisttoshow = artist
 			songnametoshow = songname
 
+		elif filetype == 4:
+			if diagnosis == 1:
+				print("Spotify playlist link detected.")
+			print(filteredsongline)
+			cusparts = filteredsongline.split(',')
+			albumpart = filteredsongline.split(',A@')
+			songname = f"{cusparts[1]}"
+			for char in filter:
+				songname = songname.replace(char, "")
+				songname = songname.strip()
+			artist = f"{cusparts[0]}"
+			for char in filter:
+				artist = artist.replace(char, "")
+				artist = artist.strip()
+			albumname = f"{albumpart[1]}"
+			for char in filter:
+				albumname = albumname.replace(char, "")
+				albumname = albumname.strip()
+			rating = ""  #set rating to none as csv does not contain rating data
+
+			artisttoshow = artist
+			songnametoshow = songname
+
 	if diagnosis == 1:
 		print ("Artist: " + artist)
 	songfilewithoutformat = os.path.join(downloaddirectory, getstructure(artist, albumname, songname, fileformat))
@@ -361,6 +441,7 @@ def setytoptions(threadnumber):
 	'max_downloads': 1,
 	'outtmpl': {'default': os.path.join(downloaddirectory, getstructure(artist, albumname, songname, fileformat))},
 	'final_ext' : fileformat,
+	'remote_components': ['ejs:npm'],
 	'postprocessors' : [{'key': 'FFmpegVideoConvertor', 'preferedformat': fileformat}],
 	}
 	if enable_yt_output:
@@ -627,8 +708,11 @@ def updatemetadata(artist, albumname, songname, threadnumber):
 			# Lisää metatiedot
 			if not albumname == "":
 				audio["\xa9alb"] = albumname  # Albumin nimi
+				print("album: "+ albumname)
+			print("artist: "+ artist)
 			audio["\xa9ART"] = artist  # Artistin nimi
 			audio["aART"] = artist
+			print("song: "+ songname)
 			audio["\xa9nam"] = songname
 
 			#‘\xa9day’ – year
@@ -666,22 +750,22 @@ def updatemetadata(artist, albumname, songname, threadnumber):
 def setupSMLD(threadcount, libraryfilelocation):
 	if diagnosis == 1:
 		print("------------------------------------------------------------------SMLD STARTS-----------------------------------------------------------------")
-	if os.path.isfile(libraryfilelocation):
-		threadnumber = 0
-		getinfo()
-		emptyfails()
-		createsonglist()
-		dividesonglist()
-		albumname, songname, artist, songfilewithoutformat, filteredsongline, rating  = getsonginfo(threadnumber)
-		setupplaylists()
-		if startrunloop_after_setup:
-			SMLDpage.startthreads()
-		def measurerate_a():
-			SMLDprogressTracker.measurerate()
-		measurerate_b = threading.Thread(target=measurerate_a)
-		measurerate_b.start()
-	else:
-		print("ERROR. Given path is not a file. Path: " + libraryfilelocation)
+	#if os.path.isfile(libraryfilelocation):
+	threadnumber = 0
+	getinfo()
+	emptyfails()
+	createsonglist()
+	dividesonglist()
+	albumname, songname, artist, songfilewithoutformat, filteredsongline, rating  = getsonginfo(threadnumber)
+	setupplaylists()
+	if startrunloop_after_setup:
+		SMLDpage.startthreads()
+	def measurerate_a():
+		SMLDprogressTracker.measurerate()
+	measurerate_b = threading.Thread(target=measurerate_a)
+	measurerate_b.start()
+	#else:
+	#	print("ERROR. Given path is not a file. Path: " + libraryfilelocation)
 
 def runsmld(threadnumber):
 	global filenotfound
@@ -772,6 +856,7 @@ def runsmld(threadnumber):
 
 				except Exception:
 					if diagnosis == 1:
+						raise
 						print("Log entry failed.-------------------------------")
 			else:
 				downloadfail()
@@ -781,10 +866,14 @@ def runsmld(threadnumber):
 			SMLDprogressTracker.trackprogress()
 
 	except FileNotFoundError:
+		#if diagnosis == 1:
+			#raise
 
 		filenotfound = True
 		print(f"Tiedostoa '{tiedostonimi}' ei löydy.")
 	except Exception as e:
+		#if diagnosis == 1:
+			#raise
 		print(f"An unexpected error occured e12: {e}")
 		addlogentry("Main loop error: " + str(e) + " on thread" + str(threadnumber))
 		addlogentry(f"While trying to download: {downloaddirectory} {artist} {albumname} {songname} Thread: {threadnumber}")
