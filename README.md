@@ -32,7 +32,7 @@ This tool works with many websites not listed here. These websites just have bee
  - To reduce downloading times, original format and source video quality is recommemded as the program does not need to convert the files to another format.
  - Downloading playlists does work, but currently you can not cancel the downloading process.
 
-![alt text](https://github.com/Saju159/YTMediaTool/blob/main/Screenshots/Basic%20Page.png "Basic Page")
+<img src="https://github.com/Saju159/YTMediaTool/blob/main/Screenshots/Basic%20Page.png" width="200" title="Basic Page" alt="Basic Page"/>
 
 ### SMLD
  - SMLD saves a download history to the home directory of your system (~/YTMediaTool/SMLD_History.txt).
