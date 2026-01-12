@@ -43,6 +43,16 @@ fileformats = {
 	'flac':	{'video': False, 'audio': True, 'ext': "flac"},
 }
 
+def readfile(path):
+	with open(path, "r", encoding='utf-8') as file:
+		value = file.read()
+
+		return value
+
+def writefile(path, data):
+	with open(path, "w", encoding='utf-8') as file:
+		file.write(data)
+
 def setupfolders():
 	if not os.path.exists(os.path.join(getBaseConfigDir(),"SMLD")):
 		os.makedirs(os.path.join(getBaseConfigDir(),"SMLD"))
@@ -89,10 +99,15 @@ class Page(qtw.QWidget):
 		self.librarydirfortextbox = os.path.expanduser("~/YTMediaTool/")
 		print (self.librarydirfortextbox)
 
+		
+
+		
+
 		def seldownloaddir1():
 			setupfolders()
 			picked_dir = openFilePicker(window, "openDir")
 			if picked_dir:
+				writefile(os.path.join(getBaseConfigDir(),"SMLD", "Temp","downloaddir.txt"), picked_dir)
 				downloaddirectory1 = picked_dir
 				self.downloaddirectory2 = downloaddirectory1
 				dirInputBox.setText(downloaddirectory1)
@@ -108,6 +123,7 @@ class Page(qtw.QWidget):
 			global currentlibrarydirectory
 			currentlibrarydirectory = openFilePicker(window, "openFile")
 			if currentlibrarydirectory:
+				writefile(os.path.join(getBaseConfigDir(),"SMLD", "Temp","librarydir.txt"), currentlibrarydirectory)
 				print(currentlibrarydirectory)
 				libraryDirInputBox.setText(currentlibrarydirectory)
 
@@ -121,6 +137,10 @@ class Page(qtw.QWidget):
 			self.downloaddirectory2 = val
 		dirInputBox.textChanged.connect(dirInputBoxEdited)
 		self.layout.addWidget(dirInputBox, 1, 2)
+		if os.path.isfile(os.path.join(getBaseConfigDir(),"SMLD", "Temp","downloaddir.txt")):
+			downloaddir2 = readfile(os.path.join(getBaseConfigDir(),"SMLD", "Temp","downloaddir.txt"))
+			dirInputBox.setText(downloaddir2)
+
 
 		selectDirButton = qtw.QToolButton(self, text="Browse...", icon=qtg.QIcon.fromTheme(qtg.QIcon.ThemeIcon.FolderOpen), toolTip="Browse...")
 		selectDirButton.clicked.connect(seldownloaddir1)
@@ -135,6 +155,10 @@ class Page(qtw.QWidget):
 		libraryDirInputBox = qtw.QLineEdit(self, placeholderText="Enter library file path or playlist link here.", clearButtonEnabled=True)
 		libraryDirInputBox.textChanged.connect(librarydirfortextboxchanged)
 		self.layout.addWidget(libraryDirInputBox, 2, 2)
+
+		if os.path.isfile(os.path.join(getBaseConfigDir(),"SMLD", "Temp","librarydir.txt")):
+			librarydir2 = readfile(os.path.join(getBaseConfigDir(),"SMLD", "Temp","librarydir.txt"))
+			libraryDirInputBox.setText(librarydir2)
 
 		selectDirButton = qtw.QToolButton(self, text="Browse...", icon=qtg.QIcon.fromTheme(qtg.QIcon.ThemeIcon.DocumentOpen), toolTip="Browse...")
 		selectDirButton.clicked.connect(sellibrarydirectory)
