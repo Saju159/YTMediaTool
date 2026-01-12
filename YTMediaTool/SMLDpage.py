@@ -99,10 +99,7 @@ class Page(qtw.QWidget):
 		self.librarydirfortextbox = os.path.expanduser("~/YTMediaTool/")
 		print (self.librarydirfortextbox)
 
-		
-
-		
-
+		SMLD.downloaddirectory = downloaddirectory1
 		def seldownloaddir1():
 			setupfolders()
 			picked_dir = openFilePicker(window, "openDir")
@@ -139,6 +136,7 @@ class Page(qtw.QWidget):
 		self.layout.addWidget(dirInputBox, 1, 2)
 		if os.path.isfile(os.path.join(getBaseConfigDir(),"SMLD", "Temp","downloaddir.txt")):
 			downloaddir2 = readfile(os.path.join(getBaseConfigDir(),"SMLD", "Temp","downloaddir.txt"))
+			SMLD.downloaddirectory = downloaddir2
 			dirInputBox.setText(downloaddir2)
 
 

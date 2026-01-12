@@ -817,67 +817,67 @@ def runsmld(threadnumber):
 				getsonginfo(threadnumber)
 				albumname, songname, artist, songfilewithoutformat, filteredsongline, rating = getsonginfo(threadnumber)
 
-			print(artist, songname, albumname)
-			if diagnosis == 1:
-				print("Checking if file exists before downloading. File: " + getstructure(artist, albumname, songname, fileformat))
-			filepath = os.path.join(downloaddirectory, getstructure(artist, albumname, songname, fileformat))
-			if not os.path.isfile(filepath):
+				#print(artist, songname, albumname)
 				if diagnosis == 1:
-					print("File does not exist: " + getstructure(artist, albumname, songname, fileformat))
-				addlogentry("File did not download correctly due to an error. File is: " + getstructure(artist, albumname, songname, fileformat))
+					print("Checking if file exists before downloading. File: " + getstructure(artist, albumname, songname, fileformat))
+				filepath = os.path.join(downloaddirectory, getstructure(artist, albumname, songname, fileformat))
+				if not os.path.isfile(filepath):
+					if diagnosis == 1:
+						print("File does not exist: " + getstructure(artist, albumname, songname, fileformat))
+					addlogentry("File did not download correctly due to an error. File is: " + getstructure(artist, albumname, songname, fileformat))
 
-				source = Settings["SMLD-source"]
-				if source == "YouTube":
-					downloadyt(songname, artist, albumname, threadnumber)
-				elif source == "YouTube Music":
-					videoid = getvideoid(songname, artist, threadnumber)
-					downloadytmusic(threadnumber, songname, artist, albumname, videoid)
+					source = Settings["SMLD-source"]
+					if source == "YouTube":
+						downloadyt(songname, artist, albumname, threadnumber)
+					elif source == "YouTube Music":
+						videoid = getvideoid(songname, artist, threadnumber)
+						downloadytmusic(threadnumber, songname, artist, albumname, videoid)
 
-				if filetype == 3:
+					if filetype == 3:
+						metadatayt = Settings["SMLD-useytmetadata"]
+						if metadatayt:
+							if diagnosis:
+								print("Using metadata from Music Brainz")
+							if not checkformetadata(filepath):
+								albumname = getmoremetadata(threadnumber, songname, artist)
+
+				else:
+					if diagnosis == 1:
+						print("File already exists, skipping download. " + os.path.join(downloaddirectory, getstructure(artist, albumname, songname, fileformat)))
+
 					metadatayt = Settings["SMLD-useytmetadata"]
-					if metadatayt:
-						if diagnosis:
-							print("Using metadata from Music Brainz")
+					if filetype == 3 and metadatayt:
 						if not checkformetadata(filepath):
 							albumname = getmoremetadata(threadnumber, songname, artist)
 
-			else:
+				if not checkformetadata(filepath):
+					updatemetadata(artist, albumname, songname, threadnumber)
+
 				if diagnosis == 1:
-					print("File already exists, skipping download. " + os.path.join(downloaddirectory, getstructure(artist, albumname, songname, fileformat)))
-
-				metadatayt = Settings["SMLD-useytmetadata"]
-				if filetype == 3 and metadatayt:
-					if not checkformetadata(filepath):
-						albumname = getmoremetadata(threadnumber, songname, artist)
-
-			if not checkformetadata(filepath):
-				updatemetadata(artist, albumname, songname, threadnumber)
-
-			if diagnosis == 1:
-				print("Filtered song line: " + filteredsongline +" on thread " + str(threadnumber))
+					print("Filtered song line: " + filteredsongline +" on thread " + str(threadnumber))
 
 			if rivit:
 				addtoplaylists(threadnumber)
-			if os.path.isfile(os.path.join(downloaddirectory, getstructure(artist, albumname, songname, fileformat))):
-				emptyfails()
-				tiedostonimi = removeline(filteredsongline, threadnumber)
-				if diagnosis == 1:
-					print(f"File {getstructure(artist, albumname, songname, fileformat)} was saved")
-				try:
+				if os.path.isfile(os.path.join(downloaddirectory, getstructure(artist, albumname, songname, fileformat))):
+					emptyfails()
+					tiedostonimi = removeline(filteredsongline, threadnumber)
 					if diagnosis == 1:
-						print("Adding entry to download log.")
-					with open(os.path.expanduser("~/YTMediaTool/SMLD_History.txt"), 'a', encoding='utf-8') as history:
-						history.write(f"File {getstructure(artist, albumname, songname, fileformat)} was saved at {datetime.now()}.")
-						history.write("\n")
+						print(f"File {getstructure(artist, albumname, songname, fileformat)} was saved")
+					try:
+						if diagnosis == 1:
+							print("Adding entry to download log.")
+						with open(os.path.expanduser("~/YTMediaTool/SMLD_History.txt"), 'a', encoding='utf-8') as history:
+							history.write(f"File {getstructure(artist, albumname, songname, fileformat)} was saved at {datetime.now()}.")
+							history.write("\n")
 
-				except Exception:
-					if diagnosis == 1:
-						#raise
-						print("Log entry failed.-------------------------------")
-			else:
-				downloadfail()
-				print("The file was not saved due to an unknown error.")
-				addlogentry(f"File save error while trying to download: {getstructure(artist, albumname, songname, fileformat)} on thread {threadnumber}")
+					except Exception:
+						if diagnosis == 1:
+							#raise
+							print("Log entry failed.-------------------------------")
+				else:
+					downloadfail()
+					print("The file was not saved due to an unknown error.")
+					addlogentry(f"File save error while trying to download: {getstructure(artist, albumname, songname, fileformat)} on thread {threadnumber}")
 			SMLDprogressTracker.check_status()
 			SMLDprogressTracker.trackprogress()
 
@@ -888,8 +888,8 @@ def runsmld(threadnumber):
 		filenotfound = True
 		print(f"Tiedostoa '{tiedostonimi}' ei löydy.")
 	except Exception as e:
-		#if diagnosis == 1:
-			#raise
+		if diagnosis == 1:
+			raise
 		print(f"An unexpected error occured e12: {e}")
 		addlogentry("Main loop error: " + str(e) + " on thread" + str(threadnumber))
 		addlogentry(f"While trying to download: {downloaddirectory} {artist} {albumname} {songname} Thread: {threadnumber}")

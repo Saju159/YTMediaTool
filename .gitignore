@@ -14,3 +14,4 @@ PKGBUILD/*.tar.zst
 PKGBUILD/*.tar.gz
 /YTMediaTool/.vscode
 YTMediaTool/.cache
+YTMediaTool/CurrentDownload.m3u
