@@ -26,7 +26,7 @@ filter = '?ü"[];:,.()®*\'é' #global filter for song album and artist names
 filter3 = '?ü"[];:,()®*\'é'
 
 global ratelimited, smlderror, filenotfound, cancel
-global libraryfiledirectory, libraryfiledirectory, downloaddirectory, fileformat, spotifyerror, spotifyerror2
+global libraryfiledirectory, libraryfiledirectory, downloaddirectory, fileformat, spotifyerror, spotifyerror2, ytprivate
 global donelist
 donelist = [False,False,False,False,False,False,False,False,False,False,False,False,False,False,False,False]
 
@@ -40,6 +40,7 @@ filenotfound = False
 failalert = False
 spotifyerror = False
 spotifyerror2 = False
+ytprivate = False
 
 def clearlog():
 	with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'w', encoding='utf-8') as log:
@@ -212,6 +213,7 @@ def extract_playlist_id(playlist_url):
 	return match.group(0) if match else None
 
 def getyoutubelink(playlist_url):
+	global ytprivate, cancel
 	ytmusic = YTMusic()
 	playlist_id = extract_playlist_id(playlist_url)
 	print(playlist_id)
@@ -219,7 +221,14 @@ def getyoutubelink(playlist_url):
 		print("Invalid playlist URL")
 		return
 
-	playlist_items = ytmusic.get_playlist(playlist_id)['tracks']
+	try:
+		playlist_items = ytmusic.get_playlist(playlist_id)['tracks']
+	except Exception as e:
+		print(f"Error with getyoutubelink function. Error is: {e}")
+		if "Unable to find 'contents'" in str(e):
+			print("Error downloading playlist. Is the playlist private?")
+			cancel = True
+			ytprivate = True
 
 	playlist = []
 	if not playlist_items:
@@ -476,8 +485,8 @@ def getsonginfo(threadnumber):
 	if diagnosis == 1:
 		print ("Artist: " + artist)
 	if filetype == 5:
-		songname = songname.split(";")[1]
-	songfilewithoutformat = os.path.join(downloaddirectory, getstructure(artist, albumname, songname, fileformat))
+		songname2 = songname.split(";")[1]
+	songfilewithoutformat = os.path.join(downloaddirectory, getstructure(artist, albumname, songname2, fileformat))
 	for char in filter3:
 		songfilewithoutformat = songfilewithoutformat.replace(char, "")
 	if diagnosis == 1:

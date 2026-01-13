@@ -67,7 +67,7 @@ SMLD works with Spotify, iTunes and Youtube Music.
 
 #### SMLD YouTube Music API
  - You can download your playlists directly with a link by putting the link in the second text box called "Library list file or playlist link".
- - This does not need any extra work from the user. It **should:tm:** just work.
+ - This does not need any extra work from the user. It **should** just work. The playlist **must be public**.
 
 ### Installation
 Installation of this program is very simple. 

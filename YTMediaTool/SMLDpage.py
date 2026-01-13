@@ -185,6 +185,10 @@ class Page(qtw.QWidget):
 			if SMLD.failalert:
 				qtw.QMessageBox.critical(window, "Download failed!", "Download has failed for over 10 times! Try updating yt-dlp and YTMediaTool!")
 				SMLD.failalert = False
+			
+			if SMLD.ytprivate:
+				qtw.QMessageBox.critical(window, "Download playlist failed!", "Error downloading playlist! Is the playlist private?")
+				SMLD.ytprivate = False
 
 			currentlibrarydirectory = os.path.expanduser("~/YTMediaTool/")
 
