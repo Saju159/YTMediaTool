@@ -58,12 +58,16 @@ SMLD works with Spotify, iTunes and Youtube Music.
  - Simply select your download directory and SMLD will automatically create a file with instructions on how to use the format. Write the name of the artist and the song separated by a comma (ARTIST,SONG1,SONG2,SONG3...).
 
 #### SMLD Spotify API
- - You can download your playlists directly with a link by putting the link in the second text box.
+ - You can download your playlists directly with a link by putting the link in the second text box called "Library list file or playlist link".
  ##### How to do it
  1. Go to https://developer.spotify.com/dashboard and authorize your account.
  2. Create a new app. Add a name and description for it. (these can be what ever you want.) Enter redirect url (example: "http://127.0.0.1:8888/callback").
  3. From the next page copy the Client ID, Client Secret and redirect URL to the SMLD settings.
  4. Done! Now downloading with the Spotify API **should** work.
+
+#### SMLD YouTube Music API
+ - You can download your playlists directly with a link by putting the link in the second text box called "Library list file or playlist link".
+ - This does not need any extra work from the user. It **should:tm:** just work.
 
 ### Installation
 Installation of this program is very simple. 

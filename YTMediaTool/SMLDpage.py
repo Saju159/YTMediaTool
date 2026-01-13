@@ -135,7 +135,7 @@ class Page(qtw.QWidget):
 		dirInputBox.textChanged.connect(dirInputBoxEdited)
 		self.layout.addWidget(dirInputBox, 1, 2)
 		if os.path.isfile(os.path.join(getBaseConfigDir(),"SMLD", "Temp","downloaddir.txt")):
-			downloaddir2 = readfile(os.path.join(getBaseConfigDir(),"SMLD", "Temp","downloaddir.txt"))
+			downloaddir2 = readfile(os.path.join(getBaseConfigDir(),"SMLD", "Temp","downloaddir.txt")).strip()
 			SMLD.downloaddirectory = downloaddir2
 			dirInputBox.setText(downloaddir2)
 
@@ -155,7 +155,7 @@ class Page(qtw.QWidget):
 		self.layout.addWidget(libraryDirInputBox, 2, 2)
 
 		if os.path.isfile(os.path.join(getBaseConfigDir(),"SMLD", "Temp","librarydir.txt")):
-			librarydir2 = readfile(os.path.join(getBaseConfigDir(),"SMLD", "Temp","librarydir.txt"))
+			librarydir2 = readfile(os.path.join(getBaseConfigDir(),"SMLD", "Temp","librarydir.txt")).strip()
 			libraryDirInputBox.setText(librarydir2)
 
 		selectDirButton = qtw.QToolButton(self, text="Browse...", icon=qtg.QIcon.fromTheme(qtg.QIcon.ThemeIcon.DocumentOpen), toolTip="Browse...")
@@ -236,7 +236,7 @@ class Page(qtw.QWidget):
 					print("Removed songlist: "+ str(number))
 				number = number + 1
 
-			if os.path.isfile(pathtocheck) or "open.spotify.com"in str(pathtocheck):
+			if os.path.isfile(pathtocheck) or "open.spotify.com"in str(pathtocheck) or "youtube.com"in str(pathtocheck):
 				downloadb1.setEnabled(False)
 				fileformatDropdown.setEnabled(False)
 

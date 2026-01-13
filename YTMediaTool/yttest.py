@@ -37,10 +37,7 @@ def ytmusicurl(playlist_url):
             else:
                 album = "[Unkown Album]"
             
-            print(f"Video id: {video_id}")
-            print(f"Song: {song_title}")
-            print(f"Artist(s): {artist}")
-            print(f"Album: {album}\n")
+            return f"{video_id};{song_title};{artist};{album}"
 
 if __name__ == "__main__":
     playlist_url = "https://music.youtube.com/playlist?list=PLjCT52YyPOMTyaAfVNB0DLbJYON2rAkbh" #input("Enter the YouTube Music playlist URL: ")

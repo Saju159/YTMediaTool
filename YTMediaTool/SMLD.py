@@ -13,6 +13,8 @@ import time
 from datetime import datetime
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
+import re
+from ytmusicapi import YTMusic
 
 diagnosis = 1 #1 = on, 0 = off
 
@@ -203,6 +205,42 @@ def getspotifylist(link):
 			spotifyerror2 = True
 			SMLDpage.cancel()
 
+def extract_playlist_id(playlist_url):
+	"""Extracts the playlist ID from the provided URL."""
+	pattern = r'(?<=list=)[^&]+'
+	match = re.search(pattern, playlist_url)
+	return match.group(0) if match else None
+
+def getyoutubelink(playlist_url):
+	ytmusic = YTMusic()
+	playlist_id = extract_playlist_id(playlist_url)
+	print(playlist_id)
+	if not playlist_id:
+		print("Invalid playlist URL")
+		return
+
+	playlist_items = ytmusic.get_playlist(playlist_id)['tracks']
+
+	playlist = []
+	if not playlist_items:
+		print("No songs found in the playlist.")
+		return
+	else:
+		for track in range(len(playlist_items)):
+			video_id = playlist_items[track]['videoId'].strip()
+			song_title = playlist_items[track]['title'].strip()
+			artist = playlist_items[track]['artists']
+			album = playlist_items[track]['album']
+
+			artist = str(artist).split(":")[1].split(",")[0].replace("'", "").strip()
+			if not album == None:
+				album = str(album).split(":")[1].split(",")[0].replace("'", "").strip()
+			else:
+				album = "[Unkown Album]"
+			
+			playlist.append(f"{video_id};{song_title};{artist};{album}")
+	return playlist
+
 def createsonglist():
 	try:
 		global filetype
@@ -210,6 +248,9 @@ def createsonglist():
 
 		if "open.spotify.com" in libraryfiledirectory:
 			filetype = 4
+
+		elif "youtube.com" in libraryfiledirectory:
+			filetype = 5
 		else:
 			with open(libraryfiledirectory, 'r', encoding='utf-8') as tiedosto:
 				ensimrivi = tiedosto.readlines(1)
@@ -225,7 +266,7 @@ def createsonglist():
 		if diagnosis == 1:
 			print("Filetype is: " + str(filetype))
 
-		if not filetype == 4:
+		if not filetype == 4 and not filetype == 5:
 			with open(libraryfiledirectory, 'r', encoding='utf-8') as tiedosto:
 				rivit2 = tiedosto.readlines()
 
@@ -278,7 +319,15 @@ def createsonglist():
 			rivit3 = getspotifylist(libraryfiledirectory)
 			print(rivit3)
 
-		if not filetype == 4:
+		elif filetype == 5:
+			with open((os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt")), 'w', encoding='utf-8') as tiedosto:
+				tiedosto.write("")
+			if diagnosis == 1:
+				print("Selected format is a youtube link.")
+			rivit3 = getyoutubelink(libraryfiledirectory)
+			print(rivit3)
+
+		if not filetype == 4 and not filetype == 5:
 			for entry in rivit2[1:]:
 				parts = entry.split(',')
 				artist = parts[0]
@@ -296,8 +345,8 @@ def createsonglist():
 		if diagnosis == 1:
 			print("File saved successfully.")
 	except Exception as e:
-		#if diagnosis == 1:
-			#raise
+		if diagnosis == 1:
+			raise
 		print(f"An error occured231: {e}")
 		global smlderror
 		if not spotifyerror and not spotifyerror2:
@@ -398,12 +447,36 @@ def getsonginfo(threadnumber):
 				albumname = albumname.replace(char, "")
 				albumname = albumname.strip()
 			rating = ""  #set rating to none as csv does not contain rating data
-
 			artisttoshow = artist
 			songnametoshow = songname
 
+		elif filetype == 5:
+			if diagnosis == 1:
+				print("YouTube playlist link detected.")
+			print(filteredsongline)
+			cusparts = filteredsongline.split(";")
+			songname = f"{cusparts[1]}"
+			for char in filter:
+				songname = songname.replace(char, "")
+				songname = songname.strip()
+			songname = f"{cusparts[0]};{songname}"
+			artist = f"{cusparts[2]}"
+			for char in filter:
+				artist = artist.replace(char, "")
+				artist = artist.strip()
+			albumname = f"{cusparts[3]}"
+			for char in filter:
+				albumname = albumname.replace(char, "")
+				albumname = albumname.strip()
+			rating = ""
+
+			artisttoshow = artist
+			songnametoshow = songname.split(";")[1]
+
 	if diagnosis == 1:
 		print ("Artist: " + artist)
+	if filetype == 5:
+		songname = songname.split(";")[1]
 	songfilewithoutformat = os.path.join(downloaddirectory, getstructure(artist, albumname, songname, fileformat))
 	for char in filter3:
 		songfilewithoutformat = songfilewithoutformat.replace(char, "")
@@ -449,6 +522,8 @@ def setupplaylists():
 
 def setytoptions(threadnumber):
 	albumname, songname, artist, songfilewithoutformat, filteredsongline, rating = getsonginfo(threadnumber)
+	if filetype == 5:
+		songname = songname.split(";")[1]
 	if diagnosis == 1:
 		print("Download location: " + songfilewithoutformat)
 	ytoptions = {
@@ -534,18 +609,21 @@ def yterror(e, artist, albumname, songname, threadnumber):
 def getvideoid(songname, artist, threadnumber):
 	if diagnosis == 1:
 		print("Trying to get video ID.")
-	hakusana = str(songname +" " + artist)
-	yt = ytmusicapi.YTMusic()
-	if diagnosis == 1:
-		print("YT Music Keyword: " + str(hakusana)+ " on thread " + str(threadnumber))
+	if not filetype == 5:
+		hakusana = str(songname +" " + artist)
+		yt = ytmusicapi.YTMusic()
+		if diagnosis == 1:
+			print("YT Music Keyword: " + str(hakusana)+ " on thread " + str(threadnumber))
 
-	tulokset = yt.search(hakusana, filter="songs")
+		tulokset = yt.search(hakusana, filter="songs")
 
-	videoid = None
-	for r in tulokset:
-		if r.get("resultType") == "song" and r.get("album") and r["album"].get("name"):
-			videoid = r["videoId"]
-			break
+		videoid = None
+		for r in tulokset:
+			if r.get("resultType") == "song" and r.get("album") and r["album"].get("name"):
+				videoid = r["videoId"]
+				break
+	else:
+		videoid = songname.split(";")[0]
 
 	if diagnosis == 1:
 		print("Video ID: " + str(videoid) + " on thread " + str(threadnumber))
@@ -705,6 +783,8 @@ def updatemetadata(artist, albumname, songname, threadnumber):
 		print("m4a detected")
 	try:
 		# Lataa M4A-tiedosto
+		if filetype == 5:
+			songname = songname.split(";")[1]
 		tiedosto = os.path.join(downloaddirectory, getstructure(artist, albumname, songname, fileformat))
 		# for char in filter:
 		# 	tiedosto = str(tiedosto.replace(char, ""))
@@ -858,6 +938,8 @@ def runsmld(threadnumber):
 
 			if rivit:
 				addtoplaylists(threadnumber)
+				if filetype == 5:
+					songname = songname.split(";")[1]
 				if os.path.isfile(os.path.join(downloaddirectory, getstructure(artist, albumname, songname, fileformat))):
 					emptyfails()
 					tiedostonimi = removeline(filteredsongline, threadnumber)
