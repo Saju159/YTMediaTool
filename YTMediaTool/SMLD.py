@@ -486,6 +486,8 @@ def getsonginfo(threadnumber):
 		print ("Artist: " + artist)
 	if filetype == 5:
 		songname2 = songname.split(";")[1]
+	else:
+		songname2 = songname
 	songfilewithoutformat = os.path.join(downloaddirectory, getstructure(artist, albumname, songname2, fileformat))
 	for char in filter3:
 		songfilewithoutformat = songfilewithoutformat.replace(char, "")

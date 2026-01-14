@@ -166,7 +166,7 @@ class Page(qtw.QWidget):
 		openlink.clicked.connect(lambda: qtg.QDesktopServices.openUrl("https://www.tunemymusic.com/transfer"))
 		self.layout.addWidget(openlink, 3, 2, 1, 1, qtc.Qt.AlignmentFlag.AlignRight)
 
-		info = qtw.QLabel(self, text="\nSMLD is a tool designed to download small and large amounts of audio files from YouTube Music and Spotify. Enter a playlist link to the second text field or input a .txt containing a list of the songs you want to download. Metadata is only added to .m4a files. See GitHub page for more information and a more complete feature list.", wordWrap=True)
+		info = qtw.QLabel(self, text="\nSMLD is a tool designed to download small and large amounts of audio files from YouTube Music and Spotify. Enter a playlist link to the second text field or input a .txt containing a list of the songs you want to download. Metadata is only added to .m4a files. See GitHub page for more information and for a more complete feature list.", wordWrap=True)
 		self.layout.addWidget(info, 8, 1, 1, 3)
 
 		def refresher():
