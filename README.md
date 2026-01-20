@@ -2,7 +2,7 @@
 
 YTMediaTool is a tool designed to download large and small quantities of video and audio files from YouTube. It is powered by yt-dlp and mutagen. 
 
-(c) 2025 Saju159 & arttuc
+(c) 2026 Saju159 & arttuc
 
 YTMediaTool is licensed under the terms of the GNU General Public License Version 3.0
 
