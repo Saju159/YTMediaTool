@@ -19,6 +19,7 @@ global downloaddirectory1
 global rate
 global done
 global progresstoshow, remainingtoshow, totaltoshow
+global generalerror
 progresstoshow =  ""
 remainingtoshow = ""
 totaltoshow = ""
@@ -100,6 +101,11 @@ class Page(qtw.QWidget):
 		print (self.librarydirfortextbox)
 
 		SMLD.downloaddirectory = downloaddirectory1
+
+		global generalerror
+		def generalerror(title, bodytext):
+			qtw.QMessageBox.critical(window, title, bodytext)
+
 		def seldownloaddir1():
 			setupfolders()
 			picked_dir = openFilePicker(window, "openDir")
@@ -170,26 +176,6 @@ class Page(qtw.QWidget):
 		self.layout.addWidget(info, 8, 1, 1, 3)
 
 		def refresher():
-			if SMLD.filenotfound:
-				qtw.QMessageBox.critical(window, "File not found", "File cannot be found. See the log for more information.")
-				SMLD.filenotfound = False
-
-			if SMLD.smlderror:
-				qtw.QMessageBox.critical(window, "ERROR", "An error occured. See the log for more information.")
-				SMLD.smlderror = False
-
-			if SMLD.ratelimited:
-				qtw.QMessageBox.critical(window, "Rate limited!", "You have been rate limited! Try to enable cookies!")
-				SMLD.ratelimited = False
-
-			if SMLD.failalert:
-				qtw.QMessageBox.critical(window, "Download failed!", "Download has failed for over 10 times! Try updating yt-dlp and YTMediaTool!")
-				SMLD.failalert = False
-			
-			if SMLD.ytprivate:
-				qtw.QMessageBox.critical(window, "Download playlist failed!", "Error downloading playlist! Is the playlist private?")
-				SMLD.ytprivate = False
-
 			currentlibrarydirectory = os.path.expanduser("~/YTMediaTool/")
 
 			if not os.path.exists(currentlibrarydirectory + "Downloads/"):

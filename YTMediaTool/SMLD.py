@@ -25,8 +25,8 @@ enable_yt_output = False #enable YT-DLP output printing
 filter = '?ü"[];:,.()®*\'é' #global filter for song album and artist names
 filter3 = '?ü"[];:,()®*\'é'
 
-global ratelimited, smlderror, filenotfound, cancel
-global libraryfiledirectory, libraryfiledirectory, downloaddirectory, fileformat, spotifyerror, spotifyerror2, ytprivate
+global ratelimited, cancel
+global libraryfiledirectory, libraryfiledirectory, downloaddirectory, fileformat, spotifyerror, spotifyerror2
 global donelist
 donelist = [False,False,False,False,False,False,False,False,False,False,False,False,False,False,False,False]
 
@@ -34,13 +34,10 @@ fileformat = ""
 libraryfiledirectory = ""
 downloaddirectory = ""
 albumnametoshow = ""
-ratelimited = False
-smlderror = False
-filenotfound = False
-failalert = False
 spotifyerror = False
 spotifyerror2 = False
 ytprivate = False
+generalerror, errortitle, errortext = False, "", ""
 
 def clearlog():
 	with open(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt"), 'w', encoding='utf-8') as log:
@@ -101,7 +98,7 @@ def checkfails():
 		fails = len(file.readlines())
 		file.close()
 	if fails > 10:
-		failalert = True
+		SMLDpage.generalerror("Download failed!", "Download has failed for over 10 times! Try updating yt-dlp and YTMediaTool!")
 
 		cancel = True
 
@@ -227,28 +224,32 @@ def getyoutubelink(playlist_url):
 		print(f"Error with getyoutubelink function. Error is: {e}")
 		if "Unable to find 'contents'" in str(e):
 			print("Error downloading playlist. Is the playlist private?")
+			SMLDpage.generalerror("Download playlist failed!", "Error downloading playlist! Is the playlist private?")
 			cancel = True
-			ytprivate = True
+			
 
 	playlist = []
-	if not playlist_items:
-		print("No songs found in the playlist.")
-		return
-	else:
-		for track in range(len(playlist_items)):
-			video_id = playlist_items[track]['videoId'].strip()
-			song_title = playlist_items[track]['title'].strip()
-			artist = playlist_items[track]['artists']
-			album = playlist_items[track]['album']
+	try:
+		if not playlist_items:
+			print("No songs found in the playlist.")
+			return
+		else:
+			for track in range(len(playlist_items)):
+				video_id = playlist_items[track]['videoId'].strip()
+				song_title = playlist_items[track]['title'].strip()
+				artist = playlist_items[track]['artists']
+				album = playlist_items[track]['album']
 
-			artist = str(artist).split(":")[1].split(",")[0].replace("'", "").strip()
-			if not album == None:
-				album = str(album).split(":")[1].split(",")[0].replace("'", "").strip()
-			else:
-				album = "[Unkown Album]"
-			
-			playlist.append(f"{video_id};{song_title};{artist};{album}")
-	return playlist
+				artist = str(artist).split(":")[1].split(",")[0].replace("'", "").strip()
+				if not album == None:
+					album = str(album).split(":")[1].split(",")[0].replace("'", "").strip()
+				else:
+					album = "[Unkown Album]"
+				
+				playlist.append(f"{video_id};{song_title};{artist};{album}")
+		return playlist
+	except Exception:
+		cancel = True
 
 def createsonglist():
 	try:
@@ -346,10 +347,11 @@ def createsonglist():
 					rivit3.append(f"{artist},{song}")
 
 		with open(os.path.join(getBaseConfigDir(), "SMLD", "Temp", "Songlist.txt"), 'a', encoding='utf-8') as tiedosto:
-			for line in rivit3:
-				line_cleaned = line.strip().replace("'", "")
-				print("Kirjoitetaan:", line_cleaned)
-				tiedosto.write(line_cleaned + "\n")
+			if not cancel:
+				for line in rivit3:
+					line_cleaned = line.strip().replace("'", "")
+					print("Kirjoitetaan:", line_cleaned)
+					tiedosto.write(line_cleaned + "\n")
 
 		if diagnosis == 1:
 			print("File saved successfully.")
@@ -357,9 +359,8 @@ def createsonglist():
 		if diagnosis == 1:
 			raise
 		print(f"An error occured231: {e}")
-		global smlderror
 		if not spotifyerror and not spotifyerror2:
-			smlderror = True
+			SMLDpage.generalerror("ERROR", "An error occured. See the log for more information.")
 		addlogentry("Error: " + str(e))
 	#Delete empty lines:
 	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "Songlist.txt"), 'r', encoding='utf-8') as file:
@@ -576,8 +577,7 @@ def yterror(e, artist, albumname, songname, threadnumber):
 		removeline(filteredsongline, threadnumber)
 
 	if "Sign in to confirm you’re not a bot." in str(e):
-		global ratelimited
-		ratelimited = True
+		SMLDpage.generalerror("Rate limited!", "You have been rate limited! Try to enable cookies!")
 		addlogentry(f"Failed to download: {getstructure(artist, albumname, songname, fileformat)} You are probably rate limited. Enabling browser cookies in the settings might help.")
 
 	elif "Postprocessing: Error opening input files" in str(e):
@@ -860,22 +860,23 @@ def setupSMLD(threadcount, libraryfilelocation):
 	threadnumber = 0
 	getinfo()
 	emptyfails()
-	createsonglist()
-	if not spotifyerror and not spotifyerror2:
-		dividesonglist()
-		albumname, songname, artist, songfilewithoutformat, filteredsongline, rating  = getsonginfo(threadnumber)
-		setupplaylists()
-		if startrunloop_after_setup:
-			SMLDpage.startthreads()
-		def measurerate_a():
-			SMLDprogressTracker.measurerate()
-		measurerate_b = threading.Thread(target=measurerate_a)
-		measurerate_b.start()
-		#else:
-		#	print("ERROR. Given path is not a file. Path: " + libraryfilelocation)
+	if cancel == False:
+		createsonglist()
+		if not spotifyerror and not spotifyerror2:
+			dividesonglist()
+			if not cancel:
+				albumname, songname, artist, songfilewithoutformat, filteredsongline, rating  = getsonginfo(threadnumber)
+				setupplaylists()
+				if startrunloop_after_setup:
+					SMLDpage.startthreads()
+				def measurerate_a():
+					SMLDprogressTracker.measurerate()
+				measurerate_b = threading.Thread(target=measurerate_a)
+				measurerate_b.start()
+				#else:
+				#	print("ERROR. Given path is not a file. Path: " + libraryfilelocation)
 
 def runsmld(threadnumber):
-	global filenotfound
 	try:
 		while True:
 			try:
@@ -978,7 +979,7 @@ def runsmld(threadnumber):
 		#if diagnosis == 1:
 			#raise
 
-		filenotfound = True
+		SMLD.generalerror("File not found", "File cannot be found. See the log for more information.")
 		print(f"Tiedostoa '{tiedostonimi}' ei löydy.")
 	except Exception as e:
 		if diagnosis == 1:
