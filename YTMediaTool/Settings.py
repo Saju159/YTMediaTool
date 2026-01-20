@@ -30,7 +30,8 @@ DefaultSettings = {
 	"SMLD-retry": (False, bool),
 	"spo_cli_id": ("", str),
 	"spo_cli_sec": ("", str),
-	"spo_cli_red": ("http://127.0.0.1:8888/callback", str)
+	"spo_cli_red": ("http://127.0.0.1:8888/callback", str),
+	"SMLD-moreerrors": (False, bool)
 }
 SettingsFilePath = os.path.join(getBaseConfigDir(), "settings.json")
 

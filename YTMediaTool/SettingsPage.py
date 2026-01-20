@@ -265,6 +265,7 @@ class Page(qtw.QWidget):
 
 		self.layout.addWidget(Spacer(widget))
 		self.layout.addWidget(qtw.QLabel(widget, text="Settings for 'SMLD' tab:"))
+		self.layout.addWidget(BooleanOption(widget, self, "SMLD-moreerrors", "Show more errors relating to download."))
 		self.layout.addWidget(Button(widget, self, "Open SMLD logs", lambda: qtg.QDesktopServices.openUrl(qtc.QUrl.fromLocalFile(os.path.join(getBaseConfigDir(),"SMLD","SMLDlog.txt")))))
 		self.layout.addWidget(Button(widget, self, "Clear SMLD Logs", lambda: SMLD.clearlog()))
 		self.layout.addWidget(TextInputOption(widget, self, "spo_cli_id", "Spotify API id", "API id for Spotify developer id. \n developer.spotify.com/", False, ""))

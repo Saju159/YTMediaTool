@@ -97,8 +97,8 @@ def checkfails():
 	with open(os.path.join(getBaseConfigDir(),"SMLD", "Temp", "SMLDfail.txt"), 'r', encoding='utf-8') as file:
 		fails = len(file.readlines())
 		file.close()
-	if fails > 10:
-		SMLDpage.generalerror("Download failed!", "Download has failed for over 10 times! Try updating yt-dlp and YTMediaTool!")
+	if fails > 6:
+		SMLDpage.generalerror("Download failed!", "Download has failed for over 6 times! Try updating yt-dlp and YTMediaTool!")
 
 		cancel = True
 
@@ -376,16 +376,15 @@ def getsonginfo(threadnumber):
 		 songlistlines = tiedosto.readlines()
 	# Ota ensimmäinen rivi ja poista se tiedoston riveistä
 
-	if not songlistlines == "":
+	if songlistlines:
 		filteredsongline = songlistlines[0].strip()  # Poista rivin ympäriltä tyhjät merkit
+		songlinefilter = "/?ü().:"
+		for char in songlinefilter:
+			filteredsongline = filteredsongline.replace(char, "")
 	else:
 		print ("Thread" + str(threadnumber) +"file is empty")
 
-	songlinefilter = "/?ü().:"
-	for char in songlinefilter:
-		filteredsongline = filteredsongline.replace(char, "")
-
-	if not songlistlines == "":   #if songlist contains something, continue
+	if songlistlines:   #if songlist contains something, continue
 		if filetype == 1:
 			if diagnosis == 1:
 				print("Expanded iTunes format")
@@ -483,36 +482,39 @@ def getsonginfo(threadnumber):
 			artisttoshow = artist
 			songnametoshow = songname.split(";")[1]
 
-	if diagnosis == 1:
-		print ("Artist: " + artist)
-	if filetype == 5:
-		songname2 = songname.split(";")[1]
-	else:
-		songname2 = songname
-	songfilewithoutformat = os.path.join(downloaddirectory, getstructure(artist, albumname, songname2, fileformat))
-	for char in filter3:
-		songfilewithoutformat = songfilewithoutformat.replace(char, "")
-	if diagnosis == 1:
-		print("Lopullinen tiedosto on: " + songfilewithoutformat)
+		if diagnosis == 1:
+			print ("Artist: " + artist)
+		if filetype == 5:
+			songname2 = songname.split(";")[1]
+		else:
+			songname2 = songname
+		songfilewithoutformat = os.path.join(downloaddirectory, getstructure(artist, albumname, songname2, fileformat))
+		for char in filter3:
+			songfilewithoutformat = songfilewithoutformat.replace(char, "")
+		if diagnosis == 1:
+			print("Lopullinen tiedosto on: " + songfilewithoutformat)
 
-	return albumname, songname, artist, songfilewithoutformat, filteredsongline, rating
+		return albumname, songname, artist, songfilewithoutformat, filteredsongline, rating
 
 def addtoplaylists(threadnumber):
-	albumname, songname, artist, songfilewithoutformat, filteredsongline, rating = getsonginfo(threadnumber)
-	currentdownloadplaylist = (os.path.join(downloaddirectory, "CurrentDownload.m3u" ))
-	favoritesplaylist = (os.path.join(downloaddirectory, "Favorites.m3u" ))
-	with open(currentdownloadplaylist, 'a', encoding='utf-8') as playlist:
-		playlist.write(getstructure(artist, albumname, songname, fileformat))
-		playlist.write("\n")
-		playlist.close()
-		if diagnosis == 1:
-			print("Current download playlist written")
-
-	if rating == "2":
-		with open(favoritesplaylist, 'a', encoding='utf-8') as playlist:
+	try:
+		albumname, songname, artist, songfilewithoutformat, filteredsongline, rating = getsonginfo(threadnumber)
+		currentdownloadplaylist = (os.path.join(downloaddirectory, "CurrentDownload.m3u" ))
+		favoritesplaylist = (os.path.join(downloaddirectory, "Favorites.m3u" ))
+		with open(currentdownloadplaylist, 'a', encoding='utf-8') as playlist:
 			playlist.write(getstructure(artist, albumname, songname, fileformat))
 			playlist.write("\n")
 			playlist.close()
+			if diagnosis == 1:
+				print("Current download playlist written")
+
+		if rating == "2":
+			with open(favoritesplaylist, 'a', encoding='utf-8') as playlist:
+				playlist.write(getstructure(artist, albumname, songname, fileformat))
+				playlist.write("\n")
+				playlist.close()
+	except Exception:
+		pass
 
 def setupplaylists():
 	global currentdownloadplaylist, favoritesplaylist
@@ -570,7 +572,9 @@ def setytoptions(threadnumber):
 
 def yterror(e, artist, albumname, songname, threadnumber):
 	albumname, songname, artist, songfilewithoutformat, filteredsongline, rating = getsonginfo(threadnumber)
-	if "Sign in to confirm your age." in str(e):
+	if not "Sign in to confirm your age." in str(e):
+		if Settings["SMLD-moreerrors"]:
+			SMLDpage.generalerror("Confirm your age!", "Sign in to confirm your age! You can enable browser cookies from the settings to fix this. Skipping this song for now.")
 		addlogentry(f"Failed to download: {getstructure(artist, albumname, songname, fileformat)} Video is age-restricted. Enabling browser cookies in the settings might help. Skipping this song.")
 		if diagnosis == 1:
 			print("Song is age restricted. Skipping...")
@@ -948,7 +952,6 @@ def runsmld(threadnumber):
 				if diagnosis == 1:
 					print("Filtered song line: " + filteredsongline +" on thread " + str(threadnumber))
 
-			if rivit:
 				addtoplaylists(threadnumber)
 				if filetype == 5:
 					songname = songname.split(";")[1]
@@ -982,8 +985,8 @@ def runsmld(threadnumber):
 		SMLD.generalerror("File not found", "File cannot be found. See the log for more information.")
 		print(f"Tiedostoa '{tiedostonimi}' ei löydy.")
 	except Exception as e:
-		if diagnosis == 1:
-			raise
+		#if diagnosis == 1:
+		raise
 		print(f"An unexpected error occured e12: {e}")
 		addlogentry("Main loop error: " + str(e) + " on thread" + str(threadnumber))
 		addlogentry(f"While trying to download: {downloaddirectory} {artist} {albumname} {songname} Thread: {threadnumber}")
