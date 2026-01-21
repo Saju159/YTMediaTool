@@ -1,14 +1,14 @@
 pkgname="ytmediatool"
-pkgver="0.5"
+pkgver="0.5.1"
 pkgrel="1"
 pkgdesc="Tool to download large and small quantities of video and audio files"
 arch=('any')
 url="https://github.com/Saju159/YTMediaTool/"
 license=("GPL-3.0")
-depends=("ffmpeg" "python" "pyside6" "yt-dlp" "python-mutagen" "python-ytmusicapi")
+depends=("ffmpeg" "python" "pyside6" "yt-dlp" "python-mutagen" "python-ytmusicapi" "python-spotipy")
 makedepends=("python-build" "python-installer" "python-wheel")
 source=("${pkgname}-${pkgver}.tar.gz::https://github.com/Saju159/YTMediaTool/archive/refs/tags/v${pkgver}.tar.gz" "YTMediaTool.desktop")
-sha256sums=("d5a76144e314d0c8c32ee8129a953ff08f599e227ec891e0b12f7039c3d1200e" "SKIP")
+sha256sums=("99a8657b822aec8d87385cc99a686594948efc49dc42eddad1dd1f1a80dcc8be" "SKIP")
 
 build() {
 	cd "YTMediaTool-${pkgver}"
