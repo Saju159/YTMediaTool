@@ -75,6 +75,16 @@ Installation of this program is very simple.
  - Then you need to install FFmpeg and input the FFmpeg installation directory in the settings. Get FFmpeg from https://www.ffmpeg.org/download.html
  - After you download it FFmpeg binary itself is located in /ffmpeg-master-latest-win64-gpl/bin/ffmpeg.exe
 NOTE: These are not installers and they work simply as a executable file as they are downloaded.
+
+#### Arch Linux
+Download the .pgk.tar.zst file from the releases. Go to the folder you downloaded the file and do:
+```
+sudo pacman -U <file name>
+```
+Then install the spotipy requirement from AUR. (YAY):
+```
+yay -S python-spotipy
+```
  
 ## Configuration
 The program is configured in the 'Settings' tab within the interface.
