@@ -77,14 +77,15 @@ Installation of this program is very simple.
 NOTE: These are not installers and they work simply as a executable file as they are downloaded.
 
 #### Arch Linux
-Download the .pgk.tar.zst file from the releases. Go to the folder you downloaded the file and do:
-```
-sudo pacman -U <file name>
-```
 Then install the spotipy requirement from AUR. (YAY):
 ```
 yay -S python-spotipy
 ```
+Download the .pgk.tar.zst file from the releases. Go to the folder you downloaded the file and do:
+```
+sudo pacman -U <file name>
+```
+
  
 ## Configuration
 The program is configured in the 'Settings' tab within the interface.
