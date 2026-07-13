@@ -82,13 +82,16 @@ def startthreads():
 		print("Thread " + str(threadnumber) + " has been started------------------------------------------------------------------------------------------------------------------")
 
 
+def showerror(parent,title,body):
+	qtw.QMessageBox.warning(parent, title, body)
 
 class Page(qtw.QWidget):
 	def __init__(self, window: qtw.QWidget):
 		super().__init__()
 
-		def showerror(title, body):
-			qtw.QMessageBox.warning(self, title, body)
+		global generalerror
+		def generalerror(title, bodytext):
+			qtw.QMessageBox.critical(self, title, bodytext)
 
 		self.layout = qtw.QGridLayout(self)
 		self.layout.setColumnStretch(2, 1)
@@ -101,10 +104,6 @@ class Page(qtw.QWidget):
 		print (self.librarydirfortextbox)
 
 		SMLD.downloaddirectory = downloaddirectory1
-
-		global generalerror
-		def generalerror(title, bodytext):
-			qtw.QMessageBox.critical(window, title, bodytext)
 
 		def seldownloaddir1():
 			setupfolders()
@@ -193,11 +192,11 @@ class Page(qtw.QWidget):
 				print("Done")
 			
 			if SMLD.spotifyerror:
-				showerror("Spotify API error", "Spotify API returned error code 400. Is Spotify API configured in the settings?")
+				showerror(self,"Spotify API error", "Spotify API returned error code 400. Is Spotify API configured in the settings?")
 				SMLD.spotifyerror = False
 
 			if SMLD.spotifyerror2:
-				showerror("Spotify API error", "Spotify API returned error code 404. Is the link valid?")
+				showerror(self,"Spotify API error", "Spotify API returned error code 404. Is the link valid?")
 				cancel()
 				SMLD.spotifyerror2 = False
 
@@ -253,7 +252,7 @@ class Page(qtw.QWidget):
 
 			else:
 				#qtw.QMessageBox.warning(self, "File not found", "File cannot be found or it doesn't exist. Please enter a valid file path.")
-				showerror("File not found", "File cannot be found or it doesn't exist. Please enter a valid file path.")
+				showerror(self,"File not found", "File cannot be found or it doesn't exist. Please enter a valid file path.")
 
 		self.refresherTimer = qtc.QTimer(self, singleShot=True)
 		self.refresherTimer.timeout.connect(refresher)

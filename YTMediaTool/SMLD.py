@@ -572,7 +572,7 @@ def setytoptions(threadnumber):
 
 def yterror(e, artist, albumname, songname, threadnumber):
 	albumname, songname, artist, songfilewithoutformat, filteredsongline, rating = getsonginfo(threadnumber)
-	if not "Sign in to confirm your age." in str(e):
+	if "Sign in to confirm your age." in str(e):
 		if Settings["SMLD-moreerrors"]:
 			SMLDpage.generalerror("Confirm your age!", "Sign in to confirm your age! You can enable browser cookies from the settings to fix this. Skipping this song for now.")
 		addlogentry(f"Failed to download: {getstructure(artist, albumname, songname, fileformat)} Video is age-restricted. Enabling browser cookies in the settings might help. Skipping this song.")
