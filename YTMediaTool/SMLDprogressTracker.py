@@ -38,6 +38,18 @@ def trackprogress():
 	SMLDpage.remainingtoshow = str(len(tlines)-rlines)
 	SMLDpage.totaltoshow = str(len(tlines))
 
+	try:
+		if os.path.isfile(os.path.join(SMLD.downloaddirectory,"Failed Songs.txt")):
+			with open(os.path.join(SMLD.downloaddirectory,"Failed Songs.txt"), 'r', encoding='utf-8') as file:
+				failed = len(file.readlines())
+				file.close()
+
+		SMLDpage.failed=failed
+	except Exception:
+		pass
+	
+
+
 	if edistyminen2 == 100:
 		if SMLD.cancel == False:
 			print("valmis")
@@ -84,6 +96,8 @@ def measurerate():
 			time.sleep(5)
 			rate = float(track1/(elapsed_time/60))
 			rate = round(rate, 1)
+			if rate>999:
+				rate=999
 
 			SMLDpage.rate = rate
 

@@ -9,6 +9,7 @@ from Common import getBaseConfigDir
 from Settings import Settings
 import threading
 import SMLDprogressTracker
+import time
 
 #Website: https://www.tunemymusic.com/transfer
 
@@ -34,6 +35,9 @@ progress = 0
 rlines = 0
 tlines = 0
 rate = 0
+failed=0
+last=0
+now=0
 
 currentlibrarydirectory = " "
 refresher = True
@@ -85,13 +89,44 @@ def startthreads():
 def showerror(parent,title,body):
 	qtw.QMessageBox.warning(parent, title, body)
 
+
 class Page(qtw.QWidget):
+	errorSignal = qtc.Signal(str, str)
+	
+	def showError(self, title, body):
+		now = time.time()
+		if self.errorOpen or (now-self.last)<4:
+			return
+
+		self.errorOpen = True
+
+		msg = qtw.QMessageBox(
+            qtw.QMessageBox.Icon.Critical,
+            title,
+            body,
+            parent=self
+        )
+		msg.finished.connect(self.errorClosed)
+		self.last=time.time()
+		msg.exec()
+		
+
+	def errorClosed(self):
+		self.errorOpen = False
+
 	def __init__(self, window: qtw.QWidget):
 		super().__init__()
 
+		self.last = 0
+
+		self.errorOpen = False
+		self.errorSignal.connect(self.showError)
+
 		global generalerror
-		def generalerror(title, bodytext):
-			qtw.QMessageBox.critical(self, title, bodytext)
+		def generalerror(title, body):
+			self.errorSignal.emit(title, body)
+
+		
 
 		self.layout = qtw.QGridLayout(self)
 		self.layout.setColumnStretch(2, 1)
@@ -167,9 +202,10 @@ class Page(qtw.QWidget):
 		selectDirButton.clicked.connect(sellibrarydirectory)
 		self.layout.addWidget(selectDirButton, 2, 3)
 
-		openlink = qtw.QPushButton(self, text="Open .csv tool")
-		openlink.clicked.connect(lambda: qtg.QDesktopServices.openUrl("https://www.tunemymusic.com/transfer"))
-		self.layout.addWidget(openlink, 3, 2, 1, 1, qtc.Qt.AlignmentFlag.AlignRight)
+		frame2 = qtw.QFrame(self)
+		self.layout.addWidget(frame2, 3, 1, 1, 1)	#kuudes parametry jätettynä tyhjäksi venyttää widgetin viemään koko solun tilan     viides parametri = monta saraketta grid vie
+		frame2layout = qtw.QHBoxLayout(frame2)
+		frame2layout.setContentsMargins(0,0,0,0)
 
 		info = qtw.QLabel(self, text="\nSMLD is a tool designed to download small and large amounts of audio files from YouTube Music and Spotify. Enter a playlist link to the second text field or input a .txt containing a list of the songs you want to download. Metadata is only added to .m4a files. See GitHub page for more information and for a more complete feature list.", wordWrap=True)
 		self.layout.addWidget(info, 8, 1, 1, 3)
@@ -210,6 +246,8 @@ class Page(qtw.QWidget):
 				np.setText(f"  Songs downloaded: {str(remainingtoshow)} / {str(totaltoshow)} ")
 
 				rd.setText("Rate is: "+ str(rate) + " SPM")
+
+				fs.setText("Failed: "+ str(failed))
 			except Exception:
 				pass
 
@@ -233,6 +271,9 @@ class Page(qtw.QWidget):
 				pg.setVisible(True)
 				np.setVisible(True)
 				rd.setVisible(True)
+				fs.setVisible(True)
+
+				writefile(os.path.join(getBaseConfigDir(),"SMLD", "Temp","librarydir.txt"), pathtocheck)
 
 				SMLD.libraryfiledirectory = pathtocheck
 
@@ -267,7 +308,11 @@ class Page(qtw.QWidget):
 		def fileformatChanged(to):
 			self.fileformat = to
 		fileformatDropdown.currentTextChanged.connect(fileformatChanged)
-		frame1layout.addWidget(fileformatDropdown)
+		frame2layout.addWidget(fileformatDropdown)
+
+		openlink = qtw.QPushButton(self, text="Open .csv tool")
+		openlink.clicked.connect(lambda: qtg.QDesktopServices.openUrl("https://www.tunemymusic.com/transfer"))
+		frame2layout.addWidget(openlink)
 
 		def cancel():
 			SMLD.cancel = True
@@ -279,6 +324,7 @@ class Page(qtw.QWidget):
 			pg.setVisible(False)
 			np.setVisible(False)
 			rd.setVisible(False)
+			fs.setVisible(False)
 			songinfo1.setVisible(False)
 			songinfo2.setVisible(False)
 			songinfo3.setVisible(False)
@@ -297,6 +343,9 @@ class Page(qtw.QWidget):
 
 		rd = qtw.QLabel(frame1, text="Rate: "+ str(rate) + " SPM", visible=False)
 		frame1layout.addWidget(rd)
+
+		fs = qtw.QLabel(frame1, text=f"Failed: {str(failed)}", visible=False)
+		frame1layout.addWidget(fs)
 
 		frame1layout.addStretch(1)
 

@@ -592,10 +592,13 @@ def yterror(e, artist, albumname, songname, threadnumber):
 		except FileNotFoundError:
 			print("Virhe: Annettua kansiota ei löytynyt.")
 
-		poistettava =  os.path.join(songdirectory, str(searchresults))
-		filter1 = "'[]"
-		for char in filter1:
-			poistettava = poistettava.replace(char, "")
+		try:
+			poistettava =  os.path.join(songdirectory, str(searchresults))
+			filter1 = "'[]"
+			for char in filter1:
+				poistettava = poistettava.replace(char, "")
+		except Exception:
+			poistettava=""
 
 		if os.path.isfile(poistettava):
 			os.remove(poistettava)
@@ -692,8 +695,8 @@ def downloadytmusic(threadnumber, songname, artist, albumname, videoid):
 			downloadyt(songname, artist, albumname, threadnumber)
 	except Exception as e:
 		if diagnosis == 1:
-			print("ERROR. Failed to download from YTMusic. Downloading from youtube. Exception: " + e)
-		addlogentry("ERROR. Failed to download from YTMusic. Downloading from youtube. Exception: " + e)
+			print("ERROR. Failed to download from YTMusic. Downloading from youtube. Exception: " + str(e))
+		addlogentry("ERROR. Failed to download from YTMusic. Downloading from youtube. Exception: " + str(e))
 		yterror(e, artist, albumname, songname, threadnumber)
 		downloadyt(songname, artist, albumname, threadnumber)
 
@@ -793,6 +796,22 @@ def getmoremetadata(threadnumber, songname, artist):
 	albumnametoshow = albumname
 	return albumname
 
+def writefailed(artist,song):
+	with open(os.path.join(downloaddirectory,"Failed Songs.txt"), 'a', encoding='utf-8') as failed:
+		failed.write(f"{song} by {artist} failed to download. See the log for more information.\n")
+		failed.close()
+
+def clearfailed():
+	addlogentry(f"Trying to clear {downloaddirectory}.")
+	try:
+		with open(os.path.join(downloaddirectory,"Failed Songs.txt"), 'w', encoding='utf-8') as failed:
+			failed.write("")
+			failed.close()
+	except Exception:
+		raise
+		print("Failed to clear failed.")
+		addlogentry("Failed to clear failed.")		
+
 def updatemetadata(artist, albumname, songname, threadnumber):
 	if diagnosis == 1:
 		print("m4a detected")
@@ -863,7 +882,7 @@ def setupSMLD(threadcount, libraryfilelocation):
 	#if os.path.isfile(libraryfilelocation):
 	threadnumber = 0
 	getinfo()
-	emptyfails()
+	clearfailed()
 	if cancel == False:
 		createsonglist()
 		if not spotifyerror and not spotifyerror2:
@@ -975,6 +994,7 @@ def runsmld(threadnumber):
 					downloadfail()
 					print("The file was not saved due to an unknown error.")
 					addlogentry(f"File save error while trying to download: {getstructure(artist, albumname, songname, fileformat)} on thread {threadnumber}")
+					writefailed(artist,songname)
 			SMLDprogressTracker.check_status()
 			SMLDprogressTracker.trackprogress()
 
